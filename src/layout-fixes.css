@@ -1,0 +1,53 @@
+/* Final responsive card contract. Equal heights, consistent padding and no text overflow. */
+.app,main,.library-section,.learning-shelf,.lesson-reader,.preschool-studio{min-width:0}
+.app{overflow-x:clip}
+main{width:100%;max-width:1150px}
+.nav{max-width:1150px}
+button,div,section,article,label,strong,p,h1,h2,h3,small,span{overflow-wrap:anywhere}
+.nav button,.chapter-chips button{overflow-wrap:normal}
+.subject-picker,.illustrated-lesson,.early-mode,.skill-card{box-sizing:border-box;min-width:0;max-width:none;width:100%;height:100%;margin:0;overflow:hidden;overflow-wrap:anywhere;word-break:normal}
+.subject-picker{transform:none!important;display:grid;grid-template-rows:66px minmax(40px,auto) minmax(28px,auto) 1fr;align-content:stretch;align-items:start;padding:16px;min-height:216px;max-height:none;gap:5px}
+.subject-picker:hover:not(:disabled){transform:translateY(-3px)!important}
+.subject-picker .subject-illustration{grid-row:1;min-width:0}
+.subject-picker strong{display:block;min-height:0!important;width:100%;line-height:1.35;white-space:normal;font-size:clamp(12px,1.4vw,14px);overflow-wrap:anywhere;hyphens:auto}
+.subject-picker small{display:block;min-height:0;width:100%;line-height:1.45;white-space:normal;overflow-wrap:anywhere}
+.subject-picker .ready-dot,.subject-picker .catalog-dot{align-self:end;display:block;max-width:100%;width:max-content;line-height:1.4;white-space:normal}
+.playful-subjects{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,185px),1fr));grid-auto-rows:1fr;align-items:stretch;gap:14px}
+.lesson-shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,205px),1fr));grid-auto-rows:1fr;align-items:stretch;gap:14px}
+.illustrated-lesson{display:grid;grid-template-rows:80px auto minmax(44px,auto) minmax(36px,auto) 1fr;align-content:stretch;align-items:start;padding:18px;min-height:254px;max-height:none;gap:6px;text-align:left}
+.illustrated-lesson .lesson-art{grid-row:1;min-width:0;margin:0;max-width:100%;font-size:38px;line-height:1.2}
+.illustrated-lesson .lesson-index{font-size:10px;line-height:1.2}
+.illustrated-lesson strong{font-size:clamp(13px,1.5vw,16px);line-height:1.38;min-width:0;min-height:0;max-width:100%;display:block;white-space:normal}
+.illustrated-lesson small{display:block;max-width:100%;min-height:0;line-height:1.45;font-size:11px;white-space:normal}
+.illustrated-lesson .lesson-link{font-size:12px;align-self:end;margin-top:auto;min-width:0;max-width:100%;white-space:normal;gap:7px;line-height:1.4}
+.illustrated-lesson .lesson-link span{font-size:21px!important;flex:none}
+.library-filters{max-width:100%;min-width:0}
+.library-filters label{min-width:min(100%,145px)}
+.library-filters select{max-width:100%}
+.colourful-lessonhead{min-width:0}
+.colourful-lessonhead h1,.colourful-lessonhead p{overflow-wrap:anywhere}
+.study-step{min-width:0}
+.study-step>div{min-width:0;flex:1}
+.mindmap,.colourful-mindmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));align-items:stretch}
+.mindmap div,.colourful-mindmap>div{min-width:0}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));align-items:stretch}
+.choices button{min-width:0;max-width:100%;line-height:1.55;text-align:center;white-space:normal;overflow-wrap:anywhere}
+.early-mode{height:100%;max-width:none;min-width:0}
+.early-mode-grid{align-items:stretch;grid-auto-rows:1fr}
+.early-answer-grid button,.spell-tiles button{overflow-wrap:anywhere}
+@media(max-width:700px){
+ .playful-subjects,.lesson-shelf{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .subject-picker{min-height:210px;padding:13px;grid-template-rows:55px auto auto 1fr}
+ .subject-picker .subject-illustration{width:48px;height:48px;font-size:27px}
+ .subject-picker strong{font-size:12px}
+ .subject-picker small{font-size:10.5px}
+ .illustrated-lesson{min-height:254px;padding:13px;grid-template-rows:58px auto minmax(44px,auto) minmax(38px,auto) 1fr}
+ .illustrated-lesson .lesson-art{width:54px;height:54px;font-size:30px}
+ .illustrated-lesson strong{font-size:13px}
+ .illustrated-lesson small{font-size:10.5px}
+ .learning-shelf{padding:14px}
+}
+@media(max-width:350px){
+ .subject-picker{min-height:223px}
+ .illustrated-lesson{min-height:270px}
+}
