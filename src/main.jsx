@@ -14,7 +14,7 @@ const isLive=!!window.google?.script?.run;
 const langLabels={ms:'Bahasa Melayu',en:'English',ta:'தமிழ்',zh:'中文'};
 let mockChildren=[],mockAttempts={},mockPin='';
 const fakeUser={name:'Demo Parent',email:'demo@example.com'};
-const fakeLessons=LESSONS.map(l=>({id:l.id,year:l.year,title:l.title,subject:l.subject,icon:l.icon,chapter:l.chapter||'Asas Matematik',status:l.status||'DRAFT_TEACHER_REVIEW',premium:l.id!=='y1-math-subtract'}));
+const fakeLessons=LESSONS.map(l=>({id:l.id,year:l.year,title:l.title,subject:l.subject,icon:l.icon,chapter:l.chapter||'Asas Matematik',status:l.status||'DRAFT_TEACHER_REVIEW',premium:false}));
 async function localCall(method,args){
  if(method==='getBootstrap')return {parent:fakeUser,children:mockChildren,access:{active:true,plan:'DEMO'},lessons:fakeLessons,scholarship:null};
  if(method==='addChild'){const [_,d]=args;const c={id:'demo-'+Date.now(),name:d.name,year:d.year,school:d.school,language:d.language};mockChildren.push(c);return c;}
