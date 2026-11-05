@@ -1871,11 +1871,11 @@ export const JUNIOR_FOUNDATION_LESSONS = [
     "status": "DRAFT_TEACHER_REVIEW"
   },
   {
-    "id": "jr-math-7-1",
-    "year": 7,
+    "id": "jr-math-6-3",
+    "year": 6,
     "school": "ALL",
     "subject": "Matematik",
-    "chapter": "Unit 1 · Nombor negatif",
+    "chapter": "Unit 3 · Nombor negatif",
     "title": "Nombor negatif",
     "icon": "🧮",
     "summary": "Nombor negatif kurang daripada sifar dan terletak di kiri sifar pada garis nombor.",
@@ -1910,7 +1910,7 @@ export const JUNIOR_FOUNDATION_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-math-7-1-q1",
+        "id": "jr-math-6-3-q1",
         "mode": "choice",
         "text": "Yang manakah lebih kecil?",
         "options": [
@@ -1926,11 +1926,11 @@ export const JUNIOR_FOUNDATION_LESSONS = [
     "status": "DRAFT_TEACHER_REVIEW"
   },
   {
-    "id": "jr-math-7-2",
-    "year": 7,
+    "id": "jr-math-6-4",
+    "year": 6,
     "school": "ALL",
     "subject": "Matematik",
-    "chapter": "Unit 2 · Nisbah mudah",
+    "chapter": "Unit 4 · Nisbah mudah",
     "title": "Nisbah mudah",
     "icon": "🧮",
     "summary": "Nisbah membandingkan dua kuantiti mengikut urutan.",
@@ -1965,7 +1965,7 @@ export const JUNIOR_FOUNDATION_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-math-7-2-q1",
+        "id": "jr-math-6-4-q1",
         "mode": "choice",
         "text": "Nisbah merah kepada biru bagi 2 merah dan 3 biru?",
         "options": [
