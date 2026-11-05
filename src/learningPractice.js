@@ -6,7 +6,7 @@
 function rotate(list,seed){if(!list.length)return [];const n=seed%list.length;return [...list.slice(n),...list.slice(0,n)]}
 export function enrichPractice(lessons){
  return lessons.map((lesson,index)=>{
-  const pool=lessons.filter(other=>other.subject===lesson.subject&&other.year===lesson.year&&other.id!==lesson.id);
+  const pool=lessons.filter(other=>other.subject===lesson.subject&&other.id!==lesson.id).sort((a,b)=>Math.abs(a.year-lesson.year)-Math.abs(b.year-lesson.year));
   const distractors=rotate(pool,index).slice(0,2);
   const optionsWith=(correct,wrong)=>rotate([correct,...wrong],index+1);
   const first=lesson.check[0];
