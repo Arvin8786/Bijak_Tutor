@@ -1,6 +1,6 @@
 /* BijakLearn Junior PWA — static assets only. Do NOT cache student data, tokens, Sheets calls or third-party requests. */
-const VERSION = 'bijaklearn-static-v4';
-const CORE = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png'];
+const VERSION = 'bijaklearn-static-v5';
+const CORE = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(CORE)));
   self.skipWaiting();
