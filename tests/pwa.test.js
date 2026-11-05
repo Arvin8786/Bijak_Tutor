@@ -13,7 +13,7 @@ test('manifest has a real bundled scalable icon or complete raster sizes',()=>{
 test('service worker avoids caching private network requests',()=>{
  const sw=fs.readFileSync('public/sw.js','utf8');
  assert.match(sw,/url.origin !== self.location.origin/);
- assert.match(sw,/url.pathname.startsWith\('\\/api\\/'/);
+ assert.ok(sw.includes("url.pathname.startsWith('/api/')"));
  assert.match(sw,/req.method !== 'GET'/);
 });
 test('Apps Script bundle remains independently deployable',()=>{
