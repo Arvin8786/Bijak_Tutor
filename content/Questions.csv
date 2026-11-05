@@ -1,0 +1,119 @@
+<PARSED TEXT FOR SHEET: 1 / 1 TABS
+TAB NAME: content__Questions.csv>
+index,questionId,lessonId,mode,text,optionsJson,correctAnswer,why,transfer,misconceptionsJson
+0,write-q1,y1-math-write,choice,Nombor mana bermaksud tujuh?,"[""6"", ""7"", ""8"", ""9""]",7,Sebut perkataan nombor dan padankan dengan angka.,False,{}
+1,write-q2,y1-math-write,number,Tulis dalam angka: sembilan.,[],9,Sebut perkataan nombor dan padankan dengan angka.,False,{}
+2,write-q3,y1-math-write,number,Sara mempunyai sebelas pen. Tulis bilangan pen sebagai angka.,[],11,Sebut perkataan nombor dan padankan dengan angka.,True,{}
+3,write-q4,y1-math-write,reason,Mengapa angka 5 dan perkataan lima boleh dipadankan?,"[""Kerana kedua-duanya menunjukkan bilangan lima"", ""Kerana lima bermaksud empat"", ""Kerana angka tidak ada nilai""]",Kerana kedua-duanya menunjukkan bilangan lima,Kedua-duanya mewakili kuantiti yang sama.,False,{}
+4,combine-q1,y1-math-combine,choice,5 dan 3 membentuk nombor berapa?,"[""6"", ""7"", ""8"", ""9""]",8,Gabungan bermaksud jumlah kedua-dua kumpulan.,False,{}
+5,combine-q2,y1-math-combine,number,4 dan 2 membentuk nombor berapa?,[],6,Gabungan bermaksud jumlah kedua-dua kumpulan.,False,{}
+6,combine-q3,y1-math-combine,number,Mira ada 3 guli merah dan 4 guli biru. Jumlah gulinya?,[],7,Gabungan bermaksud jumlah kedua-dua kumpulan.,True,{}
+7,combine-q4,y1-math-combine,reason,Mengapa 6 boleh terdiri daripada 4 dan 2?,"[""Kerana 4 + 2 = 6"", ""Kerana 4 − 2 = 6"", ""Kerana kedua-duanya perlu sama""]",Kerana 4 + 2 = 6,Kedua-dua bahagian ditambah untuk membentuk jumlah.,False,{}
+8,sequence-q1,y1-math-sequence,choice,"2, 4, 6, ?","[""7"", ""8"", ""9"", ""10""]",8,Cari saiz langkah yang berulang.,False,{}
+9,sequence-q2,y1-math-sequence,number,"5, 10, 15, ?",[],20,Cari saiz langkah yang berulang.,False,{}
+10,sequence-q3,y1-math-sequence,number,"Ali naik tangga mengikut 10, 20, 30. Nombor seterusnya?",[],40,Cari saiz langkah yang berulang.,True,{}
+11,sequence-q4,y1-math-sequence,reason,Apa yang perlu kekal sama semasa kira lompat?,"[""Saiz langkah"", ""Warna nombor"", ""Bilangan huruf""]",Saiz langkah,Kiraan lompat mengikuti beza yang tetap.,False,{}
+12,place-q1,y1-math-place,choice,"Dalam 34, digit di tempat puluh ialah?","[""2"", ""3"", ""4"", ""5""]",3,Puluh menunjukkan kumpulan sepuluh.,False,{}
+13,place-q2,y1-math-place,number,Berapa sa dalam 52?,[],2,Puluh menunjukkan kumpulan sepuluh.,False,{}
+14,place-q3,y1-math-place,number,Kotak ada 4 ikatan sepuluh dan 6 batang. Berapa semuanya?,[],46,Puluh menunjukkan kumpulan sepuluh.,True,{}
+15,place-q4,y1-math-place,reason,Mengapa 42 tidak sama dengan 24?,"[""Digit puluh dan sa bertukar tempat"", ""Kedua-duanya ada dua digit"", ""Kedua-duanya genap""]",Digit puluh dan sa bertukar tempat,Kedudukan digit menentukan nilai.,False,{}
+16,estimate-q1,y1-math-estimate,choice,"Jika anggaran sekitar 20, manakah paling hampir?","[""8"", ""12"", ""19"", ""40""]",19,Gunakan kumpulan rujukan untuk membuat anggaran.,False,{}
+17,estimate-q2,y1-math-estimate,number,Anggaran 10 ditambah 2 lebih kurang berapa?,[],12,Gunakan kumpulan rujukan untuk membuat anggaran.,False,{}
+18,estimate-q3,y1-math-estimate,number,Dalam balang ada lebih kurang 30 guli dan dimasukkan 5 lagi. Anggaran jumlah?,[],35,Gunakan kumpulan rujukan untuk membuat anggaran.,True,{}
+19,estimate-q4,y1-math-estimate,reason,Apakah beza anggaran dan kiraan tepat?,"[""Anggaran ialah nilai hampir tepat"", ""Anggaran mesti sama tepat"", ""Anggaran sentiasa lebih besar""]",Anggaran ialah nilai hampir tepat,Anggaran membantu apabila mengira satu demi satu tidak praktikal.,False,{}
+20,round-q1,y1-math-round,choice,23 dibundarkan kepada puluh terdekat ialah?,"[""10"", ""20"", ""30"", ""40""]",20,Lihat jarak ke kedua-dua puluh berdekatan.,False,{}
+21,round-q2,y1-math-round,number,Nombor 68 dibundarkan kepada puluh terdekat?,[],70,Lihat jarak ke kedua-dua puluh berdekatan.,False,{}
+22,round-q3,y1-math-round,number,Harga anggaran bagi 44 buku dibundarkan ke puluh terdekat?,[],40,Lihat jarak ke kedua-dua puluh berdekatan.,True,{}
+23,round-q4,y1-math-round,reason,Mengapa 27 dibundarkan kepada 30?,"[""27 lebih dekat kepada 30"", ""27 lebih dekat kepada 20"", ""27 ialah 30 tepat""]",27 lebih dekat kepada 30,"Jarak 27 ke 30 ialah 3, ke 20 ialah 7.",False,{}
+24,patterns-q1,y1-math-patterns,choice,"1, 3, 5, ?","[""6"", ""7"", ""8"", ""9""]",7,Periksa beza nombor yang bersebelahan.,False,{}
+25,patterns-q2,y1-math-patterns,number,"10, 8, 6, ?",[],4,Periksa beza nombor yang bersebelahan.,False,{}
+26,patterns-q3,y1-math-patterns,number,"Susunan nombor tiket 20, 25, 30. Apakah tiket seterusnya?",[],35,Periksa beza nombor yang bersebelahan.,True,{}
+27,patterns-q4,y1-math-patterns,reason,Bagaimana menyambung pola nombor?,"[""Cari aturan perubahan"", ""Teka nombor paling besar"", ""Sentiasa tambah satu""]",Cari aturan perubahan,Setiap pola mempunyai aturan yang perlu diperiksa.,False,{}
+28,symbols-q1,y1-math-symbols,choice,"Dalam 4 + 2, apakah simbol operasi?","[""+"", ""−"", ""="", ""×""]",+,Simbol membantu kita menulis tindakan matematik.,False,{}
+29,symbols-q2,y1-math-symbols,number,8 − 3 = ?,[],5,Simbol membantu kita menulis tindakan matematik.,False,{}
+30,symbols-q3,y1-math-symbols,number,Amin ada 2 gula-gula lalu menerima 4 lagi. Berapa semuanya?,[],6,Simbol membantu kita menulis tindakan matematik.,True,{}
+31,symbols-q4,y1-math-symbols,reason,Apakah maksud tanda sama dengan (=)?,"[""Kedua-dua pihak bernilai sama"", ""Sentiasa perlu menambah"", ""Maksud nombor terbesar""]",Kedua-dua pihak bernilai sama,Tanda = menunjukkan kesamaan nilai.,False,{}
+32,add100-q1,y1-math-add100,choice,24 + 13 = ?,"[""35"", ""36"", ""37"", ""38""]",37,Asingkan nilai puluh dan sa.,False,{}
+33,add100-q2,y1-math-add100,number,32 + 25 = ?,[],57,Asingkan nilai puluh dan sa.,False,{}
+34,add100-q3,y1-math-add100,number,Bakul ada 21 oren dan ditambah 16 oren. Berapa jumlahnya?,[],37,Asingkan nilai puluh dan sa.,True,{}
+35,add100-q4,y1-math-add100,reason,Mengapa 20 + 10 = 30?,"[""Dua puluh tambah satu puluh jadi tiga puluh"", ""Tambah puluh jadi sa"", ""Kerana 2 + 1 = 21""]",Dua puluh tambah satu puluh jadi tiga puluh,Nilai tempat membantu penambahan.,False,{}
+36,sub100-q1,y1-math-sub100,choice,48 − 15 = ?,"[""23"", ""33"", ""43"", ""63""]",33,Semak dengan menambah baki dan jumlah yang dikeluarkan.,False,{}
+37,sub100-q2,y1-math-sub100,number,67 − 22 = ?,[],45,Semak dengan menambah baki dan jumlah yang dikeluarkan.,False,{}
+38,sub100-q3,y1-math-sub100,number,Kedai ada 59 buku dan menjual 24. Berapa baki?,[],35,Semak dengan menambah baki dan jumlah yang dikeluarkan.,True,{}
+39,sub100-q4,y1-math-sub100,reason,Mengapa hasil tolak boleh disemak dengan tambah?,"[""Baki + yang diambil = jumlah asal"", ""Tolak sentiasa tambah"", ""Bilangan asal tidak berubah""]",Baki + yang diambil = jumlah asal,Tambah ialah operasi songsang bagi tolak.,False,{}
+40,wordprob-q1,y1-math-wordprob,choice,"Mira ada 6 pen, dapat 3 lagi. Berapa?","[""3"", ""6"", ""9"", ""12""]",9,Pilih operasi daripada perubahan dalam cerita.,False,{}
+41,wordprob-q2,y1-math-wordprob,number,"Ada 15 belon, 4 pecah. Baki?",[],11,Pilih operasi daripada perubahan dalam cerita.,False,{}
+42,wordprob-q3,y1-math-wordprob,number,"Dalam bas ada 12 orang, 5 turun. Berapa tinggal?",[],7,Pilih operasi daripada perubahan dalam cerita.,True,{}
+43,wordprob-q4,y1-math-wordprob,reason,Bilakah operasi tambah digunakan?,"[""Apabila dua kumpulan digabung"", ""Apabila objek dibuang"", ""Apabila jumlah dicari dengan mengurang""]",Apabila dua kumpulan digabung,Tambah digunakan apabila kuantiti dikumpulkan.,False,{}
+44,half-q1,y1-math-half,choice,Satu bahagian daripada dua bahagian sama besar ialah?,"[""1/2"", ""1/3"", ""1/4"", ""2/4""]",1/2,Bahagian pecahan mesti sama besar.,False,{}
+45,half-q2,y1-math-half,number,2 separuh membentuk berapa benda penuh?,[],1,Bahagian pecahan mesti sama besar.,False,{}
+46,half-q3,y1-math-half,number,Kek dibahagi dua sama besar. Ana mendapat satu bahagian. Berapa bahagian Ana dapat?,[],1,Bahagian pecahan mesti sama besar.,True,{}
+47,half-q4,y1-math-half,reason,Mengapa dua potongan yang tidak sama besar bukan dua setengah?,"[""Setengah mesti dua bahagian sama besar"", ""Asalkan dipotong dua"", ""Setengah mesti tiga bahagian""]",Setengah mesti dua bahagian sama besar,Bahagian sama besar syarat utama bagi pecahan.,False,{}
+48,quarters-q1,y1-math-quarters,choice,Satu bahagian daripada empat sama besar ialah?,"[""1/2"", ""1/3"", ""1/4"", ""1/5""]",1/4,Penyebut menunjukkan berapa bahagian sama besar.,False,{}
+49,quarters-q2,y1-math-quarters,number,Empat suku menjadikan berapa benda penuh?,[],1,Penyebut menunjukkan berapa bahagian sama besar.,False,{}
+50,quarters-q3,y1-math-quarters,number,Piza dibahagi empat. Ali makan 3 keping. Berapa suku dimakan?,[],3,Penyebut menunjukkan berapa bahagian sama besar.,True,{}
+51,quarters-q4,y1-math-quarters,reason,Mengapa 3/4 lebih besar daripada 1/4 bagi objek sama?,"[""Tiga bahagian lebih banyak daripada satu"", ""Kerana penyebut berbeza"", ""Kerana tiga suku ialah penuh""]",Tiga bahagian lebih banyak daripada satu,Kita membandingkan bahagian yang sama besar.,False,{}
+52,fraction-life-q1,y1-math-fraction-life,choice,Sebiji kek dipotong 4 sama besar. Satu keping ialah?,"[""1/2"", ""1/3"", ""1/4"", ""1/5""]",1/4,Pecahan menunjukkan bahagian daripada satu keseluruhan.,False,{}
+53,fraction-life-q2,y1-math-fraction-life,number,Dua orang berkongsi satu roti sama banyak. Berapa bahagian dibuat?,[],2,Pecahan menunjukkan bahagian daripada satu keseluruhan.,False,{}
+54,fraction-life-q3,y1-math-fraction-life,number,Empat kawan kongsi satu kek sama banyak. Berapa bahagian perlu?,[],4,Pecahan menunjukkan bahagian daripada satu keseluruhan.,True,{}
+55,fraction-life-q4,y1-math-fraction-life,reason,Apakah syarat berkongsi sama rata?,"[""Setiap orang dapat bahagian sama besar"", ""Semua dapat bahagian berbeza"", ""Orang pertama dapat semua""]",Setiap orang dapat bahagian sama besar,Saiz bahagian penting untuk perkongsian adil.,False,{}
+56,coins-q1,y1-math-coins,choice,2 syiling 20 sen bernilai berapa sen?,"[""20"", ""30"", ""40"", ""50""]",40,Jumlahkan nilai setiap syiling.,False,{}
+57,coins-q2,y1-math-coins,number,20 sen + 10 sen = berapa sen?,[],30,Jumlahkan nilai setiap syiling.,False,{}
+58,coins-q3,y1-math-coins,number,Nina simpan 50 sen dan 20 sen. Jumlah sen?,[],70,Jumlahkan nilai setiap syiling.,True,{}
+59,coins-q4,y1-math-coins,reason,Mengapa dua syiling tidak semestinya bernilai sama?,"[""Setiap syiling mempunyai nilai tersendiri"", ""Semua syiling sama nilai"", ""Saiz sentiasa menentukan nilai""]",Setiap syiling mempunyai nilai tersendiri,Lihat denominasi yang tertera pada wang.,False,{}
+60,ringgit-q1,y1-math-ringgit,choice,100 sen bersamaan berapa ringgit?,"[""1"", ""2"", ""5"", ""10""]",1,100 sen bersamaan satu ringgit.,False,{}
+61,ringgit-q2,y1-math-ringgit,number,RM3 bersamaan berapa sen?,[],300,100 sen bersamaan satu ringgit.,False,{}
+62,ringgit-q3,y1-math-ringgit,number,Ibu memberi RM2 dan RM4. Berapa ringgit semuanya?,[],6,100 sen bersamaan satu ringgit.,True,{}
+63,ringgit-q4,y1-math-ringgit,reason,Mengapa RM1 sama dengan 100 sen?,"[""Kerana 100 sen ialah satu ringgit"", ""Kerana 10 sen ialah satu ringgit"", ""Kerana 1 sen ialah satu ringgit""]",Kerana 100 sen ialah satu ringgit,Unit mata wang boleh ditukar nilainya.,False,{}
+64,moneychange-q1,y1-math-moneychange,choice,"Bayar RM5, harga RM3. Baki RM?","[""1"", ""2"", ""3"", ""4""]",2,Baki bersama harga sepatutnya menjadi wang asal.,False,{}
+65,moneychange-q2,y1-math-moneychange,number,"Bayar RM10, harga RM7. Baki RM?",[],3,Baki bersama harga sepatutnya menjadi wang asal.,False,{}
+66,moneychange-q3,y1-math-moneychange,number,Siti bayar RM8 untuk barang RM5. Berapa baki?,[],3,Baki bersama harga sepatutnya menjadi wang asal.,True,{}
+67,moneychange-q4,y1-math-moneychange,reason,Mengapa baki dikira menggunakan tolak?,"[""Sebahagian wang telah digunakan untuk membayar"", ""Barang menambahkan wang"", ""Baki tidak berkait dengan harga""]",Sebahagian wang telah digunakan untuk membayar,Harga mengurangkan wang yang dimiliki.,False,{}
+68,daytimes-q1,y1-math-daytimes,choice,Waktu manakah biasanya selepas pagi?,"[""Malam"", ""Petang"", ""Semalam"", ""Esok""]",Petang,Susun peristiwa mengikut urutan masa.,False,{}
+69,daytimes-q2,y1-math-daytimes,number,Dalam satu hari ada berapa waktu pagi?,[],1,Susun peristiwa mengikut urutan masa.,False,{}
+70,daytimes-q3,y1-math-daytimes,number,Ali bangun pagi dan makan tengah hari selepas itu. Mana berlaku dahulu? Taip 1 untuk bangun pagi.,[],1,Susun peristiwa mengikut urutan masa.,True,{}
+71,daytimes-q4,y1-math-daytimes,reason,Mengapa aktiviti pagi berlaku sebelum petang?,"[""Kerana itulah urutan waktu dalam satu hari"", ""Kerana semua hari ialah malam"", ""Kerana waktu bergerak terbalik""]",Kerana itulah urutan waktu dalam satu hari,Urutan waktu boleh dilihat dalam rutin harian.,False,{}
+72,weekdays-q1,y1-math-weekdays,choice,Hari selepas Isnin ialah?,"[""Ahad"", ""Selasa"", ""Rabu"", ""Jumaat""]",Selasa,Gunakan urutan hari untuk mencari sebelum dan selepas.,False,{}
+73,weekdays-q2,y1-math-weekdays,number,Berapa hari dalam seminggu?,[],7,Gunakan urutan hari untuk mencari sebelum dan selepas.,False,{}
+74,weekdays-q3,y1-math-weekdays,number,"Jika hari ini Rabu, berapa hari lagi hingga Jumaat?",[],2,Gunakan urutan hari untuk mencari sebelum dan selepas.,True,{}
+75,weekdays-q4,y1-math-weekdays,reason,Mengapa hari dalam seminggu berulang?,"[""Selepas hari ketujuh, kitaran bermula semula"", ""Seminggu ada sepuluh hari"", ""Hari tidak mempunyai turutan""]","Selepas hari ketujuh, kitaran bermula semula",Nama hari membentuk kitaran tujuh hari.,False,{}
+76,months-q1,y1-math-months,choice,Bulan selepas Januari ialah?,"[""Mac"", ""April"", ""Februari"", ""Disember""]",Februari,Nama bulan mempunyai susunan yang tetap.,False,{}
+77,months-q2,y1-math-months,number,Berapa bulan dalam setahun?,[],12,Nama bulan mempunyai susunan yang tetap.,False,{}
+78,months-q3,y1-math-months,number,Mei ialah bulan kelima. Jun ialah bulan ke berapa?,[],6,Nama bulan mempunyai susunan yang tetap.,True,{}
+79,months-q4,y1-math-months,reason,Mengapa Disember ialah bulan terakhir setahun?,"[""Disember ialah bulan ke-12"", ""Disember ialah bulan pertama"", ""Setahun ada 11 bulan""]",Disember ialah bulan ke-12,Kalendar biasa membahagikan setahun kepada 12 bulan.,False,{}
+80,clock-q1,y1-math-clock,choice,Jam 3:00 ialah pukul?,"[""2"", ""3"", ""4"", ""5""]",3,"Pada waktu tepat, jarum minit berada pada nombor 12.",False,{}
+81,clock-q2,y1-math-clock,number,Pukul 7 tepat ditulis 7: berapa minit?,[],00,"Pada waktu tepat, jarum minit berada pada nombor 12.",False,{}
+82,clock-q3,y1-math-clock,number,Loceng sekolah berbunyi pukul 8 tepat. Tulis angka jam sahaja.,[],8,"Pada waktu tepat, jarum minit berada pada nombor 12.",True,{}
+83,clock-q4,y1-math-clock,reason,Mengapa 3:00 disebut pukul tiga tepat?,"[""Kerana minit ialah sifar"", ""Kerana jam hanya ada tiga nombor"", ""Kerana jarum minit pada 6""]",Kerana minit ialah sifar,Minit sifar menandakan permulaan jam.,False,{}
+84,length-q1,y1-math-length,choice,"Pensel A 6 klip, B 4 klip. Mana lebih panjang?","[""A"", ""B"", ""Sama"", ""Tiada""]",A,Banding selepas menggunakan unit pengukuran sama.,False,{}
+85,length-q2,y1-math-length,number,"Pita A 8 klip, B 5 klip. Beza panjang dalam klip?",[],3,Banding selepas menggunakan unit pengukuran sama.,False,{}
+86,length-q3,y1-math-length,number,"Rantai 9 blok, satu lagi 6 blok. Berapa blok lebih panjang?",[],3,Banding selepas menggunakan unit pengukuran sama.,True,{}
+87,length-q4,y1-math-length,reason,Mengapa klip perlu sama saiz untuk mengukur?,"[""Supaya perbandingan adil"", ""Supaya lebih cantik"", ""Supaya panjang sentiasa genap""]",Supaya perbandingan adil,Unit tak sama memberi ukuran tidak konsisten.,False,{}
+88,mass-q1,y1-math-mass,choice,"Antara 5 blok sama dan 2 blok sama, yang mana lebih berat?","[""2"", ""3"", ""5"", ""Sama""]",5,Banding unit yang sama untuk jisim.,False,{}
+89,mass-q2,y1-math-mass,number,"Beg A 8 unit, beg B 3 unit. Beza jisim?",[],5,Banding unit yang sama untuk jisim.,False,{}
+90,mass-q3,y1-math-mass,number,"Kotak A 7 unit, B 4 unit. Berapa unit lebih berat A?",[],3,Banding unit yang sama untuk jisim.,True,{}
+91,mass-q4,y1-math-mass,reason,Apa tanda objek lebih berat pada neraca biasa?,"[""Bahagiannya turun lebih rendah"", ""Bahagiannya sentiasa naik"", ""Kedua-duanya tidak bergerak""]",Bahagiannya turun lebih rendah,Neraca menunjukkan perbandingan jisim.,False,{}
+92,liquid-q1,y1-math-liquid,choice,"Bekas A muat 5 cawan, B 3 cawan. Yang lebih banyak?","[""A"", ""B"", ""Sama"", ""Tiada""]",A,Gunakan unit cawan sama saiz untuk membanding isi padu.,False,{}
+93,liquid-q2,y1-math-liquid,number,"Bekas ada 6 cawan air, digunakan 2. Baki?",[],4,Gunakan unit cawan sama saiz untuk membanding isi padu.,False,{}
+94,liquid-q3,y1-math-liquid,number,"Botol pertama isi 8 cawan, kedua 5. Beza?",[],3,Gunakan unit cawan sama saiz untuk membanding isi padu.,True,{}
+95,liquid-q4,y1-math-liquid,reason,Mengapa bentuk bekas sahaja tidak cukup untuk tentukan isi padu?,"[""Bekas berlainan bentuk boleh memegang isi padu berbeza"", ""Semua bekas sama isi padu"", ""Bekas tinggi sentiasa lebih besar""]",Bekas berlainan bentuk boleh memegang isi padu berbeza,Ukur dengan unit yang sama untuk lebih tepat.,False,{}
+96,shapes2d-q1,y1-math-shapes2d,choice,Bentuk yang ada tiga sisi lurus ialah?,"[""Segi tiga"", ""Bulatan"", ""Segi empat"", ""Bujur""]",Segi tiga,Kira sisi dan penjuru sebelum menamakan bentuk.,False,{}
+97,shapes2d-q2,y1-math-shapes2d,number,Segi empat sama ada berapa sisi?,[],4,Kira sisi dan penjuru sebelum menamakan bentuk.,False,{}
+98,shapes2d-q3,y1-math-shapes2d,number,Keping tanda berbentuk segi tiga ada berapa penjuru?,[],3,Kira sisi dan penjuru sebelum menamakan bentuk.,True,{}
+99,shapes2d-q4,y1-math-shapes2d,reason,Mengapa bulatan tidak mempunyai sisi lurus?,"[""Sempadannya melengkung"", ""Bulatan ada empat sisi"", ""Bulatan ada tiga bucu""]",Sempadannya melengkung,Bulatan mempunyai lengkung berterusan.,False,{}
+100,shapes3d-q1,y1-math-shapes3d,choice,Bola biasanya berbentuk apa?,"[""Kubus"", ""Silinder"", ""Sfera"", ""Kon""]",Sfera,Bentuk 3D boleh dilihat dari pelbagai arah.,False,{}
+101,shapes3d-q2,y1-math-shapes3d,number,Kubus mempunyai berapa permukaan rata?,[],6,Bentuk 3D boleh dilihat dari pelbagai arah.,False,{}
+102,shapes3d-q3,y1-math-shapes3d,number,Kotak dadu berbentuk kubus. Berapa bucu?,[],8,Bentuk 3D boleh dilihat dari pelbagai arah.,True,{}
+103,shapes3d-q4,y1-math-shapes3d,reason,Mengapa bola boleh bergolek?,"[""Permukaannya melengkung"", ""Mempunyai banyak bucu"", ""Mempunyai enam muka rata""]",Permukaannya melengkung,Permukaan bulat membantu objek bergolek.,False,{}
+104,shape-pattern-q1,y1-math-shape-pattern,choice,△ ○ △ ○ △ ... bentuk seterusnya?,"[""△"", ""○"", ""□"", ""☆""]",○,"Lihat unit berulang, bukan teka secara rawak.",False,{}
+105,shape-pattern-q2,y1-math-shape-pattern,number,Ada corak dua bentuk diulang tiga kali. Berapa bentuk semuanya?,[],6,"Lihat unit berulang, bukan teka secara rawak.",False,{}
+106,shape-pattern-q3,y1-math-shape-pattern,number,Corak □ ○ diulang empat kali. Berapa bulatan?,[],4,"Lihat unit berulang, bukan teka secara rawak.",True,{}
+107,shape-pattern-q4,y1-math-shape-pattern,reason,Apa maksud pola bentuk?,"[""Susunan bentuk mengikut aturan"", ""Bentuk sentiasa berlainan"", ""Semua bentuk mesti bulat""]",Susunan bentuk mengikut aturan,Pola dibentuk oleh pengulangan atau aturan.,False,{}
+108,collect-q1,y1-math-collect,choice,"3 memilih epal, 2 memilih pisang. Berapa murid ditanya?","[""3"", ""4"", ""5"", ""6""]",5,Jumlahkan semua respons yang dikumpul.,False,{}
+109,collect-q2,y1-math-collect,number,4 murid pilih bola dan 3 pilih guli. Jumlah murid?,[],7,Jumlahkan semua respons yang dikumpul.,False,{}
+110,collect-q3,y1-math-collect,number,"Dalam kelas 6 suka kucing, 2 suka ikan. Berapa jawapan dikumpul?",[],8,Jumlahkan semua respons yang dikumpul.,True,{}
+111,collect-q4,y1-math-collect,reason,Mengapa kita perlu catat jawapan dengan teratur?,"[""Supaya data boleh dikira dengan tepat"", ""Supaya bilangan boleh diteka"", ""Supaya jawapan hilang""]",Supaya data boleh dikira dengan tepat,Data tersusun membantu membuat kesimpulan.,False,{}
+112,pictograph-q1,y1-math-pictograph,choice,"Jika 1 gambar = 1 murid, 4 gambar mewakili berapa?","[""2"", ""3"", ""4"", ""5""]",4,Semak petunjuk sebelum mengira gambar.,False,{}
+113,pictograph-q2,y1-math-pictograph,number,Baris epal ada 6 gambar dan pisang 4. Beza?,[],2,Semak petunjuk sebelum mengira gambar.,False,{}
+114,pictograph-q3,y1-math-pictograph,number,Piktograf tunjuk 5 kereta dan 3 bas. Jumlah?,[],8,Semak petunjuk sebelum mengira gambar.,True,{}
+115,pictograph-q4,y1-math-pictograph,reason,Mengapa petunjuk piktograf penting?,"[""Petunjuk menerangkan nilai setiap gambar"", ""Semua gambar mesti bernilai sepuluh"", ""Gambar sahaja sudah memberikan nama sekolah""]",Petunjuk menerangkan nilai setiap gambar,Setiap simbol boleh mewakili satu atau beberapa unit.,False,{}
