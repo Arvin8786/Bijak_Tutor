@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {initialSkill,recordAttempt,evaluateSkill} from '../src/mastery.js';
+test('guesses do not unlock a topic',()=>{let s=initialSkill();for(let i=0;i<8;i++)s=recordAttempt(s,{correct:true,mode:'choice',hints:0,transfer:false});assert.equal(evaluateSkill(s).mastered,false)});
+test('hinted responses do not establish independent mastery',()=>{let s=initialSkill();for(let i=0;i<6;i++)s=recordAttempt(s,{correct:true,mode:i%2?'number':'reason',hints:1,transfer:true});assert.equal(evaluateSkill(s).mastered,false)});
+test('varied independent stable responses establish mastery',()=>{let s=initialSkill();for(const mode of ['number','reason','number'])s=recordAttempt(s,{correct:true,mode,hints:0,transfer:true});assert.equal(evaluateSkill(s).mastered,true)});
+test('a recent error revokes mastery',()=>{let s=initialSkill();for(const mode of ['number','reason','number'])s=recordAttempt(s,{correct:true,mode,hints:0,transfer:true});s=recordAttempt(s,{correct:false,mode:'number',hints:0});assert.equal(evaluateSkill(s).mastered,false)});

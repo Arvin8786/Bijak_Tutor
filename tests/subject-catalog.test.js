@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {availableSubjects,PRIMARY_SUBJECT_CATALOG,lessonCountForSubject} from '../src/primarySubjects.js';
+test('catalog contains required foundational subjects',()=>{const x=availableSubjects('SK',1).map(s=>s.name); for(const n of ['Matematik','Bahasa Melayu','Bahasa Inggeris','Sains','Pendidikan Islam','Pendidikan Moral'])assert.ok(x.includes(n));});
+test('language and school streams do not cross',()=>{assert.ok(availableSubjects('SJKC',1).some(s=>s.name==='Bahasa Cina'));assert.ok(!availableSubjects('SJKT',1).some(s=>s.name==='Bahasa Cina'));assert.ok(availableSubjects('SJKT',1).some(s=>s.name==='Bahasa Tamil'));});
+test('higher primary adds history and RBT',()=>{assert.ok(!availableSubjects('SK',1).some(s=>s.name==='Sejarah'));assert.ok(availableSubjects('SK',4).some(s=>s.name==='Sejarah'));assert.ok(availableSubjects('SK',6).some(s=>s.name==='Reka Bentuk dan Teknologi'));});
+test('optional SK language offerings require opt-in flag',()=>{assert.ok(!availableSubjects('SK',1).some(s=>s.name==='Bahasa Iban'));assert.ok(availableSubjects('SK',1,{includeOptional:true}).some(s=>s.name==='Bahasa Iban'));});
+test('all years/streams have a baseline catalog',()=>{for(const s of ['SK','SJKC','SJKT'])for(let y=1;y<=6;y++)assert.ok(availableSubjects(s,y).length>=8)});
+test('catalog cannot masquerade as reviewed full content',()=>assert.ok(PRIMARY_SUBJECT_CATALOG.every(x=>x.contentStatus==='CATALOG_ONLY')));
+test('lesson counting uses current year not adjacent grade',()=>assert.equal(lessonCountForSubject([{subject:'Matematik',year:1},{subject:'Matematik',year:2}], 'Matematik',2),1));
