@@ -16,7 +16,8 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   // Any future API or account data must always reach the server.
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/') || url.pathname.startsWith('/private/')) return;
+  const pathWithinApp = url.pathname.startsWith(BASE) ? '/' + url.pathname.slice(BASE.length) : url.pathname;
+  if (pathWithinApp.startsWith('/api/') || pathWithinApp.startsWith('/auth/') || pathWithinApp.startsWith('/private/')) return;
   if (req.mode === 'navigate') {
     event.respondWith(fetch(req).catch(async () => (await caches.match(BASE + 'index.html')) || Response.error()));
     return;
