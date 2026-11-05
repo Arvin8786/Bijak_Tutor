@@ -1,1 +1,28 @@
-const CACHE='bijaklearn-shell-v1';self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(['/','/index.html','/manifest.webmanifest'])));self.skipWaiting()});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim()});self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==location.origin||u.pathname.startsWith('/api/'))return;e.respondWith(fetch(e.request).then(r=>{if(r.ok){const copy=r.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}return r}).catch(()=>caches.match(e.request)))})
+/* BijakLearn Junior PWA — static assets only. Do NOT cache student data, tokens, Sheets calls or third-party requests. */
+const VERSION = 'bijaklearn-static-v4';
+const CORE = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png'];
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(CORE)));
+  self.skipWaiting();
+});
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('bijaklearn-static-') && k !== VERSION).map(k => caches.delete(k))));
+  self.clients.claim();
+});
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+  // Any future API or account data must always reach the server.
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/') || url.pathname.startsWith('/private/')) return;
+  if (req.mode === 'navigate') {
+    event.respondWith(fetch(req).catch(async () => (await caches.match('/index.html')) || Response.error()));
+    return;
+  }
+  if (!(/\.(?:js|css|png|jpg|jpeg|svg|webp|woff2?|webmanifest)$/.test(url.pathname))) return;
+  event.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
+    if (res.ok && res.type === 'basic') { const clone=res.clone(); caches.open(VERSION).then(c=>c.put(req,clone)); }
+    return res;
+  })));
+});
