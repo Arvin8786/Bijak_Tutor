@@ -1,10 +1,16 @@
 {
-  "name": "BijakLearn Junior",
+  "id": "/",
+  "name": "BijakLearn Junior — Primary Learning",
   "short_name": "BijakLearn",
-  "start_url": "/",
+  "description": "Visual primary-school learning, interactive quizzes and progress tracking.",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#fff8ec",
-  "theme_color": "#4171d8",
-  "icons": []
+  "background_color": "#fffaf0",
+  "theme_color": "#347ad7",
+  "lang": "ms",
+  "icons": [
+    {"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
 }
