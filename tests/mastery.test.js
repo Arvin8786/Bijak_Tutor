@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {evaluateMastery} from '../src/mastery.js';
+test('one lucky choice never grants mastery',()=>assert.equal(evaluateMastery([{questionId:'1',kind:'choice',correct:true,independent:true}]).mastered,false));
+test('hinted work does not prove independent mastery',()=>assert.equal(evaluateMastery([{questionId:'1',kind:'choice',correct:true,independent:true,hintUsed:true}]).mastered,false));
+test('varied independent evidence grants mastery',()=>assert.equal(evaluateMastery([{questionId:'1',kind:'choice',correct:true,independent:true},{questionId:'2',kind:'reasoning',correct:true,independent:true},{questionId:'3',kind:'transfer',correct:true,independent:true},{questionId:'4',kind:'reasoning',correct:true,independent:true}]).mastered,true));
+test('latest wrong answer blocks mastery',()=>assert.equal(evaluateMastery([{questionId:'1',kind:'choice',correct:true,independent:true},{questionId:'2',kind:'reasoning',correct:true,independent:true},{questionId:'3',kind:'transfer',correct:true,independent:true},{questionId:'4',kind:'reasoning',correct:false,independent:true}]).mastered,false));
