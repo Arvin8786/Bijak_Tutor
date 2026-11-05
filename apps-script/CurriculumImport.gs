@@ -4,9 +4,9 @@
  * generated release/CurriculumData.gs from npm run build.
  * It does NOT mark any lesson teacher-approved.
  */
-function importFullJuniorCurriculum(){
+function importFullJuniorCurriculum_(){
   if(typeof BIJAK_CURRICULUM_BUNDLE==='undefined')throw Error('Missing CurriculumData.gs from release build');
-  initializeDatabase();
+  initializeDatabase_();
   const lock=LockService.getScriptLock();lock.waitLock(30000);
   try{
     const data=BIJAK_CURRICULUM_BUNDLE;
