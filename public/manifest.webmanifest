@@ -1,0 +1,10 @@
+{
+  "name": "BijakLearn Junior",
+  "short_name": "BijakLearn",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fff8ec",
+  "theme_color": "#4171d8",
+  "icons": []
+}
