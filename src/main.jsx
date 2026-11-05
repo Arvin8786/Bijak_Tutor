@@ -35,7 +35,7 @@ function PwaControls(){
   window.addEventListener('beforeinstallprompt',onInstall);
   window.addEventListener('appinstalled',onInstalled);
   if(!isLive && 'serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
-   navigator.serviceWorker.register('/sw.js').catch(err=>console.warn('PWA offline cache unavailable:',err));
+   navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(err=>console.warn('PWA offline cache unavailable:',err));
   }
   return ()=>{window.removeEventListener('online',onOnline);window.removeEventListener('offline',onOffline);window.removeEventListener('beforeinstallprompt',onInstall);window.removeEventListener('appinstalled',onInstalled)};
  },[]);
