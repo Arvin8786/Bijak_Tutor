@@ -487,10 +487,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-islam-6-1",
-    "year": 6,
+    "id": "jr-islam-5-2",
+    "year": 5,
     "subject": "Pendidikan Islam",
-    "chapter": "Unit 1 · Sejarah Rasulullah",
+    "chapter": "Unit 2 · Sejarah Rasulullah",
     "title": "Sejarah Rasulullah",
     "icon": "🌙",
     "summary": "Nabi Muhammad SAW ialah rasul terakhir dalam Islam dan baginda lahir di Makkah.",
@@ -525,7 +525,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-islam-6-1-q1",
+        "id": "jr-islam-5-2-q1",
         "mode": "choice",
         "text": "Di manakah Nabi Muhammad SAW dilahirkan?",
         "options": [
@@ -541,8 +541,8 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-islam-7-1",
-    "year": 7,
+    "id": "jr-islam-6-1",
+    "year": 6,
     "subject": "Pendidikan Islam",
     "chapter": "Unit 1 · Adab menggunakan teknologi",
     "title": "Adab menggunakan teknologi",
@@ -579,7 +579,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-islam-7-1-q1",
+        "id": "jr-islam-6-1-q1",
         "mode": "choice",
         "text": "Apakah amalan yang baik sebelum berkongsi berita?",
         "options": [
@@ -595,10 +595,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-islam-8-1",
-    "year": 8,
+    "id": "jr-islam-6-2",
+    "year": 6,
     "subject": "Pendidikan Islam",
-    "chapter": "Unit 1 · Ihsan dalam kehidupan",
+    "chapter": "Unit 2 · Ihsan dalam kehidupan",
     "title": "Ihsan dalam kehidupan",
     "icon": "🌙",
     "summary": "Ihsan menggalakkan melakukan kebaikan dengan ikhlas dan bersungguh-sungguh.",
@@ -633,7 +633,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-islam-8-1-q1",
+        "id": "jr-islam-6-2-q1",
         "mode": "choice",
         "text": "Tindakan manakah menunjukkan keikhlasan?",
         "options": [
@@ -1243,10 +1243,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-moral-7-1",
-    "year": 7,
+    "id": "jr-moral-6-2",
+    "year": 6,
     "subject": "Pendidikan Moral",
-    "chapter": "Unit 1 · Tanggungjawab digital",
+    "chapter": "Unit 2 · Tanggungjawab digital",
     "title": "Tanggungjawab digital",
     "icon": "🤝",
     "summary": "Kita perlu menjaga privasi dan menghormati orang dalam talian.",
@@ -1281,7 +1281,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-moral-7-1-q1",
+        "id": "jr-moral-6-2-q1",
         "mode": "choice",
         "text": "Sebelum berkongsi gambar rakan, kita patut?",
         "options": [
@@ -1783,10 +1783,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-pjpk-6-1",
-    "year": 6,
+    "id": "jr-pjpk-5-2",
+    "year": 5,
     "subject": "Pendidikan Jasmani dan Pendidikan Kesihatan",
-    "chapter": "Unit 1 · Keselamatan air",
+    "chapter": "Unit 2 · Keselamatan air",
     "title": "Keselamatan air",
     "icon": "🏃",
     "summary": "Berada berhampiran air memerlukan pengawasan dan langkah keselamatan.",
@@ -1821,7 +1821,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-pjpk-6-1-q1",
+        "id": "jr-pjpk-5-2-q1",
         "mode": "choice",
         "text": "Apakah peraturan keselamatan air?",
         "options": [
@@ -1837,8 +1837,8 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-pjpk-7-1",
-    "year": 7,
+    "id": "jr-pjpk-6-1",
+    "year": 6,
     "subject": "Pendidikan Jasmani dan Pendidikan Kesihatan",
     "chapter": "Unit 1 · Gaya hidup aktif",
     "title": "Gaya hidup aktif",
@@ -1875,7 +1875,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-pjpk-7-1-q1",
+        "id": "jr-pjpk-6-1-q1",
         "mode": "choice",
         "text": "Yang manakah amalan hidup aktif?",
         "options": [
@@ -1891,10 +1891,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-pjpk-8-1",
-    "year": 8,
+    "id": "jr-pjpk-6-2",
+    "year": 6,
     "subject": "Pendidikan Jasmani dan Pendidikan Kesihatan",
-    "chapter": "Unit 1 · Pencegahan kecederaan",
+    "chapter": "Unit 2 · Pencegahan kecederaan",
     "title": "Pencegahan kecederaan",
     "icon": "🏃",
     "summary": "Peralatan, teknik dan rehat yang sesuai mengurangkan risiko kecederaan.",
@@ -1929,7 +1929,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-pjpk-8-1-q1",
+        "id": "jr-pjpk-6-2-q1",
         "mode": "choice",
         "text": "Apakah yang perlu dipakai semasa berbasikal?",
         "options": [
@@ -2431,10 +2431,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-psv-6-1",
-    "year": 6,
+    "id": "jr-psv-5-2",
+    "year": 5,
     "subject": "Pendidikan Seni Visual",
-    "chapter": "Unit 1 · Cetakan",
+    "chapter": "Unit 2 · Cetakan",
     "title": "Cetakan",
     "icon": "🎨",
     "summary": "Cetakan memindahkan corak daripada permukaan ke bahan lain.",
@@ -2469,7 +2469,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-psv-6-1-q1",
+        "id": "jr-psv-5-2-q1",
         "mode": "choice",
         "text": "Apakah contoh aktiviti cetakan?",
         "options": [
@@ -2485,8 +2485,8 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-psv-7-1",
-    "year": 7,
+    "id": "jr-psv-6-1",
+    "year": 6,
     "subject": "Pendidikan Seni Visual",
     "chapter": "Unit 1 · Apresiasi seni",
     "title": "Apresiasi seni",
@@ -2523,7 +2523,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-psv-7-1-q1",
+        "id": "jr-psv-6-1-q1",
         "mode": "choice",
         "text": "Maklum balas yang sesuai tentang karya rakan ialah?",
         "options": [
@@ -2539,10 +2539,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-psv-8-1",
-    "year": 8,
+    "id": "jr-psv-6-2",
+    "year": 6,
     "subject": "Pendidikan Seni Visual",
-    "chapter": "Unit 1 · Rekaan lestari",
+    "chapter": "Unit 2 · Rekaan lestari",
     "title": "Rekaan lestari",
     "icon": "🎨",
     "summary": "Bahan terpakai boleh diubah menjadi karya baharu secara selamat.",
@@ -2577,7 +2577,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-psv-8-1-q1",
+        "id": "jr-psv-6-2-q1",
         "mode": "choice",
         "text": "Bahan manakah sesuai untuk projek seni guna semula?",
         "options": [
@@ -2863,10 +2863,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-music-4-1",
-    "year": 4,
+    "id": "jr-music-3-2",
+    "year": 3,
     "subject": "Pendidikan Muzik",
-    "chapter": "Unit 1 · Alat perkusi",
+    "chapter": "Unit 2 · Alat perkusi",
     "title": "Alat perkusi",
     "icon": "🎵",
     "summary": "Alat perkusi menghasilkan bunyi apabila dipukul, digoncang atau diketuk.",
@@ -2901,7 +2901,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-music-4-1-q1",
+        "id": "jr-music-3-2-q1",
         "mode": "choice",
         "text": "Yang manakah alat perkusi?",
         "options": [
@@ -2917,8 +2917,8 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-music-5-1",
-    "year": 5,
+    "id": "jr-music-4-1",
+    "year": 4,
     "subject": "Pendidikan Muzik",
     "chapter": "Unit 1 · Melodi",
     "title": "Melodi",
@@ -2955,7 +2955,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-music-5-1-q1",
+        "id": "jr-music-4-1-q1",
         "mode": "choice",
         "text": "Melodi terbentuk daripada?",
         "options": [
@@ -2971,10 +2971,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-music-6-1",
-    "year": 6,
+    "id": "jr-music-4-2",
+    "year": 4,
     "subject": "Pendidikan Muzik",
-    "chapter": "Unit 1 · Bentuk muzik",
+    "chapter": "Unit 2 · Bentuk muzik",
     "title": "Bentuk muzik",
     "icon": "🎵",
     "summary": "Bentuk muzik ialah susunan bahagian-bahagian dalam sesuatu karya.",
@@ -3009,7 +3009,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-music-6-1-q1",
+        "id": "jr-music-4-2-q1",
         "mode": "choice",
         "text": "Apakah corak bagi A-B-A?",
         "options": [
@@ -3025,8 +3025,8 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-music-7-1",
-    "year": 7,
+    "id": "jr-music-5-1",
+    "year": 5,
     "subject": "Pendidikan Muzik",
     "chapter": "Unit 1 · Harmoni asas",
     "title": "Harmoni asas",
@@ -3063,7 +3063,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-music-7-1-q1",
+        "id": "jr-music-5-1-q1",
         "mode": "choice",
         "text": "Harmoni melibatkan?",
         "options": [
@@ -3079,10 +3079,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-music-8-1",
-    "year": 8,
+    "id": "jr-music-5-2",
+    "year": 5,
     "subject": "Pendidikan Muzik",
-    "chapter": "Unit 1 · Notasi asas",
+    "chapter": "Unit 2 · Notasi asas",
     "title": "Notasi asas",
     "icon": "🎵",
     "summary": "Notasi membantu mencatat pic dan irama muzik.",
@@ -3117,7 +3117,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-music-8-1-q1",
+        "id": "jr-music-5-2-q1",
         "mode": "choice",
         "text": "Apakah kegunaan notasi?",
         "options": [
@@ -3133,8 +3133,8 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-music-9-1",
-    "year": 9,
+    "id": "jr-music-6-1",
+    "year": 6,
     "subject": "Pendidikan Muzik",
     "chapter": "Unit 1 · Muzik tradisional",
     "title": "Muzik tradisional",
@@ -3171,7 +3171,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-music-9-1-q1",
+        "id": "jr-music-6-1-q1",
         "mode": "choice",
         "text": "Yang manakah alat muzik tradisional?",
         "options": [
@@ -3187,10 +3187,10 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     "premium": false
   },
   {
-    "id": "jr-music-10-1",
-    "year": 10,
+    "id": "jr-music-6-2",
+    "year": 6,
     "subject": "Pendidikan Muzik",
-    "chapter": "Unit 1 · Persembahan berkumpulan",
+    "chapter": "Unit 2 · Persembahan berkumpulan",
     "title": "Persembahan berkumpulan",
     "icon": "🎵",
     "summary": "Persembahan muzik berkumpulan memerlukan kerjasama, mendengar dan menjaga tempo.",
@@ -3225,7 +3225,7 @@ export const JUNIOR_ENRICHMENT_LESSONS = [
     ],
     "check": [
       {
-        "id": "jr-music-10-1-q1",
+        "id": "jr-music-6-2-q1",
         "mode": "choice",
         "text": "Apakah penting dalam persembahan berkumpulan?",
         "options": [
