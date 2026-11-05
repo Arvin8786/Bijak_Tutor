@@ -1,0 +1,23 @@
+<PARSED TEXT FOR SHEET: 1 / 1 TABS
+TAB NAME: content__Subjects.csv>
+index,subjectId,subjectName,stream,stage,group,contentStatus,sourceUrl
+0,bm,Bahasa Melayu,all,all,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+1,en,Bahasa Inggeris,all,all,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+2,math,Matematik,all,all,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+3,science,Sains,all,all,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+4,islam,Pendidikan Islam,all,all,religion,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+5,moral,Pendidikan Moral,all,all,religion,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+6,pjpk,Pendidikan Jasmani dan Pendidikan Kesihatan,all,all,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+7,arts1,Pendidikan Kesenian,all,lower,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+8,psv,Pendidikan Seni Visual,all,upper,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+9,music,Pendidikan Muzik,all,upper,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+10,history,Sejarah,all,upper,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+11,rbt,Reka Bentuk dan Teknologi,all,upper,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+12,chinese,Bahasa Cina,SJKC,all,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+13,tamil,Bahasa Tamil,SJKT,all,core,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+14,arabic,Bahasa Arab,SK,all,optional,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+15,chinese-sk,Bahasa Cina SK,SK,all,optional,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+16,tamil-sk,Bahasa Tamil SK,SK,all,optional,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+17,iban,Bahasa Iban,SK,all,optional,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+18,kadazandusun,Bahasa Kadazandusun,SK,all,optional,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
+19,semai,Bahasa Semai,SK,all,optional,CATALOG_ONLY,https://www.malaysia.gov.my/my/topics/sekolah-kebangsaan
