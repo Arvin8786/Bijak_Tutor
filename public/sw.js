@@ -1,6 +1,7 @@
 /* BijakLearn Junior PWA — static assets only. Do NOT cache student data, tokens, Sheets calls or third-party requests. */
-const VERSION = 'bijaklearn-static-v5';
-const CORE = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon.svg'];
+const VERSION = 'bijaklearn-static-v6';
+const BASE = new URL(self.registration.scope).pathname;
+const CORE = [BASE, BASE + 'index.html', BASE + 'manifest.webmanifest', BASE + 'icons/icon.svg'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(CORE)));
   self.skipWaiting();
@@ -15,9 +16,10 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   // Any future API or account data must always reach the server.
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/') || url.pathname.startsWith('/private/')) return;
+  const pathWithinApp = url.pathname.startsWith(BASE) ? '/' + url.pathname.slice(BASE.length) : url.pathname;
+  if (pathWithinApp.startsWith('/api/') || pathWithinApp.startsWith('/auth/') || pathWithinApp.startsWith('/private/')) return;
   if (req.mode === 'navigate') {
-    event.respondWith(fetch(req).catch(async () => (await caches.match('/index.html')) || Response.error()));
+    event.respondWith(fetch(req).catch(async () => (await caches.match(BASE + 'index.html')) || Response.error()));
     return;
   }
   if (!(/\.(?:js|css|png|jpg|jpeg|svg|webp|woff2?|webmanifest)$/.test(url.pathname))) return;

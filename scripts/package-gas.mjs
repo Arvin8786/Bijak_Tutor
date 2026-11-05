@@ -1,6 +1,6 @@
 import fs from 'node:fs';import path from 'node:path';
 const dir='dist';const html=fs.readFileSync(path.join(dir,'index.html'),'utf8');
-const jsPath=html.match(/src="\/(assets\/[^\"]+\.js)"/)?.[1];const cssPath=html.match(/href="\/(assets\/[^\"]+\.css)"/)?.[1];
+const jsPath=html.match(/src="(?:\.\/|\/)?(assets\/[^"]+\.js)"/)?.[1];const cssPath=html.match(/href="(?:\.\/|\/)?(assets\/[^"]+\.css)"/)?.[1];
 if(!jsPath) throw new Error('JS asset not found');
 const js=fs.readFileSync(path.join(dir,jsPath),'utf8').replace(/<\/script/gi,'<\\/script');
 const css=cssPath?fs.readFileSync(path.join(dir,cssPath),'utf8'):'';
