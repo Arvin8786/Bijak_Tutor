@@ -119,7 +119,7 @@ try{
       ['Picture Puzzle','.extra-jigsaw'],['Make & Create','.extra-craft-steps']
     ];
     for(const [name,selector] of extraActivities){
-      await page.locator('.arcade-modes').getByRole('button',{name:new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g,'\\    await page.locator('nav.nav').getByRole('button',{name:'Word Tiles versus Bot'}).click();'),'i')}).click();
+      await page.locator('.arcade-modes').getByRole('button',{name:new RegExp(name,'i')}).click();
       assert.ok(await page.locator(selector).isVisible(),'Activity unavailable: '+name);
       await page.getByRole('button',{name:/Next activity/i}).click();
       assert.match(await page.locator('.arcade-meta').textContent(),/Activity 2/);
