@@ -1,35 +1,77 @@
 import React,{useCallback,useEffect,useRef,useState} from 'react';
 import {ALPHABET,EARLY_WORDS,BM_SYLLABLES,getLetterTask} from './preschoolData.js';
+import {assessTrace,approximateGuideHits} from './drawingFeedback.js';
 
 const SHAPES=[['Bulatan','●'],['Segi empat','■'],['Segi tiga','▲'],['Bintang','★']];
 const COLORS=[['Merah','#ef5475'],['Biru','#5684e9'],['Kuning','#ffca54'],['Hijau','#50c49b'],['Ungu','#ac7bef'],['Oren','#ff9b50']];
 const MODES=[['letters','🔤','ABC explorer'],['trace','✏️','Trace & draw'],['match','🅰️','Capital & small'],['spell','🧩','Build a word'],['bm','📚','Suku kata'],['numbers','🔢','Numbers 1–20'],['colors','🎨','Colours & shapes']];
 function speak(text,lang='en-US'){if(typeof window==='undefined'||!window.speechSynthesis)return;window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.lang=lang;utterance.rate=.8;window.speechSynthesis.speak(utterance)}
-export function DrawingPad({letter,lower=false}) {
- const canvas=useRef(null),drawing=useRef(false),last=useRef(null);
- const [strokes,setStrokes]=useState(0),[guide,setGuide]=useState(true);
- const paint=useCallback((event)=>{
-   const el=canvas.current;if(!el)return;
-   const rect=el.getBoundingClientRect();
-   const x=(event.clientX-rect.left)*el.width/rect.width, y=(event.clientY-rect.top)*el.height/rect.height;
-   const ctx=el.getContext('2d');
-   if(!drawing.current)return;
+export function DrawingPad({letter,lower=false,freeDraw=false}) {
+ const canvas=useRef(null),guideEl=useRef(null),drawing=useRef(false),last=useRef(null);
+ const lines=useRef([]),activeLine=useRef(null),mask=useRef(null);
+ const [strokes,setStrokes]=useState(0),[guide,setGuide]=useState(!freeDraw),[feedback,setFeedback]=useState(null);
+ const current=freeDraw?'':lower?String(letter).toLowerCase():String(letter);
+ const point=e=>{
+   const el=canvas.current,rect=el.getBoundingClientRect();
+   return {x:Math.max(0,Math.min(el.width,(e.clientX-rect.left)*el.width/rect.width)),y:Math.max(0,Math.min(el.height,(e.clientY-rect.top)*el.height/rect.height))};
+ };
+ const paint=useCallback(event=>{
+   if(!drawing.current||!canvas.current)return;
+   const p=point(event),ctx=canvas.current.getContext('2d');
+   if(last.current&&Math.hypot(p.x-last.current.x,p.y-last.current.y)<1)return;
    ctx.strokeStyle='#3c69d4';ctx.lineWidth=12;ctx.lineCap='round';ctx.lineJoin='round';
-   ctx.beginPath();
-   if(last.current)ctx.moveTo(last.current.x,last.current.y);else ctx.moveTo(x,y);
-   ctx.lineTo(x,y);ctx.stroke();last.current={x,y};
+   ctx.beginPath();if(last.current)ctx.moveTo(last.current.x,last.current.y);else ctx.moveTo(p.x-.1,p.y);
+   ctx.lineTo(p.x,p.y);ctx.stroke();
+   activeLine.current?.push(p);last.current=p;
  },[]);
- const start=e=>{if(e.pointerType==='mouse'&&e.button!==0)return;drawing.current=true;last.current=null;e.currentTarget.setPointerCapture?.(e.pointerId);paint(e);setStrokes(n=>n+1)};
- const end=()=>{drawing.current=false;last.current=null};
- const reset=()=>{canvas.current?.getContext('2d')?.clearRect(0,0,500,300);setStrokes(0)};
- useEffect(()=>{reset()},[letter,lower]);
+ const start=e=>{
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  drawing.current=true;last.current=null;const line=[];activeLine.current=line;lines.current.push(line);
+  setFeedback(null);e.currentTarget.setPointerCapture?.(e.pointerId);paint(e);setStrokes(n=>n+1);
+ };
+ const end=()=>{drawing.current=false;activeLine.current=null;last.current=null};
+ const reset=()=>{
+  drawing.current=false;last.current=null;activeLine.current=null;lines.current=[];
+  canvas.current?.getContext('2d')?.clearRect(0,0,500,300);
+  setStrokes(0);setFeedback(null);
+ };
+ useEffect(()=>{reset();setGuide(!freeDraw)},[letter,lower,freeDraw]);
+ const review=()=>{
+  const el=canvas.current,g=guideEl.current;
+  if(!el)return;
+  if(!lines.current.length){setFeedback(assessTrace([],{}));return}
+  let proximity=null;
+  if(g){
+   try{
+    const off=document.createElement('canvas');off.width=el.width;off.height=el.height;
+    const ctx=off.getContext('2d',{willReadFrequently:true}),rect=g.getBoundingClientRect(),style=window.getComputedStyle(g);
+    const sx=el.width/Math.max(1,rect.width),sy=el.height/Math.max(1,rect.height);
+    ctx.save();ctx.scale(sx,sy);ctx.font=style.font||'900 230px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#000';
+    ctx.fillText(current,rect.width/2,rect.height/2+4);ctx.restore();
+    const pixels=ctx.getImageData(0,0,off.width,off.height).data;
+    proximity=approximateGuideHits(lines.current,pixels,off.width,off.height);
+   }catch{/* A limited browser canvas must not block drawing feedback. */}
+  }
+  setFeedback(assessTrace(lines.current,{width:el.width,height:el.height,guideHits:proximity?.hits??null,guidePoints:proximity?.total??null}));
+ };
  return <div className="trace-studio">
   <div className="trace-canvas-wrap">
-   {guide&&<div aria-hidden="true" className="tracing-guide">{lower?letter.toLowerCase():letter}</div>}
-   <canvas ref={canvas} width={500} height={300} onPointerDown={start} onPointerMove={paint} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={end} className="trace-canvas" aria-label={`Draw the ${lower?'small':'capital'} letter ${letter} with your finger or mouse`} role="img"/>
+   {guide&&!freeDraw&&<div ref={guideEl} aria-hidden="true" className="tracing-guide">{current}</div>}
+   <canvas ref={canvas} width={500} height={300} onPointerDown={start} onPointerMove={paint} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={end} className="trace-canvas" aria-label={freeDraw?'Freehand sketch pad: draw with your finger or mouse':`Draw the character ${current} with your finger or mouse`} role="img"/>
   </div>
-  <div className="early-controls"><button type="button" onClick={()=>setGuide(v=>!v)}>{guide?'👀 Hide guide':'👀 Show guide'}</button><button type="button" onClick={reset}>↺ Clear drawing</button></div>
-  <p className="early-footnote">{strokes?'🌟 Nice effort! Keep practising the letter shape.':'Use your finger or mouse to follow the letter.'} Drawing is practice only; it is not automatically graded.</p>
+  <div className="early-controls">
+   {!freeDraw&&<button type="button" onClick={()=>{setGuide(v=>!v);setFeedback(null)}}>{guide?'👀 Hide guide':'👀 Show guide'}</button>}
+   <button type="button" className="primary" onClick={review}>🔍 Check my drawing</button>
+   <button type="button" onClick={reset}>↺ Try again</button>
+  </div>
+  {feedback?<div className="trace-feedback" role="status" aria-live="polite">
+    <strong>{feedback.title}</strong>
+    <p>You drew {feedback.metrics.strokes} stroke{feedback.metrics.strokes===1?'':'s'} with about {feedback.metrics.path} units of pen movement.</p>
+    {feedback.approximateGuideProximity!=null&&<p>Approximate closeness to the model guide: {feedback.approximateGuideProximity}%. This is a visual hint, not a handwriting grade.</p>}
+    <ul>{feedback.tips.map((tip,i)=><li key={i}>{tip}</li>)}</ul>
+    <button type="button" onClick={reset}>✨ Practise once more</button>
+   </div>:<p className="early-footnote">{strokes?'Nice effort! Tap Check my drawing for feedback on your lines and use of drawing space.':'Draw with your finger or mouse, then tap Check my drawing.'}</p>}
+  <p className="early-footnote">Feedback describes the movement, coverage and (when available) approximate closeness to a printed guide. It cannot reliably recognise the picture, verify stroke order, or grade artistic ability.</p>
  </div>;
 }
 function OptionGame({question,options,answer,onNext,icon='🌈'}){

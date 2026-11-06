@@ -12,3 +12,16 @@ button,select,input{touch-action:manipulation}body{padding-bottom:env(safe-area-
 .visual-example strong{font-size:1.07rem;}
 .visual-example p{margin:.4rem 0 0;line-height:1.55;}
 @media(max-width:430px){.visual-example{padding:13px;gap:10px}.visual-symbol{min-width:42px;font-size:34px}}
+.learning-time-panel{border-color:#d8e7ff}
+.learning-time-panel>p{line-height:1.65;color:#5d7089;font-size:13px}
+.time-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}
+.time-metrics>div{min-width:0;display:flex;flex-direction:column;gap:6px;justify-content:center;background:linear-gradient(130deg,#e7f2ff,#f4eaff);border:1px solid #dce8f9;border-radius:15px;padding:18px 13px;text-align:center}
+.time-metrics strong{font-size:clamp(25px,4vw,35px);color:#3a5eaa}
+.time-metrics span{font-size:12px;color:#566a89;line-height:1.45;overflow-wrap:anywhere}
+.time-days{display:grid;gap:7px;margin:12px 0 19px}
+.time-days>div{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;border:1px solid #e0ebf9;border-radius:10px;padding:10px 13px;font-size:12px;color:#586e88}
+.time-days strong{color:#37578d}
+.time-small{font-size:12px!important;line-height:1.7!important;color:#687a93}
+.time-consent{padding:15px;border-radius:15px;background:#f5f8ff}
+.time-child-notice{margin:0 auto 12px;max-width:1060px;color:#576c8d;background:#ecf5ff;border:1px solid #d3e6ff;border-radius:12px;padding:12px 15px;font-size:12px;line-height:1.6}
+@media(max-width:520px){.time-metrics{grid-template-columns:1fr 1fr}.time-metrics>div:last-child{grid-column:1/-1}}

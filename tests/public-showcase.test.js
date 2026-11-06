@@ -20,9 +20,9 @@ test('guest visitors are not represented as authenticated parents or premium mem
  assert.match(src,/Family account enrolment and paid memberships are not active/);
 });
 
-test('showcase retains curriculum review messaging and does not claim certified assessment',()=>{
+test('showcase clearly identifies supplementary learning and does not claim certified assessment',()=>{
  const src=fs.readFileSync('src/main.jsx','utf8');
- assert.match(src,/curriculum review/i);
+ assert.match(src,/supplementary learning/i);
  assert.match(src,/not a certified school assessment/i);
  assert.match(src,/Please do not enter a real child’s name or private details/);
 });

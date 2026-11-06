@@ -1,5 +1,6 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {DrawingPad} from './PreschoolStudio.jsx';
+import SketchStudio from './SketchStudio.jsx';
 import {BODY_PARTS,JOBS,WEATHER,LIFE_CYCLES,PHONICS,SYLLABLE_WORDS,SHAPES,CRAFTS,SEQUENCE_PATTERNS,arithmeticChallenge,getPattern,buildWordSearch} from './extendedPracticeData.js';
 
 export const EXTRA_MODES=[
@@ -16,7 +17,8 @@ export const EXTRA_MODES=[
  ['shapes','🔷','Shape Explorer','Identify forms and corners'],
  ['patterns','🧠','Patterns & Logic','Finish number and picture patterns'],
  ['jigsaw','🧩','Picture Puzzle','Put four picture pieces in order'],
- ['craft','🎨','Make & Create','Ten safe step-by-step craft ideas']
+ ['craft','🎨','Make & Create','Ten safe step-by-step craft ideas'],
+ ['sketch','🖍️','Creative Sketchbook','Draw, review and improve 10 pictures']
 ];
 
 const itemsFor=(kind)=>kind==='body'?BODY_PARTS:kind==='jobs'?JOBS:kind==='weather'?WEATHER:kind==='shapes'?SHAPES:[];
@@ -140,6 +142,7 @@ export default function ExtraPractice({mode,index,level,onStar}){
   {mode==='patterns'&&<><h2>🧠 Complete the Pattern</h2><p>What should come next?</p><div className="extra-pattern">{pattern.shown.map((s,i)=><span key={i}>{s}</span>)}<strong>?</strong></div>
    <div className="extra-answer-grid">{[pattern.answer,...new Set(['8','🔴','9','🟡','A','⭐','🟦','5','3','🍎'].filter(x=>x!==pattern.answer))].slice(0,3).map(v=><button type="button" key={v} disabled={answered!==null} onClick={()=>respond(v,pattern.answer,'Look for the repeating or growing rule.')}>{v}</button>)}</div></>}
   {mode==='jigsaw'&&<PicturePuzzle index={index} onWin={award}/>}
+  {mode==='sketch'&&<SketchStudio key={index} index={index} onStar={award}/>}
   {mode==='craft'&&<><h2>{craft[1]} {craft[0]}</h2><p>Follow these original instructions with appropriate adult help.</p><ol className="extra-craft-steps">{craft[2].map((s,i)=><li key={i}>{s}</li>)}</ol><p className="extra-fact">🛡️ {craft[3]}</p>
    <button type="button" onClick={()=>say(craft[2].join('. '))}>🔊 Read the instructions</button><button type="button" onClick={()=>{setAnswered({yes:true});setDetail('🌟 Great effort!');award()}}>{answered?.yes?'✓ Tried this activity':'⭐ I tried this activity'}</button></>}
   {detail&&<div className={'extra-feedback '+(answered?.yes?'success':'review')} role="status" aria-live="polite">{detail}</div>}
