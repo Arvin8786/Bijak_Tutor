@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build && node scripts/stamp-release.mjs && node scripts/package-gas.mjs && node scripts/audit-curriculum.mjs",
-    "test": "node --test tests/*.test.js",
+    "test": "node scripts/check-public-security.mjs && node --test tests/*.test.js",
     "audit:curriculum": "node scripts/audit-curriculum.mjs",
     "check:public": "node scripts/check-public-security.mjs"
   },
