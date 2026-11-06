@@ -21,10 +21,13 @@ function SpeakButton({text,lang='en-US'}){
  };
  return <span className="growth-speech"><button type="button" onClick={read}>🔊 Listen</button>{status&&<span role="status">{status}</span>}</span>
 }
-export default function GrowthHub({audience='junior',onAudience,initialKind='ai',onKind}){
+export default function GrowthHub({audience='junior',onAudience,initialKind='ai',onKind,loadTrack=null}){
  const current=audience==='adult'?'adult':'junior';
  const kind=initialKind==='hobby'?'hobby':'ai';
- const track=useMemo(()=>findGrowthTrack(current,kind),[current,kind]);
+ const [serverTrack,setServerTrack]=useState(null);
+ const [sourceNote,setSourceNote]=useState('');
+ const publicTrack=useMemo(()=>findGrowthTrack(current,kind),[current,kind]);
+ const track=serverTrack?.id===current+'-'+kind?serverTrack:publicTrack;
  const [lessonIndex,setLessonIndex]=useState(0);
  const [selected,setSelected]=useState(null);
  const [checked,setChecked]=useState(false);
@@ -32,6 +35,17 @@ export default function GrowthHub({audience='junior',onAudience,initialKind='ai'
  const [promptParts,setPromptParts]=useState(()=>({...prompts[current]}));
  const [planDay,setPlanDay]=useState(0);
  useEffect(()=>{setLessonIndex(0);setSelected(null);setChecked(false);setPlanDay(0);setPromptParts({...prompts[current]})},[current,kind]);
+ useEffect(()=>{
+  let active=true;setServerTrack(null);setSourceNote('');
+  if(!loadTrack)return()=>{active=false};
+  loadTrack(current+'-'+kind).then(result=>{
+   if(!active)return;
+   if(result&&Array.isArray(result.lessons)&&result.lessons.length&&result.lessons.every(l=>l?.quiz&&Array.isArray(l.quiz.options))){
+    setServerTrack(result);setSourceNote('Content loaded from the authorised learning library.');
+   }
+  }).catch(()=>{if(active)setSourceNote('Showing locally available starter lessons.')});
+  return()=>{active=false};
+ },[current,kind,loadTrack]);
  const lesson=track?.lessons?.[lessonIndex];
  const key=current+'-'+kind;
  const completed=Array.isArray(progress[key])?progress[key]:[];
@@ -56,7 +70,7 @@ export default function GrowthHub({audience='junior',onAudience,initialKind='ai'
   <div className="growth-modules">
    {['ai','hobby'].map(mode=>{const t=findGrowthTrack(current,mode);return <button type="button" key={mode} aria-pressed={kind===mode} className={'growth-module growth-'+mode+' '+(kind===mode?'selected':'')} onClick={()=>onKind(mode)}><span className="growth-module-icon" aria-hidden="true">{t.icon}</span><strong>{mode==='ai'?'Learn AI':'Creative Hobbies'}</strong><small>{t.tagline}</small><span className="growth-module-info">{t.lessons.length} starter lessons · Explore →</span></button>})}
   </div>
-  <div className="growth-progress-label"><strong>{track.title}</strong><span>{completed.filter(id=>track.lessons.some(l=>l.id===id)).length} / {track.lessons.length} topics practised</span></div>
+  {sourceNote&&<p className="growth-source-note" role="status">{sourceNote}</p>}<div className="growth-progress-label"><strong>{track.title}</strong><span>{completed.filter(id=>track.lessons.some(l=>l.id===id)).length} / {track.lessons.length} topics practised</span></div>
   <div className="growth-meter"><span style={{width:(100*completed.filter(id=>track.lessons.some(l=>l.id===id)).length/track.lessons.length)+'%'}}/></div>
   <div className="growth-layout">
    <nav className="growth-lessons" aria-label={track.title+' lessons'}><h2>Choose a topic</h2>{track.lessons.map((l,i)=><button type="button" key={l.id} className={lessonIndex===i?'active':''} onClick={()=>{setLessonIndex(i);setSelected(null);setChecked(false)}}><span className="growth-number">{completed.includes(l.id)?'✓':i+1}</span><span>{l.title}</span><span aria-hidden="true">→</span></button>)}</nav>
