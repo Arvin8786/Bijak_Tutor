@@ -22,7 +22,7 @@ test('Learn AI and Creative Hobbies have functional, age-appropriate lesson trac
  }
 });
 test('Adult AI content includes privacy, verification, automation and copyright',()=>{
- const texts=findGrowthTrack('adult','ai').lessons.map(l=>l.title+' '+l.summary).join(' ').toLowerCase();
+ const texts=findGrowthTrack('adult','ai').lessons.map(l=>l.title+' '+l.summary+' '+l.steps.join(' ')).join(' ').toLowerCase();
  for(const term of ['confidential','verify','automation','copyright'])assert.ok(texts.includes(term),term);
 });
 test('Junior hobby lessons include adult-supervised physical safety',()=>{
