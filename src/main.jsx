@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {LESSONS} from './lessons';
 import {availableSubjects,lessonCountForSubject} from './primarySubjects.js';
@@ -48,27 +48,80 @@ function PwaControls(){
  const [installEvent,setInstallEvent]=useState(null);
  const [standalone,setStandalone]=useState(window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true);
  const [showHelp,setShowHelp]=useState(false);
+ const [updateReady,setUpdateReady]=useState(false);
+ const reloaded=useRef(false);
  useEffect(()=>{
-  const onOnline=()=>setOnline(true),onOffline=()=>setOnline(false);
+  const onOnline=()=>{setOnline(true);checkRelease()};
+  const onOffline=()=>setOnline(false);
   const onInstall=e=>{e.preventDefault();setInstallEvent(e)};
   const onInstalled=()=>{setInstallEvent(null);setStandalone(true)};
-  window.addEventListener('online',onOnline);window.addEventListener('offline',onOffline);
+  const release=__BIJAK_RELEASE__;
+  let alive=true;
+  async function checkRelease(){
+   if(isLive||!navigator.onLine)return;
+   try{
+    const url=`${import.meta.env.BASE_URL}release.json?check=${Date.now()}`;
+    const response=await fetch(url,{cache:'no-store'});
+    if(!response.ok)return;
+    const data=await response.json();
+    if(data.version&&data.version!==release&&alive){
+      setUpdateReady(true);
+      navigator.serviceWorker?.getRegistration().then(reg=>reg?.update()).catch(()=>{});
+      const key='bijaklearn:last-reload:'+data.version;
+      if(!reloaded.current&&sessionStorage.getItem(key)!=='yes'){
+       reloaded.current=true;
+       sessionStorage.setItem(key,'yes');
+       window.location.reload();
+      }
+    }
+   }catch{ /* Offline release checks must never block studying. */ }
+  }
+  const onVisible=()=>{if(document.visibilityState==='visible')checkRelease()};
+  const hadController=Boolean(navigator.serviceWorker?.controller);
+  const onControllerChange=()=>{
+   if(hadController&&!reloaded.current){
+    reloaded.current=true;window.location.reload();
+   }
+  };
+  const onWorkerMessage=e=>{
+   if(e.data?.type==='BIJAK_RELEASE_ACTIVATED'&&e.data.version!=='bijaklearn-static-'+release)setUpdateReady(true);
+  };
+  window.addEventListener('online',onOnline);
+  window.addEventListener('offline',onOffline);
+  window.addEventListener('focus',checkRelease);
   window.addEventListener('beforeinstallprompt',onInstall);
   window.addEventListener('appinstalled',onInstalled);
-  if(!isLive && 'serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
-   navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(err=>console.warn('PWA offline cache unavailable:',err));
+  document.addEventListener('visibilitychange',onVisible);
+  navigator.serviceWorker?.addEventListener('controllerchange',onControllerChange);
+  navigator.serviceWorker?.addEventListener('message',onWorkerMessage);
+  let tick;
+  if(!isLive){
+   checkRelease();
+   tick=window.setInterval(checkRelease,60000);
+   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`,{updateViaCache:'none'}).then(reg=>reg.update()).catch(err=>console.warn('PWA offline cache unavailable:',err));
+   }
   }
-  return ()=>{window.removeEventListener('online',onOnline);window.removeEventListener('offline',onOffline);window.removeEventListener('beforeinstallprompt',onInstall);window.removeEventListener('appinstalled',onInstalled)};
+  return ()=>{
+   alive=false;window.clearInterval(tick);
+   window.removeEventListener('online',onOnline);window.removeEventListener('offline',onOffline);
+   window.removeEventListener('focus',checkRelease);
+   window.removeEventListener('beforeinstallprompt',onInstall);window.removeEventListener('appinstalled',onInstalled);
+   document.removeEventListener('visibilitychange',onVisible);
+   navigator.serviceWorker?.removeEventListener('controllerchange',onControllerChange);
+   navigator.serviceWorker?.removeEventListener('message',onWorkerMessage);
+  };
  },[]);
  const install=async()=>{
-  if(installEvent){await installEvent.prompt();setInstallEvent(null);return;}
+  if(installEvent){await installEvent.prompt();setInstallEvent(null);return}
   setShowHelp(v=>!v);
  };
  return <div className="pwa-controls" aria-label="App installation and connectivity">
-   <span className={'connection '+(online?'connected':'disconnected')} role="status">{online?'● Online':'● Offline: some activities may be unavailable'}</span>
-   {!isLive&&!standalone&&<button type="button" className="install-button" onClick={install}>📲 Install app</button>}
-   {showHelp&&<p className="install-help">On iPhone: open this website in Safari, tap Share → Add to Home Screen. On Android: open Chrome's menu → Install app or Add to Home Screen. Install from the published HTTPS website, not an editor preview.</p>}
-   {!online&&<p className="install-help">Saved public app files may work offline. Live accounts, subscriptions and verified assessments require internet. Offline progress depends on device storage settings.</p>}
+  <span className={'connection '+(online?'connected':'disconnected')} role="status">{online?'● Online':'● Offline: some activities may be unavailable'}</span>
+  {!isLive&&!standalone&&<button type="button" className="install-button" onClick={install}>📲 Install app</button>}
+  {updateReady&&<span className="pwa-update" role="status">✨ A newer version is available. <button type="button" onClick={()=>window.location.reload()}>Update now</button></span>}
+  {showHelp&&<p className="install-help">On iPhone: open this website in Safari, tap Share → Add to Home Screen. On Android: open Chrome's menu → Install app or Add to Home Screen.</p>}
+  {!online&&<p className="install-help">Public files may work offline. Private accounts and live assessments require internet.</p>}
  </div>;
 }
 function App(){
