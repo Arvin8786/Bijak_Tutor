@@ -56,7 +56,7 @@ function WordSearch({round,onWin}){
 const PUZZLE_EMOJI=['🐬','🦋','🐘','🐠','🌺','🚒','🐢','🦁','🐳','🦉'];
 function PicturePuzzle({index,onWin}){
  const picture=PUZZLE_EMOJI[index%PUZZLE_EMOJI.length];
- const shuffle=()=>[2,0,3,1].map((v,i)=>(v+index+i*2)%4);
+ const shuffle=()=>[2,0,3,1].map(v=>(v+index)%4);
  const [pieces,setPieces]=useState(shuffle),[first,setFirst]=useState(null),[done,setDone]=useState(false);
  useEffect(()=>{setPieces(shuffle());setFirst(null);setDone(false)},[index]);
  const swap=(pos)=>{
@@ -120,7 +120,7 @@ export default function ExtraPractice({mode,index,level,onStar}){
  const currentLanguage=language==='ms'?'ms-MY':'en-GB';
  return <div className="extra-practice">
   {['body','jobs','weather','shapes'].includes(mode)&&<div className="extra-language"><label>Word language <select value={language} onChange={e=>{setLanguage(e.target.value);setAnswered(null)}}><option value="en">English</option><option value="ms">Bahasa Melayu</option></select></label></div>}
-  {mode==='add'&&<><h2>➕ Picture addition</h2><p>Count both groups, then find the total.</p><div className="extra-picture-numbers"><span>{Array.from({length:Math.min(number.first,35)},(_,i)=><b key={i}>🍎</b>)}</span><strong>+</strong><span>{Array.from({length:Math.min(number.second,35)},(_,i)=><b key={i}>🍌</b>)}</span></div>
+  {mode==='add'&&<><h2>➕ Picture addition</h2><p>Count both groups, then find the total.</p><div className="extra-picture-numbers"><span>{number.first>20?<strong>🍎 × {number.first}</strong>:Array.from({length:number.first},(_,i)=><b key={i}>🍎</b>)}</span><strong>+</strong><span>{number.second>20?<strong>🍌 × {number.second}</strong>:Array.from({length:number.second},(_,i)=><b key={i}>🍌</b>)}</span></div>
    <div className="extra-expression">{number.first} + {number.second} = ?</div><QuickOptions options={number.options} expected={number.answer} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,`${number.first} plus ${number.second} is ${a}.`)}/></>}
   {mode==='count'&&<><h2>🔢 Count & Compare</h2><p>How many {['stars','flowers','cars','balls'][index%4]} are there?</p><div className="extra-counting">{Array.from({length:count},(_,i)=><span key={i}>{['⭐','🌷','🚗','⚽'][index%4]}</span>)}</div><QuickOptions options={[count,count+1,Math.max(0,count-1)].sort((a,b)=>((a+index*3)%5)-((b+index*3)%5))} expected={count} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,'Count one at a time.')}/></>}
   {mode==='phonics'&&<><h2>🔤 Alphabet Sounds</h2><div className="extra-pictured">{pair[2]}</div><p><strong>{pair[1]}</strong> begins with which letter?</p>
