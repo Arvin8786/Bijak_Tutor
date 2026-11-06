@@ -21,7 +21,7 @@ export function solveWorkedCalculation(input){
  if(!Number.isFinite(value))return null;
  return {title:`${fmt(a)} ${op==='*'?'×':op==='/'?'÷':op} ${fmt(b)} = ${fmt(value)}`,steps,kind:'math',answer:fmt(value),source:'Checked arithmetic'};
 }
-function overlaps(needle,hay){return needle.length>1&&(hay.includes(needle)||needle.includes(hay))}
+function overlaps(needle,hay){return needle===hay||(needle.length>=5&&hay.length>=5&&(hay.startsWith(needle)||needle.startsWith(hay)))}
 export function findLessonForQuestion(question,lessons=[],opts={}){
  const base=String(question||'').slice(0,500).toLowerCase();
  const glossary={fractions:'pecahan',fraction:'pecahan',plants:'tumbuhan',plant:'tumbuhan',photosynthesis:'cahaya tumbuhan',noun:'kata nama',nouns:'kata nama',verbs:'kata kerja',verb:'kata kerja',adjectives:'kata adjektif',adjective:'kata adjektif',perimeter:'perimeter',time:'masa',clock:'jam',money:'wang',decimal:'perpuluhan',decimals:'perpuluhan',multiplication:'darab',division:'bahagi',addition:'tambah',subtraction:'tolak',water:'air',number:'nombor',shapes:'bentuk',shape:'bentuk'};
