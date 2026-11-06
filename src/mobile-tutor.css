@@ -1,0 +1,37 @@
+/* Mobile repair: no inherited 30/36px text on decorative label spans. */
+.playful-subjects{grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr));align-items:stretch;gap:14px}
+.subject.subject-picker{box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:10px;height:100%;min-height:224px;max-width:100%;min-width:0;overflow:hidden;padding:18px;border-radius:25px;transform:none!important}
+.subject.subject-picker .subject-illustration{display:grid;place-items:center;flex:none;width:60px;height:60px;font-size:32px;line-height:1}
+.subject.subject-picker strong{display:block;flex:none;margin:0;font-size:14px;line-height:1.4;font-weight:800;min-height:0;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.subject.subject-picker small{display:block;flex:none;max-width:100%;font-size:12px;line-height:1.4;color:#586e83;white-space:normal}
+.subject.subject-picker .ready-dot,.subject.subject-picker .catalog-dot{box-sizing:border-box;display:block;flex:none;align-self:stretch;width:100%;max-width:100%;min-width:0;white-space:normal;text-align:center;overflow-wrap:normal;letter-spacing:.025em;font-size:10px!important;line-height:1.4;font-weight:900;padding:10px 6px;margin-top:auto;border-radius:12px;color:#376b51;background:#ffffffcc}
+.subject.subject-picker .catalog-dot{font-size:10px!important;color:#66718a}
+.subject.subject-picker>.ready-dot,.subject.subject-picker>.catalog-dot{font-size:10px!important}
+.subject.subject-picker:hover:not(:disabled){transform:translateY(-3px)!important}
+.nav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch;gap:8px;max-width:1150px}
+.nav button{display:flex;justify-content:center;align-items:center;min-width:0;width:100%;min-height:55px;max-width:100%;padding:9px 8px;border-radius:15px;line-height:1.3;text-align:center;font-size:12px;font-weight:800;overflow-wrap:anywhere;white-space:normal}
+.library-filters{position:static}
+.subject-picker .subject-illustration:before{display:none}
+@media(max-width:760px){.nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:14px;padding:0 14px}.nav button{font-size:12px;padding:12px 6px;min-height:55px;border-radius:15px}.playful-subjects{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.subject.subject-picker{min-height:216px;padding:15px;gap:9px}.subject.subject-picker .subject-illustration{width:57px;height:57px;font-size:31px}.subject.subject-picker strong{font-size:13px}.subject.subject-picker small{font-size:11px}.subject.subject-picker .ready-dot,.subject.subject-picker .catalog-dot{font-size:10px!important;padding:9px 5px}.library-section{min-width:0}}
+@media(max-width:365px){.nav{grid-template-columns:repeat(2,minmax(0,1fr))}.subject.subject-picker{min-height:229px;padding:12px}.subject.subject-picker strong{font-size:12px}.subject.subject-picker small{font-size:10px}}
+/* Study Buddy */
+.tutor-page{max-width:900px;margin:0 auto 48px}
+.tutor-hero{position:relative;display:flex;justify-content:space-between;gap:15px;align-items:center;padding:29px;border-radius:26px;background:linear-gradient(115deg,#e3f2ff,#efe8ff 65%,#ffe7d2);border:2px solid #fff;box-shadow:0 8px 26px #6176bb16}
+.tutor-hero h1{font-size:clamp(27px,5vw,39px);line-height:1.16;margin:7px 0 8px}.tutor-hero p{margin:0;max-width:560px;color:#536681;line-height:1.6;font-size:14px}.tutor-mascot{font-size:clamp(55px,11vw,102px);flex:none}
+.tutor-box{margin:18px 0;padding:23px;border:1px solid #e3e9f7;background:#fff;border-radius:24px;box-shadow:0 8px 22px #465d8910}
+.tutor-quick{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 15px}
+.tutor-quick button{border:1px solid #dae3f6;background:#f3f7ff;font-weight:750;font-size:12px;max-width:100%;padding:10px 13px;border-radius:100px}
+.tutor-box label{font-weight:850;color:#415679}
+.tutor-box textarea{display:block;width:100%;min-height:110px;resize:vertical;margin-top:9px;padding:15px;border:2px solid #d8e4f6;border-radius:17px;font:inherit;line-height:1.6;color:#344b68;background:#fbfdff}
+.tutor-actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:12px 0}
+.tutor-actions button{min-height:44px;font-size:13px;font-weight:800}
+.tutor-answer{margin-top:19px;padding:19px 20px;background:linear-gradient(155deg,#f0f9ff,#fffdf5);border-radius:21px;border:1px solid #cfdef5}
+.tutor-answer h2{font-size:21px;line-height:1.3;margin:7px 0 12px}
+.tutor-answer ol{padding-left:22px;display:grid;gap:11px}
+.tutor-answer li{line-height:1.7;color:#3c516d;white-space:pre-wrap;overflow-wrap:anywhere}
+.tutor-answer p{line-height:1.65;overflow-wrap:anywhere}
+.tutor-answer-note{font-size:11px!important;color:#74809a}
+.tutor-footnote{margin-top:16px;color:#62728d;font-size:12px;line-height:1.6}
+.tutor-status{font-size:12px;color:#666a92;line-height:1.5}
+.tutor-context{background:#fff9df;border-radius:14px;padding:10px 13px;margin:12px 0;font-size:13px;color:#71603e}
+@media(max-width:520px){.tutor-hero{padding:20px;align-items:flex-start}.tutor-mascot{font-size:57px}.tutor-box{padding:16px}.tutor-quick button{font-size:11px}.tutor-answer{padding:15px}.tutor-actions button{flex:1 1 auto}}
