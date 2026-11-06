@@ -5,7 +5,7 @@ const SHAPES=[['Bulatan','●'],['Segi empat','■'],['Segi tiga','▲'],['Binta
 const COLORS=[['Merah','#ef5475'],['Biru','#5684e9'],['Kuning','#ffca54'],['Hijau','#50c49b'],['Ungu','#ac7bef'],['Oren','#ff9b50']];
 const MODES=[['letters','🔤','ABC explorer'],['trace','✏️','Trace & draw'],['match','🅰️','Capital & small'],['spell','🧩','Build a word'],['bm','📚','Suku kata'],['numbers','🔢','Numbers 1–20'],['colors','🎨','Colours & shapes']];
 function speak(text,lang='en-US'){if(typeof window==='undefined'||!window.speechSynthesis)return;window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.lang=lang;utterance.rate=.8;window.speechSynthesis.speak(utterance)}
-function DrawingPad({letter,lower=false}) {
+export function DrawingPad({letter,lower=false}) {
  const canvas=useRef(null),drawing=useRef(false),last=useRef(null);
  const [strokes,setStrokes]=useState(0),[guide,setGuide]=useState(true);
  const paint=useCallback((event)=>{
