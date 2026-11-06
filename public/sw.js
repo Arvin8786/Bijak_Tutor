@@ -1,5 +1,5 @@
 /* BijakLearn Junior PWA — static assets only. Do NOT cache student data, tokens, Sheets calls or third-party requests. */
-const VERSION = 'bijaklearn-static-v6';
+const VERSION = 'bijaklearn-static-v9';
 const BASE = new URL(self.registration.scope).pathname;
 const CORE = [BASE, BASE + 'index.html', BASE + 'manifest.webmanifest', BASE + 'icons/icon.svg'];
 self.addEventListener('install', event => {
