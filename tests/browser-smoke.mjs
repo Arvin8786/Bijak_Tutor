@@ -23,7 +23,7 @@ try{
    await welcome.getByRole('button',{name:/Continue/i}).click();
   }
 
-  await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
+  await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   assert.equal(await page.getByRole('button',{name:/Explore local demo/i}).count(),0,'Public showcase must not show demo gate');
   const pair=page.locator('.home-mascot-band');
   await pair.locator('.mascot-boy').click();
@@ -31,7 +31,7 @@ try{
   await pair.locator('.mascot-girl').click();
   assert.ok((await pair.locator('.mascot-speech').textContent()).includes('Hello'),'The schoolgirl should greet when tapped');
 
-  await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
+  await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   const badgeOverflow=await page.locator('.playful-subjects .subject-picker').evaluateAll(cards=>cards.some(card=>{const badge=card.querySelector('.ready-dot,.catalog-dot');if(!badge)return false;const r=badge.getBoundingClientRect(),p=card.getBoundingClientRect();return r.right>p.right+2||r.left<p.left-2||badge.scrollWidth>badge.clientWidth+2||getComputedStyle(badge).fontSize.replace('px','')>13}));
   assert.equal(badgeOverflow,false,'Subject badges clip or use giant text at '+width+'px');
   let cards=page.locator('.illustrated-lesson');
@@ -61,7 +61,7 @@ try{
     await page.getByRole('button',{name:'Add practice profile'}).click();
     await page.getByRole('button',{name:/Test Fox/}).waitFor();
     await page.reload({waitUntil:'networkidle'});
-    await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
+    await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
     await page.getByRole('button',{name:/Test Fox/}).waitFor();
     await page.getByRole('button',{name:/Clear saved practice/i}).click();
     assert.equal(await page.getByRole('button',{name:/Test Fox/}).count(),0,'Clear saved practice failed');
