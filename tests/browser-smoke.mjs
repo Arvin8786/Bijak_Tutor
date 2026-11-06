@@ -62,7 +62,7 @@ try{
       assert.ok(await page.locator('.curriculum-map .illustrated-lesson').count()>=8,subject+' Year 1 still displays one or two lessons');
     }
     await page.locator('.curriculum-map select').nth(2).selectOption('Sains');
-    await page.locator('.curriculum-map .illustrated-lesson').filter({hasText:'Deria manusia'}).click();
+    await page.locator('.curriculum-map .illustrated-lesson').filter({hasText:'Deria manusia'}).last().click();
     await page.locator('.discovery-mission').waitFor();
     await page.locator('.discovery-mission textarea').fill('I learned that I can use my nose to notice different smells.');
     await page.locator('.discovery-mission').getByRole('button',{name:/Get reflection tips/i}).click();
