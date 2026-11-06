@@ -19,6 +19,8 @@ try{
   await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
   assert.equal(await page.getByRole('button',{name:/Explore local demo/i}).count(),0,'Public showcase must not show demo gate');
   await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
+  const badgeOverflow=await page.locator('.playful-subjects .subject-picker').evaluateAll(cards=>cards.some(card=>{const badge=card.querySelector('.ready-dot,.catalog-dot');if(!badge)return false;const r=badge.getBoundingClientRect(),p=card.getBoundingClientRect();return r.right>p.right+2||r.left<p.left-2||badge.scrollWidth>badge.clientWidth+2||getComputedStyle(badge).fontSize.replace('px','')>13}));
+  assert.equal(badgeOverflow,false,'Subject badges clip or use giant text at '+width+'px');
   let cards=page.locator('.illustrated-lesson');
   assert.ok(await cards.count()>0,'Default year has no lessons');
   await cards.first().click();
@@ -66,6 +68,12 @@ try{
     await page.locator('.adventure-quest .quest-go').click();
     await page.locator('.lesson-reader').waitFor();
   }
+  await page.locator('nav.nav').getByRole('button',{name:/Study Buddy/i}).click();
+  await page.getByLabel('What would you like to learn?').fill('28 + 15');
+  await page.getByRole('button',{name:/Explain to me/i}).click();
+  await page.getByRole('heading',{name:/28 \+ 15 = 43/}).waitFor();
+  assert.ok(await page.getByRole('button',{name:/Read answer/i}).isVisible());
+  await page.getByRole('button',{name:/Home/i}).click();
   assert.equal(exceptions.length,0,'JS runtime error: '+exceptions.join('; '));
   const over=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);
   assert.equal(over,false,'Horizontal overflow at '+width+'px');
