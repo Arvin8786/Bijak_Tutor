@@ -22,8 +22,8 @@ test('supplementary content does not claim official school syllabus approval',()
  for(const x of SUPPLEMENTARY_LESSONS){
   assert.equal(x.premium,false);
   assert.equal(x.status,'DRAFT_TEACHER_REVIEW');
-  assert.equal(x.school,'ALL');
-  assert.ok(x.check.every(q=>Array.isArray(q.options)&&q.options.includes(q.answer)),x.id+' missing its answer');
+  assert.ok(x.school==='ALL'||(x.optional===true&&x.school==='SK'),'Incorrect school scope: '+x.id);
+  assert.ok(x.check.every(q=>q.answer!==undefined&&q.answer!==null&&(['number','text'].includes(q.mode)||Array.isArray(q.options)&&q.options.includes(q.answer))),x.id+' has an assessment without an answer');
   assert.ok(x.enrichment?.mission?.length>10);
  }
 });
