@@ -1,5 +1,11 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {initialSkill,recordAttempt,evaluateSkill} from '../src/mastery.js';
-test('guesses do not unlock a topic',()=>{let s=initialSkill();for(let i=0;i<8;i++)s=recordAttempt(s,{correct:true,mode:'choice',hints:0,transfer:false});assert.equal(evaluateSkill(s).mastered,false)});
-test('hinted responses do not establish independent mastery',()=>{let s=initialSkill();for(let i=0;i<6;i++)s=recordAttempt(s,{correct:true,mode:i%2?'number':'reason',hints:1,transfer:true});assert.equal(evaluateSkill(s).mastered,false)});
-test('varied independent stable responses establish mastery',()=>{let s=initialSkill();for(const mode of ['number','reason','number'])s=recordAttempt(s,{correct:true,mode,hints:0,transfer:true});assert.equal(evaluateSkill(s).mastered,true)});
-test('a recent error revokes mastery',()=>{let s=initialSkill();for(const mode of ['number','reason','number'])s=recordAttempt(s,{correct:true,mode,hints:0,transfer:true});s=recordAttempt(s,{correct:false,mode:'number',hints:0});assert.equal(evaluateSkill(s).mastered,false)});
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {initialSkill,recordAttempt,evaluateSkill} from '../src/mastery.js';
+const add=(s,questionId,mode,correct=true,hints=0,transfer=true)=>recordAttempt(s,{questionId,mode,correct,hints,transfer});
+test('guesses do not unlock a topic',()=>{let s=initialSkill();for(let i=0;i<8;i++)s=add(s,'choice-'+i,'choice');assert.equal(evaluateSkill(s).mastered,false)});
+test('multiple choice reasoning is still multiple choice',()=>{let s=initialSkill();for(let i=0;i<4;i++)s=add(s,'r-'+i,'reason');assert.equal(evaluateSkill(s).mastered,false)});
+test('hinted responses do not establish independent mastery',()=>{let s=initialSkill();for(let i=0;i<6;i++)s=add(s,'q-'+i,'number',true,1);assert.equal(evaluateSkill(s).mastered,false)});
+test('repeated same question never establishes mastery',()=>{let s=initialSkill();for(let i=0;i<6;i++)s=add(s,'same','number');assert.equal(evaluateSkill(s).mastered,false)});
+test('distinct independent unhinted answers including transfer can show demo mastery',()=>{let s=initialSkill();for(const [i,m] of ['number','text','number'].entries())s=add(s,'new-'+i,m);assert.equal(evaluateSkill(s).mastered,true)});
+test('a recent error revokes mastery',()=>{let s=initialSkill();for(const [i,m] of ['number','text','number'].entries())s=add(s,'new-'+i,m);s=add(s,'new-error','number',false);assert.equal(evaluateSkill(s).mastered,false)});
+test('recent choice answers block independent streak',()=>{let s=initialSkill();for(const [i,m] of ['number','text','number'].entries())s=add(s,'new-'+i,m);s=add(s,'choice','choice');assert.equal(evaluateSkill(s).mastered,false)});
