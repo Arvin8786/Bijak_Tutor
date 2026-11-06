@@ -108,6 +108,27 @@ try{
     assert.equal(await page.locator('.arcade-answers button').count(),4);
     await page.getByRole('button',{name:/Trace letter/i}).click();
     assert.ok(await page.locator('.arcade-arabic-pad canvas').isVisible());
+    // Every additional activity must be a real, openable game, not an inert menu card.
+    const extraActivities=[
+      ['Picture addition','.extra-expression'],['Count & Compare','.extra-counting'],
+      ['Alphabet Sounds','.extra-pictured'],['Suku Kata','.extra-answer-grid'],
+      ['Spelling Builder','.extra-spell-tiles'],['Word Search','.extra-word-grid'],
+      ['Life Cycles','.extra-life-steps'],['Body Parts','.extra-pictured'],
+      ['People at Work','.extra-pictured'],['Weather Lab','.extra-pictured'],
+      ['Shape Explorer','.extra-pictured'],['Patterns & Logic','.extra-pattern'],
+      ['Picture Puzzle','.extra-jigsaw'],['Make & Create','.extra-craft-steps']
+    ];
+    for(const [name,selector] of extraActivities){
+      await page.locator('.arcade-modes').getByRole('button',{name:new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g,'\\    await page.locator('nav.nav').getByRole('button',{name:'Word Tiles versus Bot'}).click();'),'i')}).click();
+      assert.ok(await page.locator(selector).isVisible(),'Activity unavailable: '+name);
+      await page.getByRole('button',{name:/Next activity/i}).click();
+      assert.match(await page.locator('.arcade-meta').textContent(),/Activity 2/);
+    }
+    await page.locator('.arcade-modes').getByRole('button',{name:/Picture addition/}).click();
+    await page.getByLabel('Practice difficulty').selectOption('3');
+    assert.ok(await page.locator('.extra-expression').textContent(),'Level 3 addition is missing');
+    await page.locator('.extra-answer-grid button').first().click();
+    assert.ok(await page.locator('.extra-feedback').isVisible(),'Math activity did not give feedback');
     await page.locator('nav.nav').getByRole('button',{name:'Word Tiles versus Bot'}).click();
     await page.locator('.word-bot-game').waitFor();
     const rack=page.locator('.word-bot-rack button');
