@@ -51,7 +51,7 @@ try{
     assert.equal(await page.getByRole('button',{name:/Test Fox/}).count(),0,'Clear demo progress failed');
   }
   if(width===1280){
-    await page.getByRole('button',{name:/Learning Packs/i}).click();
+    await page.locator('nav.nav').getByRole('button',{name:/Learning Packs/i}).click();
     await page.getByRole('heading',{name:/Choose your superpower/i}).waitFor();
     const packCards=page.locator('.adventure-card');
     assert.ok(await packCards.count()>=3,'Adventure pack catalogue missing');
