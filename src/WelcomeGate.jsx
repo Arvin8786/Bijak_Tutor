@@ -38,7 +38,7 @@ export default function WelcomeGate({language,onLanguage,onContinue}){
     {LANGUAGES.map(l=><button type="button" key={l.code} lang={l.code==='zh'?'zh-CN':l.code==='ta'?'ta':'en'} onClick={()=>onLanguage(l.code)} aria-pressed={language===l.code} className={'welcome-choice '+(language===l.code?'chosen':'')}><span aria-hidden="true">{l.flag}</span><strong>{l.name}</strong>{language===l.code&&<span className="language-check" aria-hidden="true">✓</span>}</button>)}
    </div>
    <button type="button" className="welcome-continue" onClick={onContinue}>{say(language,'continue')} <span aria-hidden="true">→</span></button>
-   <p className="welcome-small">SK · SJKC · SJKT · Prasekolah · Tahun 1–6</p>
+   <p className="welcome-small">SK · SJKC · SJKT · Prasekolah · Tahun 1–6</p><p className="welcome-small">A ProEase Studio™ learning experience · © 2026 ProEase Studio</p>
   </section>
  </main>;
 }
