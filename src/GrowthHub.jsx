@@ -21,7 +21,7 @@ function SpeakButton({text,lang='en-US'}){
  };
  return <span className="growth-speech"><button type="button" onClick={read}>🔊 Listen</button>{status&&<span role="status">{status}</span>}</span>
 }
-export default function GrowthHub({audience='junior',onAudience,initialKind='ai',onKind,loadTrack=null}){
+export default function GrowthHub({audience='junior',onAudience,initialKind='ai',onKind,loadTrack=null,checkAnswer=null}){
  const current=audience==='adult'?'adult':'junior';
  const kind=initialKind==='hobby'?'hobby':'ai';
  const [serverTrack,setServerTrack]=useState(null);
@@ -31,10 +31,13 @@ export default function GrowthHub({audience='junior',onAudience,initialKind='ai'
  const [lessonIndex,setLessonIndex]=useState(0);
  const [selected,setSelected]=useState(null);
  const [checked,setChecked]=useState(false);
+ const [resultCorrect,setResultCorrect]=useState(null);
+ const [resultWhy,setResultWhy]=useState('');
+ const [checking,setChecking]=useState(false);
  const [progress,setProgress]=useState(initialProgress);
  const [promptParts,setPromptParts]=useState(()=>({...prompts[current]}));
  const [planDay,setPlanDay]=useState(0);
- useEffect(()=>{setLessonIndex(0);setSelected(null);setChecked(false);setPlanDay(0);setPromptParts({...prompts[current]})},[current,kind]);
+ useEffect(()=>{setLessonIndex(0);setSelected(null);setChecked(false);setResultCorrect(null);setResultWhy('');setPlanDay(0);setPromptParts({...prompts[current]})},[current,kind]);
  useEffect(()=>{
   let active=true;setServerTrack(null);setSourceNote('');
   if(!loadTrack)return()=>{active=false};
@@ -54,8 +57,21 @@ export default function GrowthHub({audience='junior',onAudience,initialKind='ai'
   if(!lesson)return;
   setProgress(prev=>{const before=Array.isArray(prev[key])?prev[key]:[],next={...prev,[key]:[...new Set([...before,lesson.id])].slice(0,60)};saveProgress(next);return next})
  };
- const quizAnswer=()=>{if(selected===null)return;setChecked(true);if(trackQuiz(lesson,selected))markDone()};
- const next=()=>{setLessonIndex(i=>(i+1)%track.lessons.length);setSelected(null);setChecked(false)};
+ const quizAnswer=async()=>{
+  if(selected===null||checked||checking)return;
+  setChecking(true);
+  try{
+   let correct=false,why=lesson.quiz.why||'Review the teaching notes for more detail.';
+   if(serverTrack?.id===key&&checkAnswer){
+    const result=await checkAnswer(lesson.id,selected);
+    correct=result?.correct===true;why=String(result?.why||why).slice(0,500);
+   }else correct=trackQuiz(lesson,selected);
+   setResultCorrect(correct);setResultWhy(why);setChecked(true);
+   if(correct)markDone();
+  }catch{setResultWhy('Online assessment unavailable. Review the lesson and try again.');setResultCorrect(false);setChecked(true)}
+  finally{setChecking(false)}
+ };
+ const next=()=>{setLessonIndex(i=>(i+1)%track.lessons.length);setSelected(null);setChecked(false);setResultCorrect(null);setResultWhy('')};
  const setPrompt=(field,value)=>setPromptParts(prev=>({...prev,[field]:String(value).slice(0,140)}));
  const prompt=`Please ${promptParts.task} for ${promptParts.audience}. Use ${promptParts.format}. ${promptParts.check}.`;
  const dayKey=key+'-day-'+(lesson?.id||'');
@@ -73,13 +89,13 @@ export default function GrowthHub({audience='junior',onAudience,initialKind='ai'
   {sourceNote&&<p className="growth-source-note" role="status">{sourceNote}</p>}<div className="growth-progress-label"><strong>{track.title}</strong><span>{completed.filter(id=>track.lessons.some(l=>l.id===id)).length} / {track.lessons.length} topics practised</span></div>
   <div className="growth-meter"><span style={{width:(100*completed.filter(id=>track.lessons.some(l=>l.id===id)).length/track.lessons.length)+'%'}}/></div>
   <div className="growth-layout">
-   <nav className="growth-lessons" aria-label={track.title+' lessons'}><h2>Choose a topic</h2>{track.lessons.map((l,i)=><button type="button" key={l.id} className={lessonIndex===i?'active':''} onClick={()=>{setLessonIndex(i);setSelected(null);setChecked(false)}}><span className="growth-number">{completed.includes(l.id)?'✓':i+1}</span><span>{l.title}</span><span aria-hidden="true">→</span></button>)}</nav>
+   <nav className="growth-lessons" aria-label={track.title+' lessons'}><h2>Choose a topic</h2>{track.lessons.map((l,i)=><button type="button" key={l.id} className={lessonIndex===i?'active':''} onClick={()=>{setLessonIndex(i);setSelected(null);setChecked(false);setResultCorrect(null);setResultWhy('')}}><span className="growth-number">{completed.includes(l.id)?'✓':i+1}</span><span>{l.title}</span><span aria-hidden="true">→</span></button>)}</nav>
    <article className="growth-lesson">
      <div className="growth-lesson-head"><span className="growth-kicker">LESSON {lessonIndex+1} OF {track.lessons.length}</span><SpeakButton text={[lesson.title,lesson.summary,...lesson.steps].join('. ')}/></div>
      <h2>{lesson.title}</h2><p className="growth-summary">{lesson.summary}</p>
      <h3>How to learn it</h3><ol className="growth-steps">{lesson.steps.map((step,i)=><li key={i}>{step}</li>)}</ol>
      <div className="growth-challenge"><strong>🏅 Try this project</strong><p>{lesson.challenge}</p></div>
-     <div className="growth-quiz"><h3>📝 Check your understanding</h3><p>{lesson.quiz.question}</p><div className="growth-answers">{lesson.quiz.options.map((option,i)=><button type="button" disabled={checked} aria-pressed={selected===i} className={selected===i?'picked':''} key={i} onClick={()=>setSelected(i)}>{option}</button>)}</div>{checked&&<div className={'growth-feedback '+(trackQuiz(lesson,selected)?'correct':'review')} role="status"><strong>{trackQuiz(lesson,selected)?'🌟 Correct — great thinking!':'💛 Try reviewing the explanation.'}</strong><p>{lesson.quiz.why}</p></div>}<div className="growth-actions">{!checked?<button type="button" className="primary" disabled={selected===null} onClick={quizAnswer}>Check answer</button>:<button type="button" className="primary" onClick={next}>Next topic →</button>}<button type="button" onClick={markDone}>{lessonDone?'✓ Practised':'Mark activity practised'}</button></div></div>
+     <div className="growth-quiz"><h3>📝 Check your understanding</h3><p>{lesson.quiz.question}</p><div className="growth-answers">{lesson.quiz.options.map((option,i)=><button type="button" disabled={checked} aria-pressed={selected===i} className={selected===i?'picked':''} key={i} onClick={()=>setSelected(i)}>{option}</button>)}</div>{checked&&<div className={'growth-feedback '+(resultCorrect?'correct':'review')} role="status"><strong>{resultCorrect?'🌟 Correct — great thinking!':'💛 Try reviewing the explanation.'}</strong><p>{resultWhy}</p></div>}<div className="growth-actions">{!checked?<button type="button" className="primary" disabled={selected===null||checking} onClick={quizAnswer}>{checking?'Checking…':'Check answer'}</button>:<button type="button" className="primary" onClick={next}>Next topic →</button>}<button type="button" onClick={markDone}>{lessonDone?'✓ Practised':'Mark activity practised'}</button></div></div>
    </article>
   </div>
   {kind==='ai'&&<section className="growth-tool"><span className="growth-tool-icon" aria-hidden="true">✨</span><div className="growth-tool-content"><h2>Prompt Builder</h2><p>Construct a clear learning or work prompt. This creates text to copy; it does not automatically transmit information to an AI service.</p><div className="growth-prompt-form">{[['task','Task'],['audience','Who is it for?'],['format','Format'],['check','How should it be checked?']].map(([field,label])=><label key={field}>{label}<input maxLength={140} value={promptParts[field]} onChange={e=>setPrompt(field,e.target.value)}/></label>)}</div><div className="growth-prompt-output"><strong>Your prompt</strong><p>{prompt}</p><button type="button" onClick={()=>navigator.clipboard?.writeText(prompt).catch(()=>{})}>📋 Copy prompt</button></div></div></section>}
