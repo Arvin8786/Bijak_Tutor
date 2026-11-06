@@ -22,3 +22,9 @@ jobs:
           path: dist/
           if-no-files-found: error
           retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bijaklearn-apps-script-and-curriculum
+          path: release/
+          if-no-files-found: error
+          retention-days: 7
