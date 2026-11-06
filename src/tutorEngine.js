@@ -23,7 +23,9 @@ export function solveWorkedCalculation(input){
 }
 function overlaps(needle,hay){return needle.length>1&&(hay.includes(needle)||needle.includes(hay))}
 export function findLessonForQuestion(question,lessons=[],opts={}){
- const query=String(question||'').slice(0,500).toLowerCase();
+ const base=String(question||'').slice(0,500).toLowerCase();
+ const glossary={fractions:'pecahan',fraction:'pecahan',plants:'tumbuhan',plant:'tumbuhan',photosynthesis:'cahaya tumbuhan',noun:'kata nama',nouns:'kata nama',verbs:'kata kerja',verb:'kata kerja',adjectives:'kata adjektif',adjective:'kata adjektif',perimeter:'perimeter',time:'masa',clock:'jam',money:'wang',decimal:'perpuluhan',decimals:'perpuluhan',multiplication:'darab',division:'bahagi',addition:'tambah',subtraction:'tolak',water:'air',number:'nombor',shapes:'bentuk',shape:'bentuk'};
+ const query=base+' '+words(base).map(w=>glossary[w]||'').join(' ');
  const keywords=[...new Set(words(query).filter(w=>w.length>2&&!STOP.has(w)))];
  if(!keywords.length)return null;
  const candidates=lessons.filter(l=>!opts.subject||l.subject===opts.subject);
