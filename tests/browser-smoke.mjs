@@ -94,6 +94,20 @@ try{
   await page.getByRole('heading',{name:/28 \+ 15 = 43/}).waitFor();
   assert.ok(await page.getByRole('button',{name:/Read answer/i}).isVisible());
   if(width===1280){
+    await page.locator('nav.nav').getByRole('button',{name:'Activity Playground'}).click();
+    await page.locator('.activity-arcade').waitFor();
+    await page.locator('.arcade-modes').getByRole('button',{name:/Picture subtraction/i}).click();
+    assert.ok(await page.locator('.arcade-counter span').count()>0);
+    await page.locator('.arcade-answers').getByRole('button',{name:'5',exact:true}).click();
+    await page.getByRole('button',{name:/Next activity/i}).click();
+    await page.locator('.arcade-modes').getByRole('button',{name:/Read & Match/i}).click();
+    assert.ok(await page.locator('.arcade-answers button').count()===3);
+    await page.locator('.arcade-modes').getByRole('button',{name:/Picture dictionary/i}).click();
+    assert.ok(await page.locator('.arcade-vocab button').count()===2);
+    await page.locator('.arcade-modes').getByRole('button',{name:/Huruf Hijaiyah/i}).click();
+    assert.equal(await page.locator('.arcade-answers button').count(),4);
+    await page.getByRole('button',{name:/Trace letter/i}).click();
+    assert.ok(await page.locator('.arcade-arabic-pad canvas').isVisible());
     await page.locator('nav.nav').getByRole('button',{name:'Word Tiles versus Bot'}).click();
     await page.locator('.word-bot-game').waitFor();
     const rack=page.locator('.word-bot-rack button');
