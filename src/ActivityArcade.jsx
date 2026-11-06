@@ -63,7 +63,7 @@ export default function ActivityArcade(){
      {guide&&<div className="arcade-arabic-pad" dir="rtl"><DrawingPad letter={target[0]}/></div>}
      {solved&&<p className="arcade-explanation">Betul: {target[0]} · {target[1]}. Tulisan Arab dibaca dari kanan ke kiri.</p>}
    </>}
-   {message&&<div role="status" className={'arcade-result '+(choice?.correct?'success':'try')}>{message}{!choice?.correct&&<span> Correct answer: <strong>{expected}</strong></span>}</div>}
+   {message&&<div role="status" aria-live="polite" className={'arcade-result '+(choice?.correct?'success':'try')}>{message}{!choice?.correct&&<span> Correct answer: <strong>{expected}</strong></span>}</div>}
    <div className="arcade-actions"><button type="button" onClick={()=>{setChoice(null);setMessage('')}}>↻ Try again</button><button className="primary" type="button" onClick={next}>Next activity →</button></div>
   </div>
   <p className="growth-safety">The activities are formative, not official assessment scores. The writing pad detects drawing strokes but does not grade handwriting. Text-to-speech requires a compatible browser voice. Children should explore with adult guidance.</p>
