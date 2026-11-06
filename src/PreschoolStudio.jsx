@@ -6,11 +6,11 @@ const SHAPES=[['Bulatan','●'],['Segi empat','■'],['Segi tiga','▲'],['Binta
 const COLORS=[['Merah','#ef5475'],['Biru','#5684e9'],['Kuning','#ffca54'],['Hijau','#50c49b'],['Ungu','#ac7bef'],['Oren','#ff9b50']];
 const MODES=[['letters','🔤','ABC explorer'],['trace','✏️','Trace & draw'],['match','🅰️','Capital & small'],['spell','🧩','Build a word'],['bm','📚','Suku kata'],['numbers','🔢','Numbers 1–20'],['colors','🎨','Colours & shapes']];
 function speak(text,lang='en-US'){if(typeof window==='undefined'||!window.speechSynthesis)return;window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.lang=lang;utterance.rate=.8;window.speechSynthesis.speak(utterance)}
-export function DrawingPad({letter,lower=false}) {
+export function DrawingPad({letter,lower=false,freeDraw=false}) {
  const canvas=useRef(null),guideEl=useRef(null),drawing=useRef(false),last=useRef(null);
  const lines=useRef([]),activeLine=useRef(null),mask=useRef(null);
- const [strokes,setStrokes]=useState(0),[guide,setGuide]=useState(true),[feedback,setFeedback]=useState(null);
- const current=lower?String(letter).toLowerCase():String(letter);
+ const [strokes,setStrokes]=useState(0),[guide,setGuide]=useState(!freeDraw),[feedback,setFeedback]=useState(null);
+ const current=freeDraw?'':lower?String(letter).toLowerCase():String(letter);
  const point=e=>{
    const el=canvas.current,rect=el.getBoundingClientRect();
    return {x:Math.max(0,Math.min(el.width,(e.clientX-rect.left)*el.width/rect.width)),y:Math.max(0,Math.min(el.height,(e.clientY-rect.top)*el.height/rect.height))};
@@ -35,7 +35,7 @@ export function DrawingPad({letter,lower=false}) {
   canvas.current?.getContext('2d')?.clearRect(0,0,500,300);
   setStrokes(0);setFeedback(null);
  };
- useEffect(()=>{reset()},[letter,lower]);
+ useEffect(()=>{reset();setGuide(!freeDraw)},[letter,lower,freeDraw]);
  const review=()=>{
   const el=canvas.current,g=guideEl.current;
   if(!el)return;
@@ -56,22 +56,22 @@ export function DrawingPad({letter,lower=false}) {
  };
  return <div className="trace-studio">
   <div className="trace-canvas-wrap">
-   {guide&&<div ref={guideEl} aria-hidden="true" className="tracing-guide">{current}</div>}
-   <canvas ref={canvas} width={500} height={300} onPointerDown={start} onPointerMove={paint} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={end} className="trace-canvas" aria-label={`Draw the character ${current} with your finger or mouse`} role="img"/>
+   {guide&&!freeDraw&&<div ref={guideEl} aria-hidden="true" className="tracing-guide">{current}</div>}
+   <canvas ref={canvas} width={500} height={300} onPointerDown={start} onPointerMove={paint} onPointerUp={end} onPointerCancel={end} onLostPointerCapture={end} className="trace-canvas" aria-label={freeDraw?'Freehand sketch pad: draw with your finger or mouse':`Draw the character ${current} with your finger or mouse`} role="img"/>
   </div>
   <div className="early-controls">
-   <button type="button" onClick={()=>{setGuide(v=>!v);setFeedback(null)}}>{guide?'👀 Hide guide':'👀 Show guide'}</button>
+   {!freeDraw&&<button type="button" onClick={()=>{setGuide(v=>!v);setFeedback(null)}}>{guide?'👀 Hide guide':'👀 Show guide'}</button>}
    <button type="button" className="primary" onClick={review}>🔍 Check my drawing</button>
    <button type="button" onClick={reset}>↺ Try again</button>
   </div>
   {feedback?<div className="trace-feedback" role="status" aria-live="polite">
     <strong>{feedback.title}</strong>
     <p>You drew {feedback.metrics.strokes} stroke{feedback.metrics.strokes===1?'':'s'} with about {feedback.metrics.path} units of pen movement.</p>
-    {feedback.approximateGuideProximity!==null&&<p>Approximate closeness to the model guide: {feedback.approximateGuideProximity}%. This is a visual hint, not a handwriting grade.</p>}
+    {feedback.approximateGuideProximity!=null&&<p>Approximate closeness to the model guide: {feedback.approximateGuideProximity}%. This is a visual hint, not a handwriting grade.</p>}
     <ul>{feedback.tips.map((tip,i)=><li key={i}>{tip}</li>)}</ul>
     <button type="button" onClick={reset}>✨ Practise once more</button>
-   </div>:<p className="early-footnote">{strokes?'Nice effort! Tap Check my drawing for feedback on your pen movement and guide position.':'Draw with your finger or mouse, then tap Check my drawing.'}</p>}
-  <p className="early-footnote">Feedback checks movement and approximate closeness to a printed guide. It cannot reliably recognise a letter, verify correct stroke order, or grade handwriting.</p>
+   </div>:<p className="early-footnote">{strokes?'Nice effort! Tap Check my drawing for feedback on your lines and use of drawing space.':'Draw with your finger or mouse, then tap Check my drawing.'}</p>}
+  <p className="early-footnote">Feedback describes the movement, coverage and (when available) approximate closeness to a printed guide. It cannot reliably recognise the picture, verify stroke order, or grade artistic ability.</p>
  </div>;
 }
 function OptionGame({question,options,answer,onNext,icon='🌈'}){
