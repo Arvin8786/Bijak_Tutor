@@ -4,6 +4,7 @@
  */
 import fs from 'node:fs';
 import {LESSONS} from '../src/lessons.js';
+import {GRADED_CHALLENGES} from '../src/gradedChallenges.js';
 import {availableSubjects} from '../src/primarySubjects.js';
 const streams=['SK','SJKC','SJKT'];
 const matrix=[];
@@ -13,7 +14,7 @@ for(const stream of streams)for(let year=1;year<=6;year++)for(const subject of a
  const reviewed=lessons.filter(l=>l.status==='TEACHER_APPROVED').length;
  matrix.push({stream,year,subject:subject.name,optional:subject.group==='optional',authoredLessons:lessons.length,assessments,teacherApproved:reviewed,needsMaterials:lessons.length===0,needsReview:lessons.length>reviewed});
 }
-const report={generatedAt:new Date().toISOString(),definition:'Counts of authored draft learning material, not complete official curriculum-standard coverage',totalAuthoredLessons:LESSONS.length,totalAssessments:LESSONS.reduce((n,l)=>n+(l.check?.length||0),0),reviewedLessons:LESSONS.filter(l=>l.status==='TEACHER_APPROVED').length,matrix};
+const report={generatedAt:new Date().toISOString(),definition:'Counts of authored draft learning material, not complete official curriculum-standard coverage',totalAuthoredLessons:LESSONS.length,totalAssessments:LESSONS.reduce((n,l)=>n+(l.check?.length||0),0)+GRADED_CHALLENGES.length,additionalChallenges:GRADED_CHALLENGES.length,reviewedLessons:LESSONS.filter(l=>l.status==='TEACHER_APPROVED').length,matrix};
 fs.mkdirSync('release',{recursive:true});
 fs.writeFileSync('release/CURRICULUM_COVERAGE.json',JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({totalAuthoredLessons:report.totalAuthoredLessons,totalAssessments:report.totalAssessments,reviewedLessons:report.reviewedLessons,emptySubjectYearStreamCombinations:matrix.filter(x=>x.needsMaterials).length},null,2));
