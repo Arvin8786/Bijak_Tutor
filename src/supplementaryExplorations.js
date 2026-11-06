@@ -937,6 +937,22 @@ export const SUPPLEMENTARY_STAGES = {
   "5": "Connect the idea to a real-life situation and identify evidence.",
   "6": "Explain the idea to another learner, check the evidence, and consider when it may not apply."
 };
+/** Additional real, grade-scaled numeracy practice, not copied/repeated catalogue placeholders. */
+export function extraMathChecks(year,unit,id){
+ const scale=[0,9,20,100,1000,10000,100000][year];
+ return Array.from({length:3},(_,k)=>{
+  const a=2+((year*13+unit*17+k*7)%(Math.max(4,Math.floor(scale/3))));
+  const b=1+((year*11+unit*7+k*5)%(Math.max(3,Math.floor(scale/5))));
+  let text,answer,why;
+  if(unit===0){const bigger=a+b;text='Antara '+a+' dan '+bigger+', yang mana lebih besar?';answer=String(bigger);why=bigger+' ialah nombor yang lebih besar.'}
+  else if(unit===1){text=a+' + '+b+' = ?';answer=String(a+b);why='Gabungkan '+a+' dan '+b+' untuk dapat '+(a+b)+'.'}
+  else if(unit===2){const bigger=a+b;text=bigger+' − '+b+' = ?';answer=String(a);why='Ambil '+b+' daripada '+bigger+', tinggal '+a+'.'}
+  else if(unit===3){const x=2+(a%([0,3,5,7,9,12,15][year]||3)),y=2+(b%([0,3,5,7,9,12,15][year]||3));text=x+' × '+y+' = ?';answer=String(x*y);why=x+' kumpulan '+y+' memberi jumlah '+(x*y)+'.'}
+  else if(unit===4){const x=2+(a%([0,3,5,7,9,12,15][year]||3)),y=2+(b%([0,3,5,7,9,12,15][year]||3));text=(x*y)+' ÷ '+x+' = ?';answer=String(y);why=(x*y)+' objek dalam '+x+' kumpulan sama banyak bermakna '+y+' setiap kumpulan.'}
+  else{const den=2+((a+k)%Math.min(year+2,8));const numerator=1+((b+k)%(den-1));text='Satu kek dibahagi kepada '+den+' bahagian sama besar. '+numerator+' bahagian ditanda. Tulis pecahan.';answer=numerator+'/'+den;why='Pecahan ialah bilangan bahagian ditanda, '+numerator+', daripada '+den+' bahagian sama besar.'}
+  return {id:id+'-math-'+k,mode:'text',text,answer,why,transfer:k===2};
+ });
+}
 export function createSupplementaryLessons(){
  const lessons=[];
  for(const [subject,entry] of Object.entries(SUPPLEMENTARY_TOPICS)){
@@ -958,7 +974,8 @@ export function createSupplementaryLessons(){
     ],
     check:[
      {id:id+'-q1',mode:'choice',text:question,options:[answer,wrong1,wrong2].sort((a,b)=>(a.length+year+i)%5-(b.length+year+i)%5),answer,why,transfer:false},
-     {id:id+'-q2',mode:'reason',text:'Which statement helps explain '+title+'?',options:[summary,alternatives[0][1],alternatives[1][1]].sort((a,b)=>((a.length+year)%7)-((b.length+year)%7)),answer:summary,why:'Review: '+example,transfer:true}
+     {id:id+'-q2',mode:'reason',text:'Which statement helps explain '+title+'?',options:[summary,alternatives[0][1],alternatives[1][1]].sort((a,b)=>((a.length+year)%7)-((b.length+year)%7)),answer:summary,why:'Review: '+example,transfer:true},
+     ...(subject==='Matematik'?extraMathChecks(year,i,id):[])
     ],
     enrichment:{mission,stage:year<=2?'Starter':year<=4?'Explorer':'Think deeper',prompt:SUPPLEMENTARY_STAGES[year]}
    });
