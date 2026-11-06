@@ -9,15 +9,53 @@ const words=text=>String(text||'').toLowerCase().normalize('NFKC').match(/[\p{L}
 const STOP=new Set(['what','is','how','the','a','an','can','you','please','explain','show','me','tell','about','why','does','do','of','and','to','it','in','a','berapa','apakah','cara','bagaimana','apa','ialah','yang','dan','untuk','dengan','saya','boleh','terangkan','tunjukkan','kira','mengapa','contoh','theory','concept','formula']);
 export function solveWorkedCalculation(input){
  const text=String(input||'').trim();if(text.length>500)return null;
- let m=text.match(regexMath);
- if(!m)return null;
+ const m=text.match(regexMath);if(!m)return null;
  const a=Number(m[1]),b=Number(m[3]),op=m[2];
  if(!Number.isFinite(a)||!Number.isFinite(b)||Math.abs(a)>1e10||Math.abs(b)>1e10)return null;
  let value,steps=[];
- if(op==='+' ){value=a+b;steps=[`Start with ${fmt(a)} and add ${fmt(b)}.`,`Combine the two amounts: ${fmt(a)} + ${fmt(b)} = ${fmt(value)}.`,Number.isInteger(a)&&Number.isInteger(b)&&a%10+b%10>=10?`The ones add to ${a%10+b%10}, so regroup 10 ones as 1 ten.`:'Check by counting forward or using place values.',`Check: ${fmt(value)} − ${fmt(b)} = ${fmt(a)}.`]}
- else if(op==='−'||op==='-'){value=a-b;steps=[`Start with ${fmt(a)}.`,`Take away ${fmt(b)}: ${fmt(a)} − ${fmt(b)} = ${fmt(value)}.`,`Check by adding back: ${fmt(value)} + ${fmt(b)} = ${fmt(a)}.`]}
- else if(op==='×'||op==='*'){value=a*b;steps=[`Multiply ${fmt(a)} by ${fmt(b)}.`,Number.isInteger(b)&&b>=1&&b<=10?`Think of ${fmt(b)} equal groups of ${fmt(a)}.`:`Use place-value multiplication or equal groups.`,`Calculate: ${fmt(a)} × ${fmt(b)} = ${fmt(value)}.`,b!==0?`Check: ${fmt(value)} ÷ ${fmt(b)} = ${fmt(a)}.`:'Multiplying any number by zero gives zero.']}
- else{if(b===0)return {title:'Division by zero',steps:['We cannot divide a number by zero.','Try dividing by a non-zero number instead.'],kind:'math'};value=a/b;steps=[`Share ${fmt(a)} into ${fmt(b)} equal groups (or find how many groups of ${fmt(b)} fit).`,`Compute: ${fmt(a)} ÷ ${fmt(b)} = ${fmt(value)}.`,`Check: ${fmt(value)} × ${fmt(b)} = ${fmt(a)}.`]}
+ const posInts=Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0;
+ if(op==='+'){
+  value=a+b;
+  steps=[`Align the numbers by place value: ones under ones, tens under tens.`];
+  if(posInts&&a<1000&&b<1000){
+   const ones=a%10+b%10,carry=Math.floor(ones/10);
+   steps.push(`Ones: ${a%10} + ${b%10} = ${ones}. Write ${ones%10} in the ones column${carry?' and carry 1 ten':''}.`);
+   const tens=Math.floor(a/10)%10+Math.floor(b/10)%10+carry;
+   steps.push(`Tens: ${Math.floor(a/10)%10} + ${Math.floor(b/10)%10}${carry?' + 1 carried ten':''} = ${tens}.`);
+   if(a>=100||b>=100)steps.push(`Include the hundreds column and any regrouping from the tens column.`);
+  }else steps.push(`Combine the amounts: ${fmt(a)} + ${fmt(b)}.`);
+  steps.push(`Answer: ${fmt(a)} + ${fmt(b)} = ${fmt(value)}.`,`Check: ${fmt(value)} − ${fmt(b)} = ${fmt(a)}.`);
+ }else if(op==='−'||op==='-'){
+  value=a-b;
+  steps=[`Align place values and start at the ones column.`];
+  if(posInts&&a>=b&&a<100&&b<100){
+   const x=a%10,y=b%10;
+   if(x<y)steps.push(`Regroup: exchange 1 ten for 10 ones. Now ${x+10} − ${y} = ${x+10-y} in the ones column.`);
+   else steps.push(`Ones: ${x} − ${y} = ${x-y}.`);
+   steps.push(`Tens: ${Math.floor(a/10)-(x<y?1:0)} − ${Math.floor(b/10)} = ${Math.floor(a/10)-(x<y?1:0)-Math.floor(b/10)}.`);
+  }else steps.push(`Subtract ${fmt(b)} from ${fmt(a)}.`);
+  steps.push(`Answer: ${fmt(a)} − ${fmt(b)} = ${fmt(value)}.`,`Check: ${fmt(value)} + ${fmt(b)} = ${fmt(a)}.`);
+ }else if(op==='×'||op==='*'){
+  value=a*b;steps=[`Multiplication makes equal groups: ${fmt(b)} groups of ${fmt(a)}.`];
+  if(posInts&&b<100&&a<1000){
+   const ones=b%10,tens=Math.floor(b/10);
+   steps.push(`Multiply by the ones digit: ${fmt(a)} × ${ones} = ${fmt(a*ones)}.`);
+   if(tens)steps.push(`Multiply by the tens: ${fmt(a)} × ${tens*10} = ${fmt(a*tens*10)}.`,`Add partial products: ${fmt(a*ones)} + ${fmt(a*tens*10)} = ${fmt(value)}.`);
+  }else steps.push(`Multiply: ${fmt(a)} × ${fmt(b)}.`);
+  steps.push(`Answer: ${fmt(value)}.`,b!==0?`Check by division: ${fmt(value)} ÷ ${fmt(b)} = ${fmt(a)}.`:'Multiplying by zero gives zero.');
+ }else{
+  if(b===0)return {title:'Division by zero',steps:['We cannot divide a number by zero.','Try dividing by a non-zero number instead.'],kind:'math'};
+  value=a/b;steps=[`Division asks how many groups of ${fmt(b)} fit into ${fmt(a)}.`];
+  if(posInts&&a<=9999&&b>=1&&b<=99){
+   let remainder=0;const digits=String(a).split('');
+   for(const digit of digits){const chunk=remainder*10+Number(digit),quotientDigit=Math.floor(chunk/b);
+    steps.push(`Bring down ${digit}. ${fmt(b)} fits into ${fmt(chunk)} exactly ${quotientDigit} time${quotientDigit===1?'':'s'}; subtract ${fmt(quotientDigit*b)}, remainder ${fmt(chunk-quotientDigit*b)}.`);
+    remainder=chunk-quotientDigit*b;
+   }
+   if(remainder)steps.push(`Remainder ${remainder}; the exact decimal answer is ${fmt(value)}.`);
+  }else steps.push(`Calculate ${fmt(a)} ÷ ${fmt(b)}.`);
+  steps.push(`Answer: ${fmt(value)}.`,`Check: ${fmt(value)} × ${fmt(b)} = ${fmt(a)}.`);
+ }
  if(!Number.isFinite(value))return null;
  return {title:`${fmt(a)} ${op==='*'?'×':op==='/'?'÷':op} ${fmt(b)} = ${fmt(value)}`,steps,kind:'math',answer:fmt(value),source:'Checked arithmetic'};
 }
