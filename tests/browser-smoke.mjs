@@ -93,11 +93,33 @@ try{
   await page.getByRole('button',{name:/Explain to me/i}).click();
   await page.getByRole('heading',{name:/28 \+ 15 = 43/}).waitFor();
   assert.ok(await page.getByRole('button',{name:/Read answer/i}).isVisible());
+  if(width===1280){
+    await page.locator('nav.nav').getByRole('button',{name:'Adults Page'}).click();
+    await page.getByRole('heading',{name:'Adult Learning Studio'}).waitFor();
+    assert.equal(await page.locator('.growth-lessons button').count(),6,'Adult Learn AI topics missing');
+    await page.locator('.growth-answers button').first().click();
+    await page.locator('.growth-actions').getByRole('button',{name:/Check answer/i}).click();
+    await page.locator('.growth-feedback.correct').waitFor();
+    await page.locator('nav.nav').getByRole('button',{name:'Creative Hobbies'}).click();
+    await page.getByRole('heading',{name:'Adult Learning Studio'}).waitFor();
+    const days=page.locator('.growth-week button');
+    assert.equal(await days.count(),7,'Seven-day adult hobby planner missing');
+    await days.first().click();
+    assert.equal(await days.first().getAttribute('aria-pressed'),'true');
+    await page.locator('nav.nav').getByRole('button',{name:'Learn AI'}).click();
+    await page.locator('.growth-prompt-form input').first().fill('Write a friendly welcome message');
+    assert.match(await page.locator('.growth-prompt-output').textContent(),/friendly welcome message/);
+    await page.locator('nav.nav').getByRole('button',{name:'Junior Lab'}).click();
+    await page.getByRole('heading',{name:'Junior Discovery Lab'}).waitFor();
+    await page.locator('.growth-module.growth-hobby').click();
+    assert.equal(await page.locator('.growth-week button').count(),7,'Junior hobby track missing');
+    assert.match(await page.locator('.proease-footer').textContent(),/ProEase Studio/);
+  }
   await page.getByRole('button',{name:/Home/i}).click();
   assert.equal(exceptions.length,0,'JS runtime error: '+exceptions.join('; '));
   const over=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);
   assert.equal(over,false,'Horizontal overflow at '+width+'px');
   await page.close();
  }
- console.log('Browser smoke tests passed: lesson cards, map, quiz, years 1 & 3 and mobile widths.');
+ console.log('Browser smoke tests passed: existing Junior features, Adult Learn AI, Junior/Adult Creative Hobbies, ProEase attribution and mobile widths.');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}
