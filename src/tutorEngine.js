@@ -19,7 +19,7 @@ export function solveWorkedCalculation(input){
   steps=[`Align the numbers by place value: ones under ones, tens under tens.`];
   if(posInts&&a<1000&&b<1000){
    const ones=a%10+b%10,carry=Math.floor(ones/10);
-   steps.push(`Ones: ${a%10} + ${b%10} = ${ones}. Write ${ones%10} in the ones column${carry?' and carry 1 ten':''}.`);
+   steps.push(`Ones: ${a%10} + ${b%10} = ${ones}. Write ${ones%10} in the ones column${carry?' and regroup (carry) 1 ten':''}.`);
    const tens=Math.floor(a/10)%10+Math.floor(b/10)%10+carry;
    steps.push(`Tens: ${Math.floor(a/10)%10} + ${Math.floor(b/10)%10}${carry?' + 1 carried ten':''} = ${tens}.`);
    if(a>=100||b>=100)steps.push(`Include the hundreds column and any regrouping from the tens column.`);
