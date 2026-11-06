@@ -125,7 +125,7 @@ try{
     assert.equal(await page.locator('.growth-week button').count(),7,'Junior hobby track missing');
     assert.match(await page.locator('.proease-footer').textContent(),/ProEase Studio/);
   }
-  await page.getByRole('button',{name:/Home/i}).click();
+  await page.locator('nav.nav').getByRole('button',{name:'Home'}).click();
   assert.equal(exceptions.length,0,'JS runtime error: '+exceptions.join('; '));
   const over=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);
   assert.equal(over,false,'Horizontal overflow at '+width+'px');
