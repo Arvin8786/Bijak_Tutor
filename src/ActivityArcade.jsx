@@ -1,11 +1,14 @@
 import React,{useState} from 'react';
 import {PICTURE_SUBTRACTION,VOCAB_CARDS,HIJAIYAH,makeMathOptions,matchOptions,makeHijaiyahOptions} from './miniActivities.js';
 import {DrawingPad} from './PreschoolStudio.jsx';
+import ExtraPractice,{EXTRA_MODES} from './ExtraPractice.jsx';
+import './extra-practice.css';
 const MODES=[
  ['subtract','🍎','Picture subtraction','Count, take away and solve'],
  ['match','🧩','Read & Match','Match pictures with words'],
  ['vocab','📚','Picture dictionary','Hear and learn Malay + English'],
- ['hijaiyah','🌙','Huruf Hijaiyah','Recognise and trace Arabic letters']
+ ['hijaiyah','🌙','Huruf Hijaiyah','Recognise and trace Arabic letters'],
+ ...EXTRA_MODES
 ];
 function say(text,lang='en-US'){
  if(!('speechSynthesis' in window))return false;
@@ -14,7 +17,7 @@ function say(text,lang='en-US'){
  window.speechSynthesis.speak(utterance);return true;
 }
 export default function ActivityArcade(){
- const [mode,setMode]=useState('subtract'),[index,setIndex]=useState(0),[choice,setChoice]=useState(null),[stars,setStars]=useState(0),[lang,setLang]=useState('ms'),[guide,setGuide]=useState(false),[message,setMessage]=useState('');
+ const [mode,setMode]=useState('subtract'),[index,setIndex]=useState(0),[choice,setChoice]=useState(null),[stars,setStars]=useState(0),[lang,setLang]=useState('ms'),[guide,setGuide]=useState(false),[message,setMessage]=useState(''),[level,setLevel]=useState(1);
  const next=()=>{setIndex(i=>i+1);setChoice(null);setGuide(false);setMessage('')};
  const switchMode=m=>{setMode(m);setIndex(0);setChoice(null);setGuide(false);setMessage('')};
  const answer=(value,expected)=>{
@@ -31,9 +34,11 @@ export default function ActivityArcade(){
  const solved=choice!==null;
  return <section className="activity-arcade" aria-label="Interactive games and activities">
   <div className="arcade-hero"><div><span className="growth-kicker">🌈 BIJAKLEARN JUNIOR • ACTIVITY PLAYGROUND</span><h1>Learn by playing!</h1><p>Tap, count, match, trace and explore. These are original interactive activities, inspired by everyday early-learning themes.</p></div><span aria-hidden="true">🎪</span></div>
+  <div className="arcade-intro"><strong>{MODES.length} interactive activities</strong><span>Choose any game, then keep tapping Next for fresh practice. 🌟</span></div>
   <div className="arcade-modes">{MODES.map(([id,icon,title,desc])=><button key={id} type="button" aria-pressed={mode===id} onClick={()=>switchMode(id)} className={mode===id?'selected':''}><span aria-hidden="true">{icon}</span><strong>{title}</strong><small>{desc}</small></button>)}</div>
   <div className="arcade-stage">
-   <div className="arcade-meta"><span>⭐ {stars} stars earned</span><span>Activity {index+1}</span>{mode==='match'||mode==='vocab'?<label>Language <select value={lang} onChange={e=>{setLang(e.target.value);setChoice(null)}}><option value="ms">Bahasa Melayu</option><option value="en">English</option></select></label>:null}</div>
+   <div className="arcade-meta"><span>⭐ {stars} stars earned</span><span>Activity {index+1}</span><label>Level <select aria-label="Practice difficulty" value={level} onChange={e=>{setLevel(Number(e.target.value));setIndex(0);setChoice(null)}}><option value="1">Starter</option><option value="2">Growing</option><option value="3">Challenge</option></select></label>{mode==='match'||mode==='vocab'?<label>Language <select value={lang} onChange={e=>{setLang(e.target.value);setChoice(null)}}><option value="ms">Bahasa Melayu</option><option value="en">English</option></select></label>:null}</div>
+   {EXTRA_MODES.some(([id])=>id===mode)&&<ExtraPractice key={mode+'-'+index+'-'+level} mode={mode} index={index} level={level} onStar={()=>setStars(v=>v+1)}/>}
    {mode==='subtract'&&<>
      <h2>🍎 Picture subtraction</h2><p>Count {q.start} {q.item}, then take away {q.removed}. How many are left?</p>
      <div className="arcade-counter" role="img" aria-label={q.start+' '+q.item+' with '+q.removed+' crossed out'}>
@@ -66,6 +71,6 @@ export default function ActivityArcade(){
    {message&&<div role="status" aria-live="polite" className={'arcade-result '+(choice?.correct?'success':'try')}>{message}{!choice?.correct&&<span> Correct answer: <strong>{expected}</strong></span>}</div>}
    <div className="arcade-actions"><button type="button" onClick={()=>{setChoice(null);setMessage('')}}>↻ Try again</button><button className="primary" type="button" onClick={next}>Next activity →</button></div>
   </div>
-  <p className="growth-safety">The activities are formative, not official assessment scores. The writing pad detects drawing strokes but does not grade handwriting. Text-to-speech requires a compatible browser voice. Children should explore with adult guidance.</p>
+  <p className="growth-safety">There are {MODES.length} playable activity types, with expanding number challenges and rotating practice sets. The activities are formative, not official assessment scores. The writing pad detects drawing strokes but does not grade handwriting. Text-to-speech requires a compatible browser voice. Children should explore with adult guidance.</p>
  </section>;
 }
