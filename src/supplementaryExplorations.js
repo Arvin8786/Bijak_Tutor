@@ -928,6 +928,78 @@ export const SUPPLEMENTARY_TOPICS = {
       ]
     ]
   }
+,
+  "Bahasa Arab": {
+  "icon": "✍️",
+  "units": [
+    [
+      "Huruf Alif dan Ba",
+      "Huruf Arab mempunyai bentuk dan nama. Alif ditulis ا dan Ba ditulis ب.",
+      "ا ialah Alif dan ب ialah Ba.",
+      "Yang manakah huruf Ba?",
+      "ب",
+      "ا",
+      "ت",
+      "Ba ditulis ب dan mempunyai satu titik di bawah.",
+      "Tulis ا dan ب pada kertas dan sebut namanya."
+    ],
+    [
+      "Nombor Arab asas",
+      "Nombor ١, ٢, ٣ mewakili satu, dua dan tiga.",
+      "١ = satu, ٢ = dua, ٣ = tiga.",
+      "Simbol yang menunjukkan tiga ialah?",
+      "٣",
+      "١",
+      "٢",
+      "٣ mewakili bilangan tiga.",
+      "Padankan angka ١ hingga ٥ dengan bilangan objek."
+    ],
+    [
+      "Ucapan salam",
+      "السلام عليكم ialah ucapan salam yang digunakan dalam bahasa Arab.",
+      "السَّلَامُ عَلَيْكُمْ ialah salam.",
+      "Ungkapan salam dalam bahasa Arab ialah?",
+      "السلام عليكم",
+      "كتاب",
+      "بيت",
+      "السلام عليكم ialah ucapan salam.",
+      "Berlatih memberi salam dengan sopan."
+    ],
+    [
+      "Nama benda asas",
+      "كِتَابٌ bermaksud buku dan قَلَمٌ bermaksud pen.",
+      "Ini ialah buku: كِتَابٌ.",
+      "Apakah maksud كِتَابٌ?",
+      "buku",
+      "rumah",
+      "air",
+      "كِتَابٌ merujuk kepada buku.",
+      "Labelkan buku dan pen dalam nota Bahasa Arab."
+    ],
+    [
+      "Keluarga dalam bahasa Arab",
+      "أُمٌّ ialah ibu dan أَبٌ ialah bapa.",
+      "أُمٌّ bermaksud ibu.",
+      "Apakah maksud أُمٌّ?",
+      "ibu",
+      "sekolah",
+      "pokok",
+      "أُمٌّ ialah istilah untuk ibu.",
+      "Tulis perkataan Arab dan maksud Melayu untuk dua ahli keluarga."
+    ],
+    [
+      "Warna asas",
+      "أَحْمَرُ bermaksud merah dan أَزْرَقُ bermaksud biru.",
+      "أَحْمَرُ ialah merah.",
+      "Apakah maksud أَحْمَرُ?",
+      "merah",
+      "kuning",
+      "hijau",
+      "أَحْمَرُ bermaksud warna merah.",
+      "Pilih tiga objek dan cari namanya dalam sumber Arab yang boleh dipercayai."
+    ]
+  ]
+}
 };
 export const SUPPLEMENTARY_STAGES = {
   "1": "Start with a simple example and say the idea aloud before answering.",
@@ -979,6 +1051,13 @@ export function createSupplementaryLessons(){
     ],
     enrichment:{mission,stage:year<=2?'Starter':year<=4?'Explorer':'Think deeper',prompt:SUPPLEMENTARY_STAGES[year]}
    });
+  }
+ }
+ // Optional SK language offerings share starter language topics but remain separately labelled.
+ for(const [source,target,prefix] of [['Bahasa Cina','Bahasa Cina SK','chinesesk'],['Bahasa Tamil','Bahasa Tamil SK','tamilsk']]){
+  for(const base of lessons.filter(l=>l.subject===source)){
+   lessons.push({...base,id:'supp-'+prefix+'-'+base.year+'-'+base.id.split('-').at(-1),subject:target,school:'SK',optional:true,
+    check:base.check.map(q=>({...q,id:'supp-'+prefix+'-'+q.id}))});
   }
  }
  return lessons;
