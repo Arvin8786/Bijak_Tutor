@@ -47,11 +47,40 @@ try{
   const year=page.locator('.curriculum-map select').nth(1);
   await year.selectOption('3');
   const lessonCount=await page.locator('.curriculum-map .illustrated-lesson').count();
-  assert.ok(lessonCount>=1,'Year 3 lesson cards missing');
+  assert.ok(lessonCount>=8,'Year 3 Maths has fewer than eight genuine study topics');
   await page.locator('.curriculum-map .illustrated-lesson').first().click();
   await page.locator('.lesson-reader').waitFor();
   assert.ok((await page.locator('.lesson-reader h1').textContent()).length>2);
   if(width===1280){await page.getByRole('button',{name:/Learning map/i}).click();for(const stream of ['SK','SJKC','SJKT']){await page.locator('.curriculum-map select').first().selectOption(stream);for(let y=1;y<=6;y++){await page.locator('.curriculum-map select').nth(1).selectOption(String(y));await page.locator('.curriculum-map select').nth(2).selectOption('Matematik');const cards=page.locator('.curriculum-map .illustrated-lesson');assert.ok(await cards.count()>0,stream+' year '+y+' has no lessons');await cards.first().click();await page.locator('.lesson-reader').waitFor();await page.getByRole('button',{name:/Back to subjects/i}).click();await page.getByRole('button',{name:/Learning map/i}).click()}}}
+  if(width===1280){
+    // Audit real selected subject/year lesson cards rather than only checking source data.
+    await page.locator('nav.nav').getByRole('button',{name:/Learning map/i}).click();
+    await page.locator('.curriculum-map select').first().selectOption('SK');
+    await page.locator('.curriculum-map select').nth(1).selectOption('1');
+    for(const subject of ['Bahasa Melayu','Bahasa Inggeris','Sains','Pendidikan Islam','Pendidikan Moral','Pendidikan Seni Visual','Pendidikan Muzik']){
+      await page.locator('.curriculum-map select').nth(2).selectOption(subject);
+      assert.ok(await page.locator('.curriculum-map .illustrated-lesson').count()>=8,subject+' Year 1 still displays one or two lessons');
+    }
+    await page.locator('.curriculum-map select').nth(2).selectOption('Sains');
+    await page.locator('.curriculum-map .illustrated-lesson').filter({hasText:'Deria manusia'}).click();
+    await page.locator('.discovery-mission').waitFor();
+    await page.locator('.discovery-mission textarea').fill('I learned that I can use my nose to notice different smells.');
+    await page.locator('.discovery-mission').getByRole('button',{name:/Get reflection tips/i}).click();
+    assert.match(await page.locator('.discovery-feedback').textContent(),/compare your idea/i);
+    await page.locator('nav.nav').getByRole('button',{name:/Preschool/i}).click();
+    await page.locator('.early-mode-grid').getByRole('button',{name:/Trace & draw/i}).click();
+    const draw=page.locator('.trace-studio .trace-canvas');
+    const bounds=await draw.boundingBox();
+    assert.ok(bounds,'Finger tracing canvas missing');
+    await page.mouse.move(bounds.x+bounds.width*.35,bounds.y+bounds.height*.2);
+    await page.mouse.down();
+    for(let i=0;i<=15;i++)await page.mouse.move(bounds.x+bounds.width*(.35+.3*i/15),bounds.y+bounds.height*(.2+.65*i/15));
+    await page.mouse.up();
+    await page.getByRole('button',{name:/Check my drawing/i}).click();
+    assert.ok(await page.locator('.trace-feedback').isVisible(),'Drawing review does not appear');
+    assert.match(await page.locator('.trace-feedback').textContent(),/stroke|movement/i);
+    await page.getByRole('button',{name:/Try again/i}).first().click();
+  }
   if(width===1280){
     await page.locator('nav.nav').getByRole('button',{name:'Home'}).click();
     await page.getByRole('checkbox',{name:/Remember practice on this device/i}).check();
