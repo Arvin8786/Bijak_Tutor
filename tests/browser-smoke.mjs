@@ -53,7 +53,7 @@ try{
   assert.ok((await page.locator('.lesson-reader h1').textContent()).length>2);
   if(width===1280){await page.getByRole('button',{name:/Learning map/i}).click();for(const stream of ['SK','SJKC','SJKT']){await page.locator('.curriculum-map select').first().selectOption(stream);for(let y=1;y<=6;y++){await page.locator('.curriculum-map select').nth(1).selectOption(String(y));await page.locator('.curriculum-map select').nth(2).selectOption('Matematik');const cards=page.locator('.curriculum-map .illustrated-lesson');assert.ok(await cards.count()>0,stream+' year '+y+' has no lessons');await cards.first().click();await page.locator('.lesson-reader').waitFor();await page.getByRole('button',{name:/Back to subjects/i}).click();await page.getByRole('button',{name:/Learning map/i}).click()}}}
   if(width===1280){
-    await page.getByRole('button',{name:/Home/i}).click();
+    await page.locator('nav.nav').getByRole('button',{name:'Home'}).click();
     await page.getByRole('checkbox',{name:/Remember practice on this device/i}).check();
     await page.locator('details summary').first().click();
     await page.getByLabel('Fictional nickname').fill('Test Fox');
@@ -93,11 +93,57 @@ try{
   await page.getByRole('button',{name:/Explain to me/i}).click();
   await page.getByRole('heading',{name:/28 \+ 15 = 43/}).waitFor();
   assert.ok(await page.getByRole('button',{name:/Read answer/i}).isVisible());
-  await page.getByRole('button',{name:/Home/i}).click();
+  if(width===1280){
+    await page.locator('nav.nav').getByRole('button',{name:'Activity Playground'}).click();
+    await page.locator('.activity-arcade').waitFor();
+    await page.locator('.arcade-modes').getByRole('button',{name:/Picture subtraction/i}).click();
+    assert.ok(await page.locator('.arcade-counter span').count()>0);
+    await page.locator('.arcade-answers').getByRole('button',{name:'5',exact:true}).click();
+    await page.getByRole('button',{name:/Next activity/i}).click();
+    await page.locator('.arcade-modes').getByRole('button',{name:/Read & Match/i}).click();
+    assert.ok(await page.locator('.arcade-answers button').count()===3);
+    await page.locator('.arcade-modes').getByRole('button',{name:/Picture dictionary/i}).click();
+    assert.ok(await page.locator('.arcade-vocab button').count()===2);
+    await page.locator('.arcade-modes').getByRole('button',{name:/Huruf Hijaiyah/i}).click();
+    assert.equal(await page.locator('.arcade-answers button').count(),4);
+    await page.getByRole('button',{name:/Trace letter/i}).click();
+    assert.ok(await page.locator('.arcade-arabic-pad canvas').isVisible());
+    await page.locator('nav.nav').getByRole('button',{name:'Word Tiles versus Bot'}).click();
+    await page.locator('.word-bot-game').waitFor();
+    const rack=page.locator('.word-bot-rack button');
+    assert.equal(await rack.count(),6,'Word tile rack missing');
+    for(const tile of ['S','T','O','N','E']){
+      await rack.filter({hasText:tile}).first().click();
+    }
+    await page.getByRole('button',{name:/Play word/i}).click();
+    await page.locator('.word-bot-plays').waitFor();
+    assert.ok(await page.locator('.word-bot-plays>div').count()>=1);
+    await page.locator('nav.nav').getByRole('button',{name:'Adults Page'}).click();
+    await page.getByRole('heading',{name:'Adult Learning Studio'}).waitFor();
+    assert.equal(await page.locator('.growth-lessons button').count(),6,'Adult Learn AI topics missing');
+    await page.locator('.growth-answers button').first().click();
+    await page.locator('.growth-actions').getByRole('button',{name:/Check answer/i}).click();
+    await page.locator('.growth-feedback.correct').waitFor();
+    await page.locator('nav.nav').getByRole('button',{name:'Creative Hobbies'}).click();
+    await page.getByRole('heading',{name:'Adult Learning Studio'}).waitFor();
+    const days=page.locator('.growth-week button');
+    assert.equal(await days.count(),7,'Seven-day adult hobby planner missing');
+    await days.first().click();
+    assert.equal(await days.first().getAttribute('aria-pressed'),'true');
+    await page.locator('nav.nav').getByRole('button',{name:'Learn AI'}).click();
+    await page.locator('.growth-prompt-form input').first().fill('Write a friendly welcome message');
+    assert.match(await page.locator('.growth-prompt-output').textContent(),/friendly welcome message/);
+    await page.locator('nav.nav').getByRole('button',{name:'Junior Lab'}).click();
+    await page.getByRole('heading',{name:'Junior Discovery Lab'}).waitFor();
+    await page.locator('.growth-module.growth-hobby').click();
+    assert.equal(await page.locator('.growth-week button').count(),7,'Junior hobby track missing');
+    assert.match(await page.locator('.proease-footer').textContent(),/ProEase Studio/);
+  }
+  await page.locator('nav.nav').getByRole('button',{name:'Home'}).click();
   assert.equal(exceptions.length,0,'JS runtime error: '+exceptions.join('; '));
   const over=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);
   assert.equal(over,false,'Horizontal overflow at '+width+'px');
   await page.close();
  }
- console.log('Browser smoke tests passed: lesson cards, map, quiz, years 1 & 3 and mobile widths.');
+ console.log('Browser smoke tests passed: existing Junior features, Adult Learn AI, Junior/Adult Creative Hobbies, ProEase attribution and mobile widths.');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}

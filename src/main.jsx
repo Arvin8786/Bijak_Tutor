@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {LESSONS} from './lessons';
 import {availableSubjects,lessonCountForSubject} from './primarySubjects.js';
@@ -20,6 +20,12 @@ import PracticeArena from './PracticeArena.jsx';
 import {readLocale,writeLocale,say,LANGUAGES} from './localization.js';
 import './welcome.css';
 import './practice.css';
+import GrowthHub from './GrowthHub.jsx';
+import './growth.css';
+import WordTilesGame from './WordTilesGame.jsx';
+import './word-tiles.css';
+import ActivityArcade from './ActivityArcade.jsx';
+import './activity-arcade.css';
 const isLive=!!window.google?.script?.run;
 const langLabels={ms:'Bahasa Melayu',en:'English',ta:'தமிழ்',zh:'中文'};
 const DEMO_SAVE_CONSENT='bijaklearn:demo-save-consent';
@@ -46,27 +52,80 @@ function PwaControls(){
  const [installEvent,setInstallEvent]=useState(null);
  const [standalone,setStandalone]=useState(window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true);
  const [showHelp,setShowHelp]=useState(false);
+ const [updateReady,setUpdateReady]=useState(false);
+ const reloaded=useRef(false);
  useEffect(()=>{
-  const onOnline=()=>setOnline(true),onOffline=()=>setOnline(false);
+  const onOnline=()=>{setOnline(true);checkRelease()};
+  const onOffline=()=>setOnline(false);
   const onInstall=e=>{e.preventDefault();setInstallEvent(e)};
   const onInstalled=()=>{setInstallEvent(null);setStandalone(true)};
-  window.addEventListener('online',onOnline);window.addEventListener('offline',onOffline);
+  const release=__BIJAK_RELEASE__;
+  let alive=true;
+  async function checkRelease(){
+   if(isLive||!navigator.onLine)return;
+   try{
+    const url=`${import.meta.env.BASE_URL}release.json?check=${Date.now()}`;
+    const response=await fetch(url,{cache:'no-store'});
+    if(!response.ok)return;
+    const data=await response.json();
+    if(data.version&&data.version!==release&&alive){
+      setUpdateReady(true);
+      navigator.serviceWorker?.getRegistration().then(reg=>reg?.update()).catch(()=>{});
+      const key='bijaklearn:last-reload:'+data.version;
+      if(!reloaded.current&&sessionStorage.getItem(key)!=='yes'){
+       reloaded.current=true;
+       sessionStorage.setItem(key,'yes');
+       window.location.reload();
+      }
+    }
+   }catch{ /* Offline release checks must never block studying. */ }
+  }
+  const onVisible=()=>{if(document.visibilityState==='visible')checkRelease()};
+  const hadController=Boolean(navigator.serviceWorker?.controller);
+  const onControllerChange=()=>{
+   if(hadController&&!reloaded.current){
+    reloaded.current=true;window.location.reload();
+   }
+  };
+  const onWorkerMessage=e=>{
+   if(e.data?.type==='BIJAK_RELEASE_ACTIVATED'&&e.data.version!=='bijaklearn-static-'+release)setUpdateReady(true);
+  };
+  window.addEventListener('online',onOnline);
+  window.addEventListener('offline',onOffline);
+  window.addEventListener('focus',checkRelease);
   window.addEventListener('beforeinstallprompt',onInstall);
   window.addEventListener('appinstalled',onInstalled);
-  if(!isLive && 'serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')){
-   navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(err=>console.warn('PWA offline cache unavailable:',err));
+  document.addEventListener('visibilitychange',onVisible);
+  navigator.serviceWorker?.addEventListener('controllerchange',onControllerChange);
+  navigator.serviceWorker?.addEventListener('message',onWorkerMessage);
+  let tick;
+  if(!isLive){
+   checkRelease();
+   tick=window.setInterval(checkRelease,60000);
+   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`,{updateViaCache:'none'}).then(reg=>reg.update()).catch(err=>console.warn('PWA offline cache unavailable:',err));
+   }
   }
-  return ()=>{window.removeEventListener('online',onOnline);window.removeEventListener('offline',onOffline);window.removeEventListener('beforeinstallprompt',onInstall);window.removeEventListener('appinstalled',onInstalled)};
+  return ()=>{
+   alive=false;window.clearInterval(tick);
+   window.removeEventListener('online',onOnline);window.removeEventListener('offline',onOffline);
+   window.removeEventListener('focus',checkRelease);
+   window.removeEventListener('beforeinstallprompt',onInstall);window.removeEventListener('appinstalled',onInstalled);
+   document.removeEventListener('visibilitychange',onVisible);
+   navigator.serviceWorker?.removeEventListener('controllerchange',onControllerChange);
+   navigator.serviceWorker?.removeEventListener('message',onWorkerMessage);
+  };
  },[]);
  const install=async()=>{
-  if(installEvent){await installEvent.prompt();setInstallEvent(null);return;}
+  if(installEvent){await installEvent.prompt();setInstallEvent(null);return}
   setShowHelp(v=>!v);
  };
  return <div className="pwa-controls" aria-label="App installation and connectivity">
-   <span className={'connection '+(online?'connected':'disconnected')} role="status">{online?'● Online':'● Offline: some activities may be unavailable'}</span>
-   {!isLive&&!standalone&&<button type="button" className="install-button" onClick={install}>📲 Install app</button>}
-   {showHelp&&<p className="install-help">On iPhone: open this website in Safari, tap Share → Add to Home Screen. On Android: open Chrome's menu → Install app or Add to Home Screen. Install from the published HTTPS website, not an editor preview.</p>}
-   {!online&&<p className="install-help">Saved public app files may work offline. Live accounts, subscriptions and verified assessments require internet. Offline progress depends on device storage settings.</p>}
+  <span className={'connection '+(online?'connected':'disconnected')} role="status">{online?'● Online':'● Offline: some activities may be unavailable'}</span>
+  {!isLive&&!standalone&&<button type="button" className="install-button" onClick={install}>📲 Install app</button>}
+  {updateReady&&<span className="pwa-update" role="status">✨ A newer version is available. <button type="button" onClick={()=>window.location.reload()}>Update now</button></span>}
+  {showHelp&&<p className="install-help">On iPhone: open this website in Safari, tap Share → Add to Home Screen. On Android: open Chrome's menu → Install app or Add to Home Screen.</p>}
+  {!online&&<p className="install-help">Public files may work offline. Private accounts and live assessments require internet.</p>}
  </div>;
 }
 function App(){
@@ -74,6 +133,7 @@ function App(){
  const [welcomeDone,setWelcomeDone]=useState(()=>!!readLocale());
  useEffect(()=>{document.documentElement.lang=uiLanguage},[uiLanguage]);
  const [token,setToken]=useState(''),[boot,setBoot]=useState(null),[childId,setChildId]=useState(''),[page,setPage]=useState('home'),[lesson,setLesson]=useState(null),[qIndex,setQIndex]=useState(0),[answer,setAnswer]=useState(''),[hints,setHints]=useState(0),[result,setResult]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[pin,setPin]=useState(''),[oldPin,setOldPin]=useState(''),[report,setReport]=useState(null),[newName,setNewName]=useState(''),[year,setYear]=useState(1),[school,setSchool]=useState('SK'),[language,setLanguage]=useState('ms');
+ const [growthAudience,setGrowthAudience]=useState('junior'),[growthKind,setGrowthKind]=useState('ai');
  const [browseSubject,setBrowseSubject]=useState('Matematik'),[browseChapter,setBrowseChapter]=useState('all'),[studyTab,setStudyTab]=useState('notes');
  const [rememberDemo,setRememberDemo]=useState(savedDemo());
  useEffect(()=>{if(!isLive){api('getBootstrap','PUBLIC_SHOWCASE').then(b=>{setToken('PUBLIC_SHOWCASE');setBoot(b);setChildId(b.children[0]?.id||'')}).catch(e=>setError(e.message))}},[]);
@@ -117,14 +177,20 @@ function App(){
  if(!token)return isLive?<><PwaControls/><GoogleLogin onToken={login}/></>:<><PwaControls/><main className="showcase-loading" role="status"><span aria-hidden="true">🦁</span><h1>Welcome to BijakLearn Junior</h1><p>Opening your learning adventure…</p></main></>;
  return <div className="app"><PwaControls/><header><button className="logo" onClick={()=>setPage('home')}><img src="./icons/icon.svg" width="44" height="44" alt="BijakLearn Junior schoolchildren logo"/> <span>BijakLearn <b>Junior</b></span></button><div className="topactions"><button type="button" className="language-switch" onClick={()=>setWelcomeDone(false)}>{say(uiLanguage,'change')} · {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button>{isLive?<><span>{boot?.parent?.name}</span><button onClick={()=>{setToken('');setBoot(null);setReport(null)}}>Sign out</button></>:<span className="showcase-welcome">✨ Learn • Play • Discover</span>}</div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
- <nav className="nav"><button onClick={()=>setPage('home')} aria-label="Home">🏠 {say(uiLanguage,'home')}</button><button onClick={()=>setPage('preschool')} aria-label="Preschool">🐣 {say(uiLanguage,'preschool')}</button><button onClick={()=>setPage('packs')} aria-label="Learning Packs">🚀 {say(uiLanguage,'packs')}</button><button onClick={()=>setPage('map')} aria-label="Learning map">🗺️ {say(uiLanguage,'map')}</button><button onClick={()=>setPage('tutor')} aria-label="Study Buddy">🤖 {say(uiLanguage,'tutor')}</button><button onClick={()=>setPage('practice')} aria-label="Practice Arena">🎯 {say(uiLanguage,'practice')}</button>{isLive&&<button onClick={()=>{setReport(null);setPage('pin')}}>👨‍👩‍👧 Parent insights</button>}<button onClick={()=>setPage('membership')} aria-label="Membership">💚 {say(uiLanguage,'membership')}</button></nav>
+ <nav className="nav"><button onClick={()=>setPage('home')} aria-label="Home">🏠 {say(uiLanguage,'home')}</button><button onClick={()=>setPage('preschool')} aria-label="Preschool">🐣 {say(uiLanguage,'preschool')}</button><button onClick={()=>setPage('packs')} aria-label="Learning Packs">🚀 {say(uiLanguage,'packs')}</button><button onClick={()=>setPage('map')} aria-label="Learning map">🗺️ {say(uiLanguage,'map')}</button><button onClick={()=>setPage('tutor')} aria-label="Study Buddy">🤖 {say(uiLanguage,'tutor')}</button><button onClick={()=>setPage('practice')} aria-label="Practice Arena">🎯 {say(uiLanguage,'practice')}</button><button onClick={()=>{setGrowthAudience('adult');setGrowthKind('ai');setPage('growth')}} aria-label="Adults Page">🧑‍🎓 Adults</button><button onClick={()=>{setGrowthAudience('junior');setGrowthKind('ai');setPage('growth')}} aria-label="Junior Lab">🎒 Junior Lab</button><button onClick={()=>{setGrowthKind('ai');setPage('growth')}} aria-label="Learn AI">🧠 Learn AI</button><button onClick={()=>{setGrowthKind('hobby');setPage('growth')}} aria-label="Creative Hobbies">🎨 Creative Hobbies</button><button onClick={()=>setPage('wordgame')} aria-label="Word Tiles versus Bot">🔡 Word Tiles vs Bot</button><button onClick={()=>setPage('arcade')} aria-label="Activity Playground">🎪 Activity Playground</button>{isLive&&<button onClick={()=>{setReport(null);setPage('pin')}}>👨‍👩‍👧 Parent insights</button>}<button onClick={()=>setPage('membership')} aria-label="Membership">💚 {say(uiLanguage,'membership')}</button></nav>
  <main>
+ {page==='arcade'&&<ActivityArcade/>}
+ {page==='wordgame'&&<WordTilesGame/>}
+ {page==='growth'&&<GrowthHub audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?async id=>await api("getGrowthModule",token,id):null} checkAnswer={isLive?async(lessonId,answerIndex)=>await api("checkGrowthAnswer",token,lessonId,answerIndex):null}/>}
  {page==='practice'&&<PracticeArena lessons={LESSONS} year={browseYear} school={browseSchool} language={uiLanguage} onOpenLesson={openLesson}/>}
  {page==='tutor'&&<StudyBuddy lessons={LESSONS} year={browseYear} subject={lesson?.subject||''} currentLesson={lesson} askOnline={isLive?async(question,context)=>await api('askTutor',token,question,context):null}/>}
  {page==='packs'&&<><div className="library-filters"><label>School stream<select value={browseSchool} disabled={!!child} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Year<select value={browseYear} disabled={!!child} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>Tahun {y}</option>)}</select></label><span className="library-hint">Short learning adventures created from available lessons</span></div><AdventurePacks lessons={LESSONS.filter(l=>(!l.school||l.school==='ALL'||l.school===browseSchool))} year={browseYear} school={browseSchool} childId={childId} attempts={isLive?{}:mockAttempts} onOpen={openLesson} onPreschool={()=>setPage('preschool')}/></>}
  {page==='preschool'&&<PreschoolStudio/>}
  {page==='home'&&<><div className="hero"><div><span className="eyebrow">MY LEARNING ADVENTURE</span><h1>Learn, explore and grow! 🌈</h1><p>Learn through pictures, try new questions, and turn mistakes into understanding.</p></div><div className="hero-mascots"><MascotFriends language={uiLanguage} compact/></div><button type="button" className="preschool-launch" onClick={()=>setPage("preschool")}>🐣 Try Prasekolah: ABC, tracing & spelling →</button></div><section className="panel"><h2>Personalise your learning space</h2><div className="demo-save-settings"><div><strong>⭐ Optional practice nickname</strong><p>Explore every lesson without an account. You can use a fictional nickname to remember practice on this device for up to 30 days. Please do not enter a real child’s name or private details.</p></div><label className="demo-save-check"><input type="checkbox" checked={rememberDemo} onChange={e=>toggleDemoSave(e.target.checked)}/> Remember practice on this device</label><button type="button" onClick={resetDemo}>Clear saved practice</button></div>{boot?.children.length?<div className="chips">{boot.children.map(c=><button key={c.id} className={childId===c.id?'selected':''} onClick={()=>setChildId(c.id)}>{c.name} · Tahun {c.year}</button>)}</div>:<p>You can explore all lessons without a profile. Add a fictional practice nickname only if you want to try the progress tools.</p>}<details><summary>+ Add practice nickname</summary><form onSubmit={createChild} className="form"><label>Fictional nickname<input required maxLength={40} value={newName} onChange={e=>setNewName(e.target.value)}/></label><label>Year<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>Tahun {y}</option>)}</select></label><label>School<select value={school} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Language<select value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(langLabels).map(([k,v])=><option value={k} key={k}>{v}</option>)}</select></label><button className="primary" disabled={busy}>Add practice profile</button></form></details></section>
 
+ <button type="button" className="arcade-home-teaser" onClick={()=>setPage('arcade')}><span aria-hidden="true">🎪</span><span><strong>Activity Playground</strong><small>Picture subtraction, word matching, bilingual picture dictionary and Huruf Hijaiyah recognition with tracing.</small></span><span aria-hidden="true">→</span></button>
+ <button type="button" className="word-bot-home" onClick={()=>setPage('wordgame')}><span aria-hidden="true">🔡</span><span><strong>Word Tiles vs Bot</strong><small>Build vocabulary and challenge a friendly spelling bot — English and Bahasa Melayu.</small></span><span aria-hidden="true">→</span></button>
+ <div className="growth-home-spotlight"><button type="button" className="growth-home-card" onClick={()=>{setGrowthAudience('junior');setGrowthKind('ai');setPage('growth')}}><span className="growth-spot-icon" aria-hidden="true">🤖</span><span><strong>Learn AI</strong><small>Understand smart technology, safe prompts and how to check answers. Junior and Adult lessons.</small></span></button><button type="button" className="growth-home-card" onClick={()=>{setGrowthAudience('junior');setGrowthKind('hobby');setPage('growth')}}><span className="growth-spot-icon" aria-hidden="true">🌿</span><span><strong>Creative Hobbies</strong><small>Try drawing, music, journaling and everyday creative challenges. Junior and Adult tracks.</small></span></button></div>
  <div className="home-mascot-band"><div><span className="mini-label">🌟 BIJAKLEARN JUNIOR</span><h2>{say(uiLanguage,'greeting')}</h2><p>{say(uiLanguage,'touch')}</p></div><MascotFriends language={uiLanguage} compact/></div>
  <div className="tutor-teaser"><span aria-hidden="true">🤖</span><div><strong>Stuck on a question?</strong><p>Ask Study Buddy for a worked calculation, a concept explanation, or listen to the answer.</p></div><button type="button" className="primary" onClick={()=>{setLesson(null);setPage('tutor')}}>Ask Study Buddy →</button></div>
  <div className="home-packs-teaser"><div><span className="mini-label">🎯 NEW PRACTICE MODULES</span><h2>Daily questions and flashcards</h2><p>Choose a subject and a school year, then try short quizzes, daily challenges and flashcards.</p></div><button type="button" className="primary" onClick={()=>setPage('practice')}>🎯 Open Practice Arena</button></div>
@@ -165,6 +231,6 @@ function App(){
  {page==='pin'&&<div className="panel narrow"><h1>🔒 Parent-only learning reports</h1><p>Parents use a six-digit PIN to view their child's progress. Set a PIN on your first visit.</p><label>Parent PIN<input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={e=>setPin(e.target.value)} placeholder="6 digits"/></label><label>Existing PIN (only when replacing)<input type="password" inputMode="numeric" maxLength={6} value={oldPin} onChange={e=>setOldPin(e.target.value)} placeholder="Leave blank for first setup"/></label><div className="actions"><button onClick={savePin} disabled={pin.length!==6||busy}>Set or replace PIN</button><button className="primary" onClick={viewReport} disabled={pin.length!==6||!childId||busy}>View child report</button></div><small>Students using the same parent-signed-in device must not know the PIN. For production, a dedicated child login is recommended.</small></div>}
  {page==='parent'&&report&&<><h1>👨‍👩‍👧 Parent Learning Intelligence</h1><p>Practice overview for {child?.name} — formative and not independently certified</p><div className="statgrid">{[['Practice milestones',report.mastered],['Practice attempts',report.attempts],['Independent attempts',report.independent],['Learning opportunities',report.errors]].map(([name,n])=><div className="stat" key={name}><strong>{n}</strong><span>{name}</span></div>)}</div><div className="panel"><h2>🕵️ Learning Detective</h2>{report.topics.length?report.topics.map(x=><p key={x.lessonId}><strong>{boot.lessons.find(l=>l.id===x.lessonId)?.title||x.lessonId}</strong> — {x.mastered?'Practice milestone reached (not certified)':'Needs more independent practice'} · {x.independent} independent answers</p>):<p>Complete a few lessons to begin building the learning profile.</p>}<p className="hint">We report observed evidence, not a diagnosis of intelligence or a fixed learning style.</p></div><div className="panel"><h2>💡 Suggested home activity</h2><p>Ask your child to explain a maths problem using household objects, then try a similar example with different quantities.</p></div></>}
  {page==='membership'&&<section className="membership-journey"><div className="adventure-intro"><div><span className="adventure-eyebrow">💚 SUPPORT EVERY LEARNER</span><h1>Learning access & family packages</h1><p>Explore our learning experience and understand the available access options. Family account enrolment and paid memberships are not active on this website.</p></div><div className="adventure-illustration" aria-hidden="true"><span>🎒</span><span>💚</span><span>✨</span></div></div><div className="membership-tiers"><article className="tier-card"><span className="tier-icon">🌱</span><h2>Free Explorer</h2><p>Discover learning activities and find your favourite subjects.</p><ul><li>Browse available study lessons</li><li>Try interactive preschool games</li><li>Explore themed learning packs</li></ul><button type="button" onClick={()=>setPage('packs')}>Explore learning packs →</button></article><article className="tier-card premium-tier"><span className="tier-icon">🚀</span><h2>Premium</h2><p>Planned full learning access for subscribing families, subject to manual verification.</p><ul><li>Premium lesson access in the separately hosted account pilot</li><li>Parent learning progress insights</li><li>Family-managed child profiles</li></ul><div className="tier-status">Enrolment opening later</div></article><article className="tier-card"><span className="tier-icon">💚</span><h2>Premium Kasih</h2><p>A planned full-Premium sponsorship path for eligible families, following private administrator approval.</p><ul><li>Same planned learning access as Premium</li><li>Manual, private eligibility review</li><li>No fee for approved families</li></ul><div className="tier-status">Private application process</div></article></div><div className="panel"><h2>Account status</h2><p>Plan: <strong>{boot?.access.plan}</strong> · {boot?.access.active?'Active test entitlement':'Free access'}</p>{isLive?<><button type="button" onClick={()=>refresh()}>Refresh account status</button><p>Scholarship review status: {boot?.scholarship||'Not requested'}</p><button type="button" className="primary" onClick={scholarship} disabled={busy}>Request private scholarship review</button></>:<p>The website currently offers open access to its available learning activities. Online payments and private document submissions are not enabled.</p>}</div></section>}
- </main><footer>BijakLearn Junior · Learn, play and grow · {isLive?'Family learning platform':'Public learning preview'} · Curriculum review in progress</footer></div>
+ </main><footer><div>BijakLearn Junior · Learn, play and grow · {isLive?'Family learning platform':'Public learning preview'} · Curriculum review in progress</div><div className="proease-footer">A <strong>ProEase Studio™</strong> learning experience · © {new Date().getFullYear()} ProEase Studio. All rights reserved.</div></footer></div>
 }
 createRoot(document.getElementById('root')).render(<App/>);
