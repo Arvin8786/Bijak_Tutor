@@ -16,7 +16,8 @@ try{
   const exceptions=[];
   page.on('pageerror',e=>exceptions.push(e.message));
   await page.goto(base,{waitUntil:'networkidle'});
-  await page.getByRole('button',{name:/Explore local demo/i}).click();
+  await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
+  assert.equal(await page.getByRole('button',{name:/Explore local demo/i}).count(),0,'Public showcase must not show demo gate');
   await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
   let cards=page.locator('.illustrated-lesson');
   assert.ok(await cards.count()>0,'Default year has no lessons');
@@ -38,17 +39,17 @@ try{
   if(width===1280){await page.getByRole('button',{name:/Learning map/i}).click();for(const stream of ['SK','SJKC','SJKT']){await page.locator('.curriculum-map select').first().selectOption(stream);for(let y=1;y<=6;y++){await page.locator('.curriculum-map select').nth(1).selectOption(String(y));await page.locator('.curriculum-map select').nth(2).selectOption('Matematik');const cards=page.locator('.curriculum-map .illustrated-lesson');assert.ok(await cards.count()>0,stream+' year '+y+' has no lessons');await cards.first().click();await page.locator('.lesson-reader').waitFor();await page.getByRole('button',{name:/Back to subjects/i}).click();await page.getByRole('button',{name:/Learning map/i}).click()}}}
   if(width===1280){
     await page.getByRole('button',{name:/Home/i}).click();
-    await page.getByRole('checkbox',{name:/Remember demo progress/i}).check();
+    await page.getByRole('checkbox',{name:/Remember practice on this device/i}).check();
     await page.locator('details summary').first().click();
-    await page.getByLabel('Nickname').fill('Test Fox');
+    await page.getByLabel('Fictional nickname').fill('Test Fox');
     await page.locator('form.form select').first().selectOption('3');
-    await page.getByRole('button',{name:'Add learner'}).click();
+    await page.getByRole('button',{name:'Add practice profile'}).click();
     await page.getByRole('button',{name:/Test Fox/}).waitFor();
     await page.reload({waitUntil:'networkidle'});
-    await page.getByRole('button',{name:/Explore local demo/i}).click();
+    await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
     await page.getByRole('button',{name:/Test Fox/}).waitFor();
-    await page.getByRole('button',{name:/Clear demo progress/i}).click();
-    assert.equal(await page.getByRole('button',{name:/Test Fox/}).count(),0,'Clear demo progress failed');
+    await page.getByRole('button',{name:/Clear saved practice/i}).click();
+    assert.equal(await page.getByRole('button',{name:/Test Fox/}).count(),0,'Clear saved practice failed');
   }
   if(width===1280){
     await page.locator('nav.nav').getByRole('button',{name:/Learning Packs/i}).click();

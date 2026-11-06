@@ -33,6 +33,6 @@ export default function AdventurePacks({lessons=[],year=1,school='SK',childId=''
      </article>
    })}
   </div>
-  <div className="packs-disclaimer"><span>💡</span><p>Learning packs are themed paths through available draft materials, not additional paid products. “Practised” means at least one question was attempted — not a certified mastery result. Explore the subject library for every other available lesson.</p></div>
+  <div className="packs-disclaimer"><span>💡</span><p>Learning packs are themed paths through available study materials, not additional paid products. “Practised” means at least one question was attempted — not a certified mastery result. Explore the subject library for every other available lesson.</p></div>
  </section>;
 }

@@ -61,3 +61,12 @@ button,div,section,article,label,strong,p,h1,h2,h3,small,span{overflow-wrap:anyw
 .demo-save-check input{accent-color:#4778e8;min-height:18px;width:18px;flex:none}
 .demo-save-settings>button{font-size:12px;padding:10px;border:1px solid #b9c8e2}
 @media(max-width:550px){.demo-save-settings{align-items:stretch;flex-direction:column}.demo-save-settings>div{flex:none}.demo-save-settings .demo-save-check{max-width:none}.demo-save-settings>button{align-self:flex-start}}
+
+/* Public showcase: polished first render with no artificial sign-in gate. */
+.showcase-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:62vh;text-align:center;padding:48px 24px}
+.showcase-loading>span{font-size:100px;filter:drop-shadow(0 13px 12px #c8a57542);animation:mascot-wave 2.2s ease-in-out infinite}
+.showcase-loading h1{font-size:clamp(28px,5vw,42px);line-height:1.2;color:#354c88;margin:12px 0 8px}
+.showcase-loading p{color:#647493;font-size:16px}
+.showcase-welcome{display:inline-flex;align-items:center;background:#f0f6ff;border:1px solid #dce6fb;border-radius:999px;padding:11px 14px;color:#5264a1;font-size:13px;font-weight:750}
+header .logo{white-space:normal}
+@media(max-width:550px){.showcase-welcome{font-size:10px;padding:8px 10px}.topactions{gap:4px}header .logo{font-size:19px;line-height:1.2;padding:4px 6px}}
