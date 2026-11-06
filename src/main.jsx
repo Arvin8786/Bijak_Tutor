@@ -147,6 +147,7 @@ function App(){
   if(!timeConsent||!childId)return;
   const stamp=()=>Date.now();
   const active=()=>{usageInteraction.current=stamp()};
+  const backgrounded={current:false};
   usageLast.current=stamp();usageInteraction.current=stamp();
   const pulse=(event='active')=>{
    const now=stamp(),elapsed=Math.max(0,now-usageLast.current);usageLast.current=now;
@@ -154,8 +155,8 @@ function App(){
      (now-usageInteraction.current)<IDLE_LIMIT_MS&&event==='active';
    recordUsage({childId,at:now,seconds:eligible?Math.min(MAX_TICK_MS,elapsed)/1000:0,activity:page,event});
   };
-  const changed=()=>{pulse('background');usageInteraction.current=stamp()};
-  const foreground=()=>{usageLast.current=stamp();usageInteraction.current=stamp();recordUsage({childId,at:stamp(),seconds:0,activity:page,event:'foreground'})};
+  const changed=()=>{if(document.visibilityState==='hidden'||document.hasFocus?.()===false){if(backgrounded.current)return;backgrounded.current=true; pulse('background');usageInteraction.current=stamp()}};
+  const foreground=()=>{if(!backgrounded.current)return;backgrounded.current=false;usageLast.current=stamp();usageInteraction.current=stamp();recordUsage({childId,at:stamp(),seconds:0,activity:page,event:'foreground'})};
   const tick=window.setInterval(()=>pulse('active'),15000);
   const onVisibility=()=>document.visibilityState==='hidden'?changed():foreground();
   const onBlur=()=>changed();
