@@ -16,9 +16,22 @@ try{
   const exceptions=[];
   page.on('pageerror',e=>exceptions.push(e.message));
   await page.goto(base,{waitUntil:'networkidle'});
-  await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
+  await page.getByRole('heading',{name:/Welcome to BijakLearn Junior/i}).waitFor({timeout:10000}).catch(()=>{});
+  const welcome=page.locator('.welcome-gate');
+  if(await welcome.isVisible()){
+   await welcome.getByRole('button',{name:/English/i}).click();
+   await welcome.getByRole('button',{name:/Continue/i}).click();
+  }
+
+  await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   assert.equal(await page.getByRole('button',{name:/Explore local demo/i}).count(),0,'Public showcase must not show demo gate');
-  await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
+  const pair=page.locator('.home-mascot-band');
+  await pair.locator('.mascot-boy').click();
+  assert.ok(await pair.locator('.mascot-speech').isVisible(),'The schoolboy should greet when tapped');
+  await pair.locator('.mascot-girl').click();
+  assert.ok((await pair.locator('.mascot-speech').textContent()).includes('Hello'),'The schoolgirl should greet when tapped');
+
+  await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   const badgeOverflow=await page.locator('.playful-subjects .subject-picker').evaluateAll(cards=>cards.some(card=>{const badge=card.querySelector('.ready-dot,.catalog-dot');if(!badge)return false;const r=badge.getBoundingClientRect(),p=card.getBoundingClientRect();return r.right>p.right+2||r.left<p.left-2||badge.scrollWidth>badge.clientWidth+2||getComputedStyle(badge).fontSize.replace('px','')>13}));
   assert.equal(badgeOverflow,false,'Subject badges clip or use giant text at '+width+'px');
   let cards=page.locator('.illustrated-lesson');
@@ -48,7 +61,7 @@ try{
     await page.getByRole('button',{name:'Add practice profile'}).click();
     await page.getByRole('button',{name:/Test Fox/}).waitFor();
     await page.reload({waitUntil:'networkidle'});
-    await page.getByRole('heading',{name:/Choose your learning adventure/i}).waitFor();
+    await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
     await page.getByRole('button',{name:/Test Fox/}).waitFor();
     await page.getByRole('button',{name:/Clear saved practice/i}).click();
     assert.equal(await page.getByRole('button',{name:/Test Fox/}).count(),0,'Clear saved practice failed');
@@ -68,6 +81,13 @@ try{
     await page.locator('.adventure-quest .quest-go').click();
     await page.locator('.lesson-reader').waitFor();
   }
+  await page.locator('nav.nav').getByRole('button',{name:/Practice Arena/i}).click();
+  await page.locator('.practice-arena').waitFor();
+  await page.getByRole('button',{name:/Flip Flashcards/i}).click();
+  await page.locator('.flip-card').click();
+  assert.ok(await page.locator('.flip-card.revealed').isVisible());
+  await page.getByRole('button',{name:/Quick Quiz/i}).click();
+  assert.ok(await page.locator('.practice-stage h2').isVisible());
   await page.locator('nav.nav').getByRole('button',{name:/Study Buddy/i}).click();
   await page.getByLabel('What would you like to learn?').fill('28 + 15');
   await page.getByRole('button',{name:/Explain to me/i}).click();
