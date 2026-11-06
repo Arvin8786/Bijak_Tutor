@@ -51,3 +51,13 @@ button,div,section,article,label,strong,p,h1,h2,h3,small,span{overflow-wrap:anyw
  .subject-picker{min-height:223px}
  .illustrated-lesson{min-height:270px}
 }
+
+/* Clearly-labelled optional local demo persistence; no misleading authentication. */
+.demo-save-settings{margin:14px 0 18px;display:flex;align-items:center;gap:13px;flex-wrap:wrap;padding:14px 16px;border:1px solid #d8e7fa;border-radius:18px;background:#f1f8ff}
+.demo-save-settings>div{flex:1 1 270px;min-width:0}
+.demo-save-settings strong{color:#355aa5}
+.demo-save-settings p{font-size:12px;line-height:1.6;color:#54667c;margin:5px 0 0}
+.demo-save-settings .demo-save-check{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:12px;font-weight:750;max-width:230px}
+.demo-save-check input{accent-color:#4778e8;min-height:18px;width:18px;flex:none}
+.demo-save-settings>button{font-size:12px;padding:10px;border:1px solid #b9c8e2}
+@media(max-width:550px){.demo-save-settings{align-items:stretch;flex-direction:column}.demo-save-settings>div{flex:none}.demo-save-settings .demo-save-check{max-width:none}.demo-save-settings>button{align-self:flex-start}}
