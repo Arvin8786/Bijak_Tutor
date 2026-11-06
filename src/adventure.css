@@ -54,3 +54,25 @@
 @media(max-width:600px){.adventure-intro{padding:20px;gap:8px}.adventure-illustration{width:83px;height:82px}.adventure-illustration span:first-child{font-size:40px;width:65px;height:65px}.adventure-illustration span:nth-child(2){font-size:22px;width:33px;height:33px}.adventure-illustration span:nth-child(3){font-size:22px;width:33px;height:33px}.adventure-grid{gap:10px}.adventure-card{padding:14px;border-radius:20px}.pack-emoji{width:56px;min-width:56px;height:56px;border-radius:17px;font-size:33px}.pack-index{font-size:9px}.adventure-card h3{font-size:17px}.pack-meta{gap:6px}.pack-meta span{font-size:10px;padding:6px}.quest-symbol{width:44px;height:44px;border-radius:14px;font-size:25px}.adventure-quest{gap:10px;padding:12px;flex-wrap:wrap}.quest-copy strong{font-size:15px}.quest-go{width:100%;text-align:center;font-size:12px}}
 @media(max-width:355px){.adventure-grid{grid-template-columns:1fr}.adventure-card h3{font-size:20px}}
 @media(prefers-reduced-motion:reduce){.pack-meter>span{transition:none}}
+
+.home-packs-teaser{display:flex;align-items:center;justify-content:space-between;gap:24px;border-radius:25px;padding:25px 29px;margin:24px 0 13px;background:linear-gradient(110deg,#e4faed,#e6f6ff 55%,#fff1cf);border:2px solid #fff;box-shadow:0 8px 22px #557d9b1b}
+.home-packs-teaser h2{font-size:clamp(22px,3vw,30px);line-height:1.25;margin:6px 0}
+.home-packs-teaser p{color:#536d80;line-height:1.6;margin:4px 0;max-width:620px}
+.home-packs-teaser button{flex:none;border-radius:17px;padding:14px 18px}
+.celebrate-stars{font-size:30px;letter-spacing:5px;padding:12px 0 3px;animation:celebration-bounce .7s ease both;text-align:center}
+@keyframes celebration-bounce{0%{transform:scale(.85);opacity:.2}65%{transform:scale(1.09);opacity:1}100%{transform:scale(1)}}
+.membership-journey{min-width:0}
+.membership-tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:1fr;gap:16px;margin:18px 0 27px}
+.tier-card{display:flex;flex-direction:column;gap:11px;padding:24px;border-radius:27px;background:linear-gradient(150deg,#e7f6ff,#fff);box-shadow:0 10px 24px #5270a418;border:2px solid #fff;min-width:0}
+.tier-card:nth-child(3){background:linear-gradient(150deg,#e7f9ed,#fff)}
+.tier-card.premium-tier{background:linear-gradient(150deg,#f7eaff,#fff1d7);border-color:#ddc9ff}
+.tier-icon{font-size:44px}
+.tier-card h2{font-size:24px;letter-spacing:-.5px;margin:2px 0}
+.tier-card p{font-size:13px;line-height:1.7;color:#5c6c87;margin:0;min-height:65px}
+.tier-card ul{display:flex;flex-direction:column;gap:9px;padding:0;list-style:none;margin:8px 0 18px;font-size:12px;color:#394e72;line-height:1.45}
+.tier-card li{display:flex;gap:5px}
+.tier-card li:before{content:"✓";font-weight:900;color:#49a987}
+.tier-card>button,.tier-status{margin-top:auto;border:1px solid #bacbf0;background:#ffffffb9;border-radius:14px;padding:12px;font-size:12px;text-align:center;color:#415a88;font-weight:850}
+.tier-card>button{cursor:pointer}
+@media(max-width:780px){.membership-tiers{grid-template-columns:1fr}.tier-card p{min-height:0}.home-packs-teaser{align-items:flex-start;flex-direction:column;padding:21px}.home-packs-teaser button{max-width:100%;white-space:normal}}
+@media(prefers-reduced-motion:reduce){.celebrate-stars{animation:none}}
