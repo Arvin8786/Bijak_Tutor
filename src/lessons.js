@@ -4,6 +4,7 @@ import {JUNIOR_ENRICHMENT_LESSONS} from './juniorEnrichment.js';
 import {JUNIOR_STREAM_LESSONS} from './juniorStreams.js';
 import {enrichPractice} from './learningPractice.js';
 import {withMathPractice} from './mathPractice.js';
+import {OPTIONAL_STARTER_LESSONS} from './optionalStarterLessons.js';
 /* Original demonstration lessons, not a claimed complete KPM/DSKP mapping. */
 export const ORIGINAL_LESSONS=[
  {id:'y1-math-subtract',year:1,subject:'Matematik',title:'Tolak dengan Benda',en:'Taking Away',icon:'🍎',summary:'Tolak bermaksud mengambil sebahagian daripada jumlah asal. Kira benda yang masih tinggal.',mind:[['Mula','8 epal'],['Ambil','3 epal'],['Tinggal','5 epal']],steps:[{title:'Lihat',body:'Aina ada 8 epal. Dia beri 3 kepada kawan.'},{title:'Bayangkan',body:'Ketepikan 3 daripada 8 epal. Jangan campurkan lagi.'},{title:'Kira',body:'Lima epal masih ada. Jadi 8 − 3 = 5.'}],check:[{id:'c1',mode:'choice',text:'Aina ada 8 epal. Dia beri 3. Berapa epal tinggal?',options:['3','5','8','11'],answer:'5',why:'Tiga epal diberikan, jadi lima yang tinggal.'},{id:'c2',mode:'number',text:'9 − 4 = ?',answer:'5',why:'Mulakan dengan 9, keluarkan 4, tinggal 5.'},{id:'c3',mode:'number',text:'Ada 7 pensel. Dua diberikan kepada kawan. Berapa tinggal?',answer:'5',why:'Tujuh kurang dua tinggal lima.',transfer:true},{id:'c4',mode:'reason',text:'Mengapa 6 − 2 = 4? Pilih penerangan yang betul.',options:['Dua diambil daripada enam, empat tinggal','Enam ditambah dua','Semua enam masih ada'],answer:'Dua diambil daripada enam, empat tinggal',why:'Menolak bermaksud mengambil atau mengurangkan jumlah.'}],misconceptions:{'3':'Itu bilangan epal yang diberi. Cuba kira yang masih tinggal.','8':'Itu jumlah asal sebelum tiga epal diberikan.','11':'Itu jawapan jika epal ditambah, bukan diberi keluar.'}},
@@ -328,4 +329,4 @@ export const SKILL_DEMO_LESSONS = [
 ];
 export const PRIMARY_SUBJECTS=[['Matematik','🧮'],['Bahasa Melayu','📖'],['English','🔤'],['Sains','🔬'],['Sejarah','🌏'],['Bahasa Cina','🀄'],['Bahasa Tamil','✍️'],['Pendidikan Islam','🌙'],['Pendidikan Moral','🤝'],['Reka Bentuk dan Teknologi','🛠️'],['Pendidikan Seni Visual','🎨'],['Pendidikan Muzik','🎼'],['Pendidikan Jasmani dan Kesihatan','🏃']];
 
-export const LESSONS = [...SKILL_DEMO_LESSONS, ...ORIGINAL_LESSONS, ...EXPANDED_LESSONS, ...withMathPractice(enrichPractice([...JUNIOR_FOUNDATION_LESSONS,...JUNIOR_ENRICHMENT_LESSONS,...JUNIOR_STREAM_LESSONS]))];
+export const LESSONS = [...SKILL_DEMO_LESSONS, ...ORIGINAL_LESSONS, ...EXPANDED_LESSONS, ...withMathPractice(enrichPractice([...JUNIOR_FOUNDATION_LESSONS,...JUNIOR_ENRICHMENT_LESSONS,...JUNIOR_STREAM_LESSONS,...OPTIONAL_STARTER_LESSONS]))];
