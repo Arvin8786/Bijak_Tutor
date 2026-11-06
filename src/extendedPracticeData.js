@@ -101,7 +101,7 @@ export function arithmeticChallenge(index,level=1,kind='add'){
  const opts=[answer,answer+1,answer+2,Math.max(0,answer-1)].filter((x,i,s)=>s.indexOf(x)===i).slice(0,3);
  return {first,second,answer,options:opts.sort((x,y)=>((x*7+n)%19)-((y*7+n)%19))};
 }
-export function getPattern(index){const entry=SEQUENCE_PATTERNS[index%SEQUENCE_PATTERNS.length];const shown=[...entry.tiles,...entry.tiles.slice(0,2)];return {...entry,shown}}
+export function getPattern(index){const entry=SEQUENCE_PATTERNS[index%SEQUENCE_PATTERNS.length];const shown=entry.tiles.length===2?[...entry.tiles,...entry.tiles]:[...entry.tiles];return {...entry,shown}}
 export function buildWordSearch(index,size=9){
  const terms=WORDSEARCH_WORDS[index%WORDSEARCH_WORDS.length];
  // Deterministic horizontal placement, one word per row; no fake hidden words.
