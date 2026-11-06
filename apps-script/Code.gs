@@ -7,6 +7,8 @@ const TABLES = {
  Parents:['googleSub','email','displayName','createdAt','parentPinHash','pinSalt'],
  Children:['childId','parentSub','nickname','year','school','language','createdAt'],
  Subscriptions:['googleSub','plan','status','expiresAt','updatedAt','adminNote'],
+ ModuleCatalog:['moduleId','audience','title','tagline','icon','visibility','accessTier','contentStatus','reviewStatus','updatedAt'],
+ ModuleLessons:['lessonId','moduleId','sequence','title','summary','stepsJson','questionJson','project','visibility','contentStatus','reviewStatus','updatedAt'],
  Payments:['paymentId','googleSub','reference','amountRM','status','verifiedAt','adminNote'],
  Lessons:['lessonId','year','subject','title','summary','icon','mindJson','stepsJson','premium','chapter','visual','school','contentStatus'],
  Questions:['questionId','lessonId','mode','text','optionsJson','correctAnswer','why','transfer','misconceptionsJson'],
