@@ -53,7 +53,7 @@ try{
   assert.ok((await page.locator('.lesson-reader h1').textContent()).length>2);
   if(width===1280){await page.getByRole('button',{name:/Learning map/i}).click();for(const stream of ['SK','SJKC','SJKT']){await page.locator('.curriculum-map select').first().selectOption(stream);for(let y=1;y<=6;y++){await page.locator('.curriculum-map select').nth(1).selectOption(String(y));await page.locator('.curriculum-map select').nth(2).selectOption('Matematik');const cards=page.locator('.curriculum-map .illustrated-lesson');assert.ok(await cards.count()>0,stream+' year '+y+' has no lessons');await cards.first().click();await page.locator('.lesson-reader').waitFor();await page.getByRole('button',{name:/Back to subjects/i}).click();await page.getByRole('button',{name:/Learning map/i}).click()}}}
   if(width===1280){
-    await page.getByRole('button',{name:/Home/i}).click();
+    await page.locator('nav.nav').getByRole('button',{name:'Home'}).click();
     await page.getByRole('checkbox',{name:/Remember practice on this device/i}).check();
     await page.locator('details summary').first().click();
     await page.getByLabel('Fictional nickname').fill('Test Fox');
@@ -94,6 +94,16 @@ try{
   await page.getByRole('heading',{name:/28 \+ 15 = 43/}).waitFor();
   assert.ok(await page.getByRole('button',{name:/Read answer/i}).isVisible());
   if(width===1280){
+    await page.locator('nav.nav').getByRole('button',{name:'Word Tiles versus Bot'}).click();
+    await page.locator('.word-bot-game').waitFor();
+    const rack=page.locator('.word-bot-rack button');
+    assert.equal(await rack.count(),6,'Word tile rack missing');
+    for(const tile of ['S','T','O','N','E']){
+      await rack.filter({hasText:tile}).first().click();
+    }
+    await page.getByRole('button',{name:/Play word/i}).click();
+    await page.locator('.word-bot-plays').waitFor();
+    assert.ok(await page.locator('.word-bot-plays>div').count()>=1);
     await page.locator('nav.nav').getByRole('button',{name:'Adults Page'}).click();
     await page.getByRole('heading',{name:'Adult Learning Studio'}).waitFor();
     assert.equal(await page.locator('.growth-lessons button').count(),6,'Adult Learn AI topics missing');
