@@ -1,4 +1,5 @@
 import React,{useEffect,useRef,useState} from 'react';
+import {TRACK_CONSENT,trackingEnabled,setTrackingEnabled,readUsage,wipeUsage,recordUsage,summariseUsage,IDLE_LIMIT_MS,MAX_TICK_MS} from './learningTime.js';
 import {createRoot} from 'react-dom/client';
 import {LESSONS} from './lessons';
 import {availableSubjects,lessonCountForSubject} from './primarySubjects.js';
@@ -136,6 +137,48 @@ function App(){
  const [growthAudience,setGrowthAudience]=useState('junior'),[growthKind,setGrowthKind]=useState('ai');
  const [browseSubject,setBrowseSubject]=useState('Matematik'),[browseChapter,setBrowseChapter]=useState('all'),[studyTab,setStudyTab]=useState('notes');
  const [rememberDemo,setRememberDemo]=useState(savedDemo());
+ const [timeConsent,setTimeConsent]=useState(trackingEnabled);
+ const [usageReport,setUsageReport]=useState(null);
+ const usageLast=useRef(Date.now()),usageInteraction=useRef(Date.now());
+ useEffect(()=>{
+  // Active time is measured only with parent consent and a selected profile.
+  if(!timeConsent||!childId)return;
+  const stamp=()=>Date.now();
+  const active=()=>{usageInteraction.current=stamp()};
+  usageLast.current=stamp();usageInteraction.current=stamp();
+  const pulse=(event='active')=>{
+   const now=stamp(),elapsed=Math.max(0,now-usageLast.current);usageLast.current=now;
+   const eligible=document.visibilityState==='visible'&&
+     (now-usageInteraction.current)<IDLE_LIMIT_MS&&event==='active';
+   recordUsage({childId,at:now,seconds:eligible?Math.min(MAX_TICK_MS,elapsed)/1000:0,activity:page,event});
+  };
+  const changed=()=>{pulse('background');usageInteraction.current=stamp()};
+  const foreground=()=>{usageLast.current=stamp();usageInteraction.current=stamp();recordUsage({childId,at:stamp(),seconds:0,activity:page,event:'foreground'})};
+  const tick=window.setInterval(()=>pulse('active'),15000);
+  const onVisibility=()=>document.visibilityState==='hidden'?changed():foreground();
+  const onBlur=()=>changed();
+  window.addEventListener('pointerdown',active,{passive:true});
+  window.addEventListener('keydown',active);
+  window.addEventListener('focus',foreground);
+  window.addEventListener('blur',onBlur);
+  window.addEventListener('pagehide',changed);
+  document.addEventListener('visibilitychange',onVisibility);
+  return()=>{
+   window.clearInterval(tick);pulse('pause');
+   window.removeEventListener('pointerdown',active);window.removeEventListener('keydown',active);
+   window.removeEventListener('focus',foreground);window.removeEventListener('blur',onBlur);
+   window.removeEventListener('pagehide',changed);document.removeEventListener('visibilitychange',onVisibility);
+  };
+ },[timeConsent,childId,page]);
+ const optIntoTracking=()=>{
+  setTrackingEnabled(true);setTimeConsent(true);setUsageReport(summariseUsage(childId));
+ };
+ const stopTracking=()=>{
+  setTrackingEnabled(false);setTimeConsent(false);setUsageReport(null);
+ };
+ const clearTracking=()=>{
+  wipeUsage();setUsageReport(summariseUsage(childId));
+ };
  useEffect(()=>{if(!isLive){api('getBootstrap','PUBLIC_SHOWCASE').then(b=>{setToken('PUBLIC_SHOWCASE');setBoot(b);setChildId(b.children[0]?.id||'')}).catch(e=>setError(e.message))}},[]);
  const child=boot?.children.find(x=>x.id===childId),q=lesson?.questions[qIndex];
  const browseYear=child?.year||year,browseSchool=child?.school||school;
@@ -170,7 +213,7 @@ function App(){
  }
  async function submit(){if(!q||!answer.trim())return;try{const r=await call('submitAttempt',childId,lesson.id,q.id,answer,hints);setResult(r)}catch{}}
  function next(){setQIndex(x=>x+1);setAnswer('');setHints(0);setResult(null)}
- async function viewReport(){try{const r=await call('getParentReport',childId,pin);setReport(r);setPage('parent')}catch{}}
+ async function viewReport(){try{const r=await call('getParentReport',childId,pin);setReport(r);setUsageReport(summariseUsage(childId));setPage('parent')}catch{}}
  async function savePin(){try{await call('setParentPin',pin,oldPin);alert('Parent PIN saved. Keep it private.')}catch{}}
  async function scholarship(){try{await call('requestScholarship');await refresh();alert('Scholarship request submitted for private manual review.')}catch{}}
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
@@ -179,6 +222,7 @@ function App(){
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
  <nav className="nav"><button onClick={()=>setPage('home')} aria-label="Home">🏠 {say(uiLanguage,'home')}</button><button onClick={()=>setPage('preschool')} aria-label="Preschool">🐣 {say(uiLanguage,'preschool')}</button><button onClick={()=>setPage('packs')} aria-label="Learning Packs">🚀 {say(uiLanguage,'packs')}</button><button onClick={()=>setPage('map')} aria-label="Learning map">🗺️ {say(uiLanguage,'map')}</button><button onClick={()=>setPage('tutor')} aria-label="Study Buddy">🤖 {say(uiLanguage,'tutor')}</button><button onClick={()=>setPage('practice')} aria-label="Practice Arena">🎯 {say(uiLanguage,'practice')}</button><button onClick={()=>{setGrowthAudience('adult');setGrowthKind('ai');setPage('growth')}} aria-label="Adults Page">🧑‍🎓 Adults</button><button onClick={()=>{setGrowthAudience('junior');setGrowthKind('ai');setPage('growth')}} aria-label="Junior Lab">🎒 Junior Lab</button><button onClick={()=>{setGrowthKind('ai');setPage('growth')}} aria-label="Learn AI">🧠 Learn AI</button><button onClick={()=>{setGrowthKind('hobby');setPage('growth')}} aria-label="Creative Hobbies">🎨 Creative Hobbies</button><button onClick={()=>setPage('wordgame')} aria-label="Word Tiles versus Bot">🔡 Word Tiles vs Bot</button><button onClick={()=>setPage('arcade')} aria-label="Activity Playground">🎪 Activity Playground</button>{isLive&&<button onClick={()=>{setReport(null);setPage('pin')}}>👨‍👩‍👧 Parent insights</button>}<button onClick={()=>setPage('membership')} aria-label="Membership">💚 {say(uiLanguage,'membership')}</button></nav>
  <main>
+ {timeConsent&&<p className="time-child-notice" role="status">⏱️ Learning-time recording is on. Your parent can see approximate study time, activities and breaks. You can ask them to pause it.</p>}
  {page==='arcade'&&<ActivityArcade/>}
  {page==='wordgame'&&<WordTilesGame/>}
  {page==='growth'&&<GrowthHub audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?async id=>await api("getGrowthModule",token,id):null} checkAnswer={isLive?async(lessonId,answerIndex)=>await api("checkGrowthAnswer",token,lessonId,answerIndex):null}/>}
@@ -229,7 +273,17 @@ function App(){
  </div>}
 
  {page==='pin'&&<div className="panel narrow"><h1>🔒 Parent-only learning reports</h1><p>Parents use a six-digit PIN to view their child's progress. Set a PIN on your first visit.</p><label>Parent PIN<input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={e=>setPin(e.target.value)} placeholder="6 digits"/></label><label>Existing PIN (only when replacing)<input type="password" inputMode="numeric" maxLength={6} value={oldPin} onChange={e=>setOldPin(e.target.value)} placeholder="Leave blank for first setup"/></label><div className="actions"><button onClick={savePin} disabled={pin.length!==6||busy}>Set or replace PIN</button><button className="primary" onClick={viewReport} disabled={pin.length!==6||!childId||busy}>View child report</button></div><small>Students using the same parent-signed-in device must not know the PIN. For production, a dedicated child login is recommended.</small></div>}
- {page==='parent'&&report&&<><h1>👨‍👩‍👧 Parent Learning Intelligence</h1><p>Practice overview for {child?.name} — formative and not independently certified</p><div className="statgrid">{[['Practice milestones',report.mastered],['Practice attempts',report.attempts],['Independent attempts',report.independent],['Learning opportunities',report.errors]].map(([name,n])=><div className="stat" key={name}><strong>{n}</strong><span>{name}</span></div>)}</div><div className="panel"><h2>🕵️ Learning Detective</h2>{report.topics.length?report.topics.map(x=><p key={x.lessonId}><strong>{boot.lessons.find(l=>l.id===x.lessonId)?.title||x.lessonId}</strong> — {x.mastered?'Practice milestone reached (not certified)':'Needs more independent practice'} · {x.independent} independent answers</p>):<p>Complete a few lessons to begin building the learning profile.</p>}<p className="hint">We report observed evidence, not a diagnosis of intelligence or a fixed learning style.</p></div><div className="panel"><h2>💡 Suggested home activity</h2><p>Ask your child to explain a maths problem using household objects, then try a similar example with different quantities.</p></div></>}
+ {page==='parent'&&report&&<section className="panel learning-time-panel" aria-label="Parent learning time report">
+ <h2>⏱️ Learning Time & Breaks</h2>
+ <p>This optional report measures approximate time while the app is visible and a learner is interacting. It cannot see other apps or confirm why a session stopped.</p>
+ {!timeConsent?<div className="time-consent"><p><strong>Parent opt-in required.</strong> Children will see a short notice when this feature is enabled. The detailed report is shown only after the parent PIN check.</p><button type="button" className="primary" onClick={optIntoTracking}>Enable learning-time recording</button></div>:
+ <><div className="time-metrics">{[['Active minutes (7 days)',usageReport?.minutes7||0],['Study days (7 days)',usageReport?.activeDays||0],['App backgrounded (7 days)',usageReport?.backgroundEvents7||0]].map(([label,value])=><div key={label}><strong>{value}</strong><span>{label}</span></div>)}</div>
+ <p className="time-small">Last observed activity: {usageReport?.lastSeen?new Date(usageReport.lastSeen).toLocaleString():'No study activity recorded yet'}. “App backgrounded” can mean switching apps, locking the device, navigating away, or an interruption; it is not proof of cheating or force-closing.</p>
+ <div className="time-days">{(usageReport?.days||[]).length?(usageReport?.days||[]).map(d=><div key={d.date}><strong>{d.date}</strong><span>{Math.round(d.seconds/60)} active min · {d.backgroundEvents} interruptions</span></div>):<p>No activity in the last seven days.</p>}</div>
+ <div className="actions"><button type="button" onClick={()=>setUsageReport(summariseUsage(childId))}>Refresh report</button><button type="button" onClick={stopTracking}>Stop recording</button><button type="button" onClick={clearTracking}>Delete device usage history</button></div></>}
+ <p className="time-small">Device-local preview: this report may be cleared or altered through browser settings. Reliable multi-device parent reporting requires separate parent/child accounts, consent controls and a private backend; no remote tracking is active on the public site.</p>
+ </section>}
+{page==='parent'&&report&&<><h1>👨‍👩‍👧 Parent Learning Intelligence</h1><p>Practice overview for {child?.name} — formative and not independently certified</p><div className="statgrid">{[['Practice milestones',report.mastered],['Practice attempts',report.attempts],['Independent attempts',report.independent],['Learning opportunities',report.errors]].map(([name,n])=><div className="stat" key={name}><strong>{n}</strong><span>{name}</span></div>)}</div><div className="panel"><h2>🕵️ Learning Detective</h2>{report.topics.length?report.topics.map(x=><p key={x.lessonId}><strong>{boot.lessons.find(l=>l.id===x.lessonId)?.title||x.lessonId}</strong> — {x.mastered?'Practice milestone reached (not certified)':'Needs more independent practice'} · {x.independent} independent answers</p>):<p>Complete a few lessons to begin building the learning profile.</p>}<p className="hint">We report observed evidence, not a diagnosis of intelligence or a fixed learning style.</p></div><div className="panel"><h2>💡 Suggested home activity</h2><p>Ask your child to explain a maths problem using household objects, then try a similar example with different quantities.</p></div></>}
  {page==='membership'&&<section className="membership-journey"><div className="adventure-intro"><div><span className="adventure-eyebrow">💚 SUPPORT EVERY LEARNER</span><h1>Learning access & family packages</h1><p>Explore our learning experience and understand the available access options. Family account enrolment and paid memberships are not active on this website.</p></div><div className="adventure-illustration" aria-hidden="true"><span>🎒</span><span>💚</span><span>✨</span></div></div><div className="membership-tiers"><article className="tier-card"><span className="tier-icon">🌱</span><h2>Free Explorer</h2><p>Discover learning activities and find your favourite subjects.</p><ul><li>Browse available study lessons</li><li>Try interactive preschool games</li><li>Explore themed learning packs</li></ul><button type="button" onClick={()=>setPage('packs')}>Explore learning packs →</button></article><article className="tier-card premium-tier"><span className="tier-icon">🚀</span><h2>Premium</h2><p>Planned full learning access for subscribing families, subject to manual verification.</p><ul><li>Premium lesson access in the separately hosted account pilot</li><li>Parent learning progress insights</li><li>Family-managed child profiles</li></ul><div className="tier-status">Enrolment opening later</div></article><article className="tier-card"><span className="tier-icon">💚</span><h2>Premium Kasih</h2><p>A planned full-Premium sponsorship path for eligible families, following private administrator approval.</p><ul><li>Same planned learning access as Premium</li><li>Manual, private eligibility review</li><li>No fee for approved families</li></ul><div className="tier-status">Private application process</div></article></div><div className="panel"><h2>Account status</h2><p>Plan: <strong>{boot?.access.plan}</strong> · {boot?.access.active?'Active test entitlement':'Free access'}</p>{isLive?<><button type="button" onClick={()=>refresh()}>Refresh account status</button><p>Scholarship review status: {boot?.scholarship||'Not requested'}</p><button type="button" className="primary" onClick={scholarship} disabled={busy}>Request private scholarship review</button></>:<p>The website currently offers open access to its available learning activities. Online payments and private document submissions are not enabled.</p>}</div></section>}
  </main><footer><div>BijakLearn Junior · Learn, play and grow · {isLive?'Family learning platform':'Public learning preview'} · Curriculum review in progress</div><div className="proease-footer">A <strong>ProEase Studio™</strong> learning experience · © {new Date().getFullYear()} ProEase Studio. All rights reserved.</div></footer></div>
 }
