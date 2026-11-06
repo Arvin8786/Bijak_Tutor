@@ -39,7 +39,7 @@ test('tracing review is actionable but never claims handwriting recognition',()=
  assert.ok(traceMetrics([[{x:0,y:0},{x:30,y:40}]]).path>=50);
  const studio=fs.readFileSync('src/PreschoolStudio.jsx','utf8');
  assert.match(studio,/Check my drawing/);
- assert.match(studio,/cannot reliably recognise a letter/);
+ assert.match(studio,/cannot reliably recognise the picture/);
 });
 test('learning time is opt-in, bounded and reports ambiguity fairly',()=>{
  const childId='test-learner';
