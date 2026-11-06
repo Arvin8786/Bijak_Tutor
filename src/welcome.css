@@ -1,0 +1,25 @@
+.welcome-gate{min-height:100svh;max-width:none;margin:0;padding:25px 16px 55px;display:grid;place-items:center;background:radial-gradient(circle at 22% 10%,#fff1bf,transparent 37%),radial-gradient(circle at 85% 12%,#f0d8ff,transparent 40%),linear-gradient(135deg,#e7f4ff,#fff8f0);color:#29375c}
+.welcome-main{width:min(100%,610px);min-width:0;text-align:center;background:#ffffffef;border:2px solid #fff;border-radius:36px;box-shadow:0 20px 65px #52749d24;padding:25px clamp(16px,4vw,38px) 32px}
+.welcome-brand{display:flex;justify-content:center;align-items:center;gap:7px;font-size:clamp(23px,5vw,35px);font-weight:950;color:#335eb7;letter-spacing:-1px}.welcome-brand em{color:#cb5298;font-style:normal}.welcome-star{font-size:30px}
+.welcome-main h1{font-size:clamp(25px,5vw,36px);line-height:1.25;margin:15px 0 6px;overflow-wrap:anywhere}.welcome-sub{color:#596d8a;font-size:15px;line-height:1.6;margin:0 0 8px}
+.mascot-friends{position:relative;max-width:310px;margin:16px auto 16px;min-width:0}
+.mascot-picture{position:relative;display:block;width:100%;aspect-ratio:1;border-radius:30%;overflow:hidden;box-shadow:0 12px 28px #5a75b42c;isolation:isolate}
+.mascot-picture>img{display:block;width:100%;height:100%;object-fit:cover;user-select:none}
+.mascot-touch{position:absolute;top:12%;height:83%;width:48%;padding:0;border:0;background:transparent;box-shadow:none!important;border-radius:40%}
+.mascot-boy{left:3%}.mascot-girl{right:3%}
+.mascot-touch:hover{background:#ffffff16}.mascot-touch:focus-visible{outline:4px solid #fff100;outline-offset:-5px}
+.mascot-picture:has(.mascot-touch:active)>img{transform:scale(1.035)}
+.mascot-picture.mascot-reacting{animation:mascot-greet .55s ease}
+@keyframes mascot-greet{0%{transform:rotate(0)}25%{transform:rotate(-3deg)}60%{transform:rotate(3deg)}100%{transform:rotate(0)}}
+.mascot-hint{font-size:12px;color:#5e7192;margin:10px auto 0;line-height:1.5}
+.mascot-speech{margin:9px auto 3px;background:#fff6d7;border:2px solid #f0da8e;border-radius:16px;max-width:100%;padding:10px 14px;font-size:13px;line-height:1.5;color:#635230}
+.mascot-friends.compact{max-width:155px;margin:0 auto}.mascot-friends.compact .mascot-picture{border-radius:24px}.mascot-friends.compact .mascot-speech{position:absolute;z-index:2;bottom:-28px;left:50%;transform:translateX(-50%);width:220px;font-size:11px;background:#fffdf0}
+.welcome-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:22px auto}
+.welcome-choice{display:flex;align-items:center;justify-content:flex-start;gap:10px;min-height:67px;padding:10px 13px;border:2px solid #dfebf9;background:#f6faff;border-radius:17px;font-size:15px;text-align:left;min-width:0;overflow-wrap:anywhere}
+.welcome-choice>span:first-child{font-size:26px;flex:none}.welcome-choice strong{font-size:clamp(13px,3.5vw,17px);line-height:1.35}.welcome-choice.chosen{border-color:#6d82ef;background:#eaf0ff;box-shadow:0 0 0 3px #8495ec20}
+.language-check{margin-left:auto;font-size:20px;color:#39866b}
+.welcome-continue{display:flex;justify-content:center;align-items:center;gap:20px;width:100%;padding:16px;border-radius:18px;border:0;color:#fff;font-weight:900;font-size:18px;background:linear-gradient(110deg,#5576e2,#9a50d8);box-shadow:0 10px 20px #6975de37}.welcome-small{font-size:12px;color:#7683a2;margin:17px 0 0}
+.home-mascot-band{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:18px 0;padding:16px 20px;border:2px solid #fff;background:linear-gradient(110deg,#fff0d5,#e5f6ff);border-radius:26px;min-height:165px}.home-mascot-band>div:first-child{min-width:0;flex:1}.home-mascot-band h2{margin:5px 0 8px;font-size:clamp(20px,4vw,29px)}.home-mascot-band p{font-size:13px;color:#55698a;line-height:1.6;margin:0}.home-mascot-band .mascot-friends{flex:none;width:145px;max-width:35%;margin:0}
+.language-switch{background:#f0f4ff;border:1px solid #dce5fc;border-radius:999px;padding:8px 11px;font-weight:800;font-size:12px;white-space:normal;max-width:150px}.visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media(max-width:600px){.welcome-gate{padding:12px 10px 35px}.welcome-main{border-radius:25px;padding:18px 14px 25px}.mascot-friends{max-width:250px}.welcome-choice{min-height:60px}.home-mascot-band{padding:13px;gap:8px}.home-mascot-band .mascot-friends{width:115px}.home-mascot-band p{font-size:12px}.language-switch{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.mascot-picture.mascot-reacting{animation:none}}
