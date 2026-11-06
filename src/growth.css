@@ -60,3 +60,8 @@
 @media(max-width:800px){.growth-layout{grid-template-columns:1fr}.growth-lessons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.growth-lessons h2{grid-column:1/-1}.growth-lessons button{margin:0}.growth-hero{padding:21px}}
 @media(max-width:550px){.growth-hero-emoji{font-size:51px}.growth-hero h1{font-size:26px}.growth-hero p{font-size:12px}.growth-module{padding:15px;min-height:215px}.growth-module-icon{font-size:35px}.growth-module strong{font-size:19px}.growth-module small{font-size:11px}.growth-module-info{font-size:10px}.growth-lessons{grid-template-columns:1fr}.growth-prompt-form{grid-template-columns:1fr}.growth-home-spotlight{grid-template-columns:1fr}.growth-week{gap:3px}.growth-week button{padding:9px 0}.growth-week button span{width:24px;height:24px}.growth-audience button{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.growth-meter span{transition:none}}
+
+.growth-source-note{padding:11px 14px;border:1px solid #cae7d7;background:#effbf4;color:#3b7556;border-radius:13px;font-size:12px;line-height:1.5}
+.pwa-update{display:inline-flex;align-items:center;flex-wrap:wrap;gap:7px;background:#fff2c9;border:1px solid #ebc978;color:#725927;border-radius:12px;padding:9px 12px;font-size:12px;font-weight:850}
+.pwa-update button{border:0;background:#405eaf;color:#fff;font-size:12px;padding:7px 10px;border-radius:8px}
+.nav button:focus-visible,.growth-hub button:focus-visible{outline:3px solid #527be7;outline-offset:2px}
