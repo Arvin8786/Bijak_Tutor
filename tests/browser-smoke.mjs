@@ -50,6 +50,21 @@ try{
     await page.getByRole('button',{name:/Clear demo progress/i}).click();
     assert.equal(await page.getByRole('button',{name:/Test Fox/}).count(),0,'Clear demo progress failed');
   }
+  if(width===1280){
+    await page.locator('nav.nav').getByRole('button',{name:/Learning Packs/i}).click();
+    await page.getByRole('heading',{name:/Choose your superpower/i}).waitFor();
+    const packCards=page.locator('.adventure-card');
+    assert.ok(await packCards.count()>=3,'Adventure pack catalogue missing');
+    await packCards.first().getByRole('button',{name:/See learning pack/i}).click();
+    assert.ok(await packCards.first().locator('.pack-lesson-list button').count()>0);
+    await packCards.first().locator('.pack-lesson-list button').first().click();
+    await page.locator('.lesson-reader').waitFor();
+    await page.getByRole('button',{name:/Membership/i}).click();
+    assert.equal(await page.locator('.tier-card').count(),3,'Family access package comparison missing');
+    await page.locator('.tier-card').first().getByRole('button',{name:/Explore learning packs/i}).click();
+    await page.locator('.adventure-quest .quest-go').click();
+    await page.locator('.lesson-reader').waitFor();
+  }
   assert.equal(exceptions.length,0,'JS runtime error: '+exceptions.join('; '));
   const over=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);
   assert.equal(over,false,'Horizontal overflow at '+width+'px');
