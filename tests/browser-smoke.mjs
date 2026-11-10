@@ -213,6 +213,36 @@ try{
     await lesson.getByRole('button',{name:'Contoh',exact:true}).click();
     await lesson.getByText(/Jika 6 petak sudah diisi/).waitFor();
   }
+  if(width===375){
+    await page.locator('nav.nav').getByRole('button',{name:'Home'}).click();
+    await page.getByRole('button',{name:'Interactive Modules'}).click();
+    const modules=page.locator('.discovery-library');
+    await modules.getByRole('heading',{name:/Interactive Modules/}).waitFor();
+    assert.equal(await modules.getByRole('button').count(),20);
+    await modules.getByRole('button',{name:/Pasar mini/}).click();
+    const activity=page.getByRole('region',{name:'Interactive lesson activity'});
+    await activity.getByRole('button',{name:'20 sen',exact:true}).click();
+    await activity.getByRole('status').filter({hasText:'Try again'}).waitFor();
+    for(const value of ['10 sen','20 sen','30 sen']) {
+      await activity.getByRole('button',{name:value,exact:true}).click();
+    }
+    await activity.getByRole('status').filter({hasText:'Finished!'}).waitFor();
+    await activity.getByRole('button',{name:'Start again'}).click();
+    await activity.getByRole('status').filter({hasText:'0 / 3'}).waitFor();
+    await page.getByRole('tab',{name:/Try the quiz/}).click();
+    await page.locator('.colour-quiz').getByRole('textbox').fill('25');
+    await page.getByRole('button',{name:'Check my answer'}).click();
+    await page.locator('.colour-quiz .feedback.good').waitFor();
+
+    await pageControls.getByRole('button',{name:'Back',exact:true}).click();
+    await modules.getByRole('button',{name:/Diari percambahan kacang/}).click();
+    await activity.getByRole('button',{name:'Pucuk dapat dilihat'}).click();
+    await activity.getByRole('status').filter({hasText:'Try again'}).waitFor();
+    for(const step of ['Biji belum bercambah','Akar mula kelihatan','Pucuk dapat dilihat']) {
+      await activity.getByRole('button',{name:step,exact:true}).click();
+    }
+    await activity.getByRole('status').filter({hasText:'Finished!'}).waitFor();
+  }
   await page.locator('nav.nav').getByRole('button',{name:/Study Buddy/i}).click();
   await page.getByLabel('What would you like to learn?').fill('28 + 15');
   await page.getByRole('button',{name:/Explain to me/i}).click();
