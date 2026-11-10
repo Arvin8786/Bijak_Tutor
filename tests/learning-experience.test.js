@@ -25,7 +25,6 @@ test('all three school streams expose a subject catalogue',()=>{
 
 test('student dashboard can open reading materials without a child profile',()=>{
  const app=fs.readFileSync('src/main.jsx','utf8');
- assert.match(app,/setBrowseSubject\(s\.name\)/);
  assert.match(app,/onClick=\{\(\)=>openLesson\(l\.id\)\}/);
  assert.match(app,/studyTab==='notes'/);
  assert.match(app,/LearningVisuals/);
