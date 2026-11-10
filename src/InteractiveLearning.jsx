@@ -60,7 +60,7 @@ export function SubjectMindMap({subject}) {
  </details>;
 }
 
-export function LessonQuickCheck({question}) {
+export function LessonQuickCheck({question,onComplete}) {
  const [choice, setChoice] = useState(null);
  const correct = choice === question.answer;
  return <section className="lesson-quick-check" aria-label="Quick lesson challenge">
@@ -70,7 +70,7 @@ export function LessonQuickCheck({question}) {
   <div className="quick-check-choices" role="group" aria-label="Choose an answer">
    {question.options.map(option => <button type="button" key={option} dir="auto"
     aria-pressed={choice === option} disabled={correct}
-    onClick={() => setChoice(option)}>{option}</button>)}
+    onClick={() => {setChoice(option);if(option===question.answer)onComplete?.()}}>{option}</button>)}
   </div>
   {choice !== null && <p role="status" className={correct ? 'quick-check-right' : 'quick-check-retry'}>
    {correct ? '⭐ ' + question.why : '🌱 Good try! Look at the example and pick another answer.'}

@@ -9,15 +9,31 @@ const copy = {
 };
 
 export function DiscoveryLibrary({availableLessons, onOpen}) {
+ const [year,setYear]=useState('all'),[subject,setSubject]=useState('all'),[kind,setKind]=useState('all');
  const available = new Set(availableLessons.map(lesson => lesson.id));
+ const catalogue=DISCOVERY_MODULES.flatMap(module=>module.lessons).filter(lesson=>available.has(lesson.id));
+ const matches=lesson=>available.has(lesson.id)
+  &&(year==='all'||String(lesson.year)===year)
+  &&(subject==='all'||lesson.subject===subject)
+  &&(kind==='all'||lesson.activity.kind===kind);
  return <section className="discovery-library">
   <div className="section-heading"><div>
    <span className="mini-label">🧩 BELAJAR SAMBIL BERMAIN</span>
    <h1>Interactive Modules · Modul Interaktif</h1>
    <p>Choose a lesson to match cards, put ideas in order, and try a short quiz.</p>
   </div></div>
+  <div className="library-filters">
+   <label>Year <select value={year} onChange={event=>setYear(event.target.value)}><option value="all">All years</option>
+    {[...new Set(catalogue.map(lesson=>lesson.year))].sort().map(value=><option key={value} value={value}>Tahun {value}</option>)}</select></label>
+   <label>Subject <select value={subject} onChange={event=>setSubject(event.target.value)}><option value="all">All subjects</option>
+    {[...new Set(catalogue.map(lesson=>lesson.subject))].sort().map(value=><option key={value}>{value}</option>)}</select></label>
+   <label>Activity type <select value={kind} onChange={event=>setKind(event.target.value)}>
+    <option value="all">All activities</option><option value="match">Match cards</option><option value="order">Put in order</option>
+   </select></label>
+  </div>
+  {!catalogue.some(matches)&&<p role="status">No lessons match these filters.</p>}
   {DISCOVERY_MODULES.map(module => {
-   const lessons = module.lessons.filter(lesson => available.has(lesson.id));
+   const lessons = module.lessons.filter(matches);
    if (!lessons.length) return null;
    return <section className="panel discovery-library-group" key={module.title}>
     <h2><span aria-hidden="true">{module.icon}</span> {module.title}</h2>
@@ -36,7 +52,7 @@ export function DiscoveryLibrary({availableLessons, onOpen}) {
  </section>;
 }
 
-export function DiscoveryActivity({activity, language}) {
+export function DiscoveryActivity({activity, language, onComplete}) {
  const [position, setPosition] = useState(0);
  const [mistake, setMistake] = useState(false);
  const labels = copy[language] || copy.en;
@@ -56,6 +72,7 @@ export function DiscoveryActivity({activity, language}) {
   }
   setMistake(false);
   setPosition(position + 1);
+  if(position+1===answers.length)onComplete?.();
  }
 
  return <section className="lesson-quick-check discovery-activity" aria-label="Interactive lesson activity">
