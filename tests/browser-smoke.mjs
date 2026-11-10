@@ -170,6 +170,37 @@ try{
     await page.getByRole('button',{name:'Check my answer'}).click();
     await page.locator('.feedback.good').waitFor();
   }
+  if(width===1280){
+    await page.getByRole('button',{name:'Learning map'}).click();
+    const library=page.locator('.curriculum-map');
+    await library.locator('.subject-mind-map summary').click();
+    const subjectMap=library.getByRole('region',{name:'Mind map for Matematik'});
+    const numbers=subjectMap.getByRole('button',{name:'Nombor'});
+    await numbers.click();
+    assert.equal(await numbers.getAttribute('aria-expanded'),'true');
+    await subjectMap.getByText(/Tunjukkan dua cara membuat 10/).waitFor();
+    await subjectMap.getByRole('button',{name:'Ukuran'}).click();
+    assert.equal(await numbers.getAttribute('aria-expanded'),'false');
+
+    await library.getByLabel('Find a lesson').fill('pasangan rahsia');
+    await library.locator('.illustrated-lesson').click();
+    const lesson=page.locator('.lesson-reader');
+    await lesson.getByRole('heading',{name:'Pasangan rahsia untuk membuat 10'}).waitFor();
+    const quick=lesson.getByRole('region',{name:'Quick lesson challenge'});
+    await quick.getByRole('button',{name:'2',exact:true}).click();
+    await quick.getByRole('status').filter({hasText:'Good try'}).waitFor();
+    await quick.getByRole('button',{name:'3',exact:true}).click();
+    await quick.getByRole('status').filter({hasText:'7 + 3 = 10'}).waitFor();
+    await quick.getByRole('button',{name:'Try again'}).click();
+    await quick.getByRole('status').waitFor({state:'hidden'});
+
+    const notes=lesson.getByRole('tab',{name:/Study content/});
+    await notes.focus();
+    await notes.press('ArrowRight');
+    assert.equal(await lesson.getByRole('tab',{name:/Mind map/}).getAttribute('aria-selected'),'true');
+    await lesson.getByRole('button',{name:'Contoh',exact:true}).click();
+    await lesson.getByText(/Jika 6 petak sudah diisi/).waitFor();
+  }
   await page.locator('nav.nav').getByRole('button',{name:/Study Buddy/i}).click();
   await page.getByLabel('What would you like to learn?').fill('28 + 15');
   await page.getByRole('button',{name:/Explain to me/i}).click();

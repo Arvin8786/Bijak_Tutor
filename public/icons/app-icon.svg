@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">BijakLearn Junior smiling book and star</title>
+  <defs>
+    <linearGradient id="sky" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#21559b"/>
+      <stop offset="1" stop-color="#6335aa"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h512v512H0z"/>
+  <circle cx="256" cy="256" r="199" fill="#e8ecff" opacity=".12"/>
+  <path fill="#ffce67" d="m256 87 12 28 30 3-23 20 7 30-26-16-26 16 7-30-23-20 30-3z"/>
+  <circle cx="177" cy="151" r="9" fill="#94e8dd"/>
+  <circle cx="343" cy="148" r="7" fill="#ffb7ca"/>
+  <path d="M119 228c42-27 93-29 137-1 44-28 95-26 137 1v129c-43-22-93-15-137 12-44-27-94-34-137-12z" fill="#142f69" opacity=".45" transform="translate(0 11)"/>
+  <path d="M119 214c42-27 93-29 137-1 44-28 95-26 137 1v129c-43-22-93-15-137 12-44-27-94-34-137-12z" fill="#fff4dd" stroke="#112e67" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M256 213c44-28 95-26 137 1v129c-43-22-93-15-137 12z" fill="#e2f5ef" stroke="#112e67" stroke-width="12" stroke-linejoin="round"/>
+  <circle cx="204" cy="260" r="12" fill="#112e67"/>
+  <circle cx="308" cy="260" r="12" fill="#112e67"/>
+  <path d="M226 286q30 34 60 0" fill="none" stroke="#112e67" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="177" cy="282" r="10" fill="#f5a3ad"/>
+  <circle cx="335" cy="282" r="10" fill="#f5a3ad"/>
+</svg>
