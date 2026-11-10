@@ -85,3 +85,18 @@
 .lesson-navigation .reader-tabs { gap: .55rem; margin: 0; }
 .lesson-navigation > button { min-height: 48px; }
 .lesson-reader .reader-tabs button { min-height: 48px; }
+.discovery-library-group { margin-block: 1rem; }
+.discovery-activity-clue {
+  width: fit-content;
+  padding: .55rem .8rem;
+  border: 2px solid #ddbb60;
+  border-radius: .7rem;
+  background: white;
+}
+.discovery-activity-answers { padding-inline-start: 1.5rem; }
+.discovery-activity-answers li { margin-block: .35rem; }
+.discovery-activity .quick-check-choices button[aria-disabled="true"] {
+  opacity: .6;
+  cursor: default;
+}
+.discovery-activity > button { min-height: 44px; }

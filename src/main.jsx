@@ -31,6 +31,7 @@ import './learning-mission.css';
 import './activity-arcade.css';
 import './study-library.css';
 import './interactive-learning.css';
+import {DiscoveryActivity, DiscoveryLibrary} from './DiscoveryLearning.jsx';
 import {LessonNavigation, LearningMindMap, LessonQuickCheck, SubjectMindMap} from './InteractiveLearning.jsx';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
 
@@ -292,6 +293,7 @@ function App(){
   <button type="button" onClick={()=>setPage('home')}><span aria-hidden="true">🏠</span> {say(uiLanguage,'goHome')}</button>
  </nav>}
  {timeConsent&&<p className="time-child-notice" role="status">⏱️ Learning-time recording is on. Your parent can see approximate study time, activities and breaks. You can ask them to pause it.</p>}
+ {page==='discovery'&&<DiscoveryLibrary availableLessons={boot?.lessons||[]} onOpen={openLesson}/>}
  {page==='arcade'&&<ActivityArcade/>}
  {page==='wordgame'&&<WordTilesGame/>}
  {page==='growth'&&<GrowthHub audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?async id=>await api("getGrowthModule",token,id):null} checkAnswer={isLive?async(lessonId,answerIndex)=>await api("checkGrowthAnswer",token,lessonId,answerIndex):null}/>}
@@ -303,6 +305,7 @@ function App(){
 
  <div className="study-shortcuts" aria-label="Learning shortcuts">
   <a href="#study-library">📚 Browse the study library</a>
+  <button type="button" onClick={()=>setPage('discovery')}>🧩 {say(uiLanguage,'discovery')}</button>
   <button type="button" onClick={()=>setPage('practice')}>🎯 Start a practice quiz</button>
   <button type="button" onClick={()=>setPage('arcade')}>🎪 Play a learning game</button>
  </div>
@@ -357,7 +360,9 @@ function App(){
    <div className="panel study-summary"><span className="mini-label">💡 LET'S UNDERSTAND</span><h2>What will I learn?</h2><p className="large-reading">{lesson.summary}</p>{lesson.visual&&<div className="visual-example" role="note"><span className="visual-symbol" aria-hidden="true">{lesson.icon}</span><div><strong>👀 Look at this example</strong><p>{lesson.visual}</p></div></div>}</div>
    <section className="study-chapter"><div className="section-heading"><div><span className="mini-label">🪜 ONE STEP AT A TIME</span><h2>Let's learn together</h2></div></div><div className="study-steps">{(lesson.steps||[]).map((s,i)=><article className="study-step" key={i}><span className="step-number">{i+1}</span><div><h3>{s.title}</h3><p>{s.body}</p></div><span className="step-emoji" aria-hidden="true">{['🔎','🧠','✨'][i%3]}</span></article>)}</div></section>
    {lesson.enrichment&&<LearningMission enrichment={lesson.enrichment} title={lesson.title}/>}
-   {lesson.activity&&<LessonQuickCheck key={lesson.id} question={lesson.activity}/>}
+   {lesson.activity&&(lesson.activity.kind
+    ? <DiscoveryActivity key={lesson.id} activity={lesson.activity} language={uiLanguage}/>
+    : <LessonQuickCheck key={lesson.id} question={lesson.activity}/>)}
    <div className="study-cta"><div><strong>Ready for a challenge?</strong><p>Try the questions when you understand the lesson.</p></div><button type="button" className="primary" onClick={()=>{setStudyTab('quiz');setQIndex(0);setResult(null);setAnswer('');setHints(0)}}>Start practice →</button></div>
   </>:studyTab==='map'?<LearningMindMap key={lesson.id} title={lesson.title} icon={lesson.icon}
    branches={lesson.mind?.length?lesson.mind:[['Idea utama',lesson.summary],...lesson.steps.map(step=>[step.title,step.body])]}/>:<section className="panel quiz colour-quiz"><div className="quiz-progress"><span>🎯 Practice challenge</span><span>{Math.min(qIndex+1,lesson.questions.length)} / {lesson.questions.length}</span></div><div className="progress-track"><div style={{width:(100*Math.min(qIndex,lesson.questions.length)/Math.max(1,lesson.questions.length))+'%'}}/></div>{q?<><h2>{q.text}</h2>{q.options.length?<div className="choices">{q.options.map(x=><button type="button" className={answer===x?'selected':''} key={x} disabled={!!result} onClick={()=>setAnswer(x)}>{x}</button>)}</div>:<label>Your answer<input value={answer} disabled={!!result} onChange={e=>setAnswer(e.target.value)} placeholder="Type your answer here"/></label>}<div className="actions">{!result?<><button type="button" onClick={()=>setHints(h=>h+1)}>💡 Hint {hints? '('+hints+' used)':''}</button><button type="button" className="primary" disabled={busy||!answer.trim()} onClick={submit}>Check my answer</button></>:<><button type="button" onClick={()=>{setAnswer('');setResult(null);setHints(x=>x+1)}}>Try with guidance</button><button type="button" className="primary" onClick={next}>Next question →</button></>}</div>{hints>0&&!result&&<p className="hint">Try drawing the objects or using your fingers. What changes when you move one?</p>}{result&&<div className={'feedback '+(result.correct?'good':'gentle')}><strong>{result.correct?'🌟 Wonderful effort!':'💛 Good try — we learn from mistakes!'}</strong>{result.correct&&<div className="celebrate-stars" aria-hidden="true">⭐ ✨ 🎉 ✨ ⭐</div>}<p>{result.feedback}</p><p>{result.mastery.mastered?'⭐ Great independent practice! Keep exploring.':'Keep practising in different ways. One correct answer alone never passes a topic.'}</p></div>}</>:<div className="feedback good"><h2>🎉 You explored all the questions!</h2><p>Keep revisiting the study content and try again with fresh examples.</p><button type="button" className="primary" onClick={()=>{setQIndex(0);setAnswer('');setResult(null);setHints(0)}}>Practice again</button><button type="button" onClick={()=>setStudyTab('notes')}>Review study notes</button></div>}</section>}
