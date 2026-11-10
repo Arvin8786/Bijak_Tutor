@@ -80,11 +80,11 @@ function PicturePuzzle({index,onWin}){
 function SpellingTiles({index,onWin}){
  const entry=PHONICS[index%PHONICS.length],word=entry[1].toUpperCase(),letters=[...word];
  const scrambled=letters.map((letter,i)=>({letter,id:i})).sort((a,b)=>(a.id*11+3)%letters.length-(b.id*11+3)%letters.length);
- const [chosen,setChosen]=useState([]),[feedback,setFeedback]=useState('');
- useEffect(()=>{setChosen([]);setFeedback('')},[index]);
+ const [chosen,setChosen]=useState([]);
  const built=chosen.map(i=>letters[i]).join('');
  const solved=chosen.length===letters.length&&built===word;
- useEffect(()=>{if(solved){setFeedback('⭐ Correct spelling!');onWin()}else setFeedback(chosen.length===letters.length?'That is not quite right. Undo a letter and try again.':'')},[chosen.length,built]);
+ const feedback=solved?'⭐ Correct spelling!':chosen.length===letters.length?'That is not quite right. Undo a letter and try again.':'';
+ useEffect(()=>{if(solved)onWin()},[solved,onWin]);
  return <><h2>✏️ Spell the word</h2><div className="extra-pictured">{entry[2]}</div><p>Choose the tiles to spell <strong>{entry[1]}</strong> correctly.</p>
  <div className="extra-spell-slots" aria-live="polite">{letters.map((_,i)=><span key={i}>{built[i]||'_'}</span>)}</div>
  <div className="extra-spell-tiles">{scrambled.filter(x=>!chosen.includes(x.id)).map(x=><button key={x.id} disabled={solved} type="button" onClick={()=>setChosen(s=>[...s,x.id])}>{x.letter}</button>)}</div>

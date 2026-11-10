@@ -144,7 +144,7 @@ try{
       await arena.locator('.practice-feedback.correct').waitFor();
       await arena.getByRole('button',{name:/Next question|Finish practice/}).click();
     }
-    assert.match(await arena.locator('.practice-finish').textContent(),/10 out of 10/);
+    await arena.locator('.practice-finish').filter({hasText:'10 out of 10'}).waitFor();
     await arena.getByRole('button',{name:'Retry today’s challenge'}).click();
     assert.equal(await arena.locator('.practice-stage h2').textContent(),firstPrompt);
 
@@ -223,11 +223,11 @@ try{
     await game(/Spelling Builder/).click();
     const tiles=arcade.locator('.extra-spell-tiles');
     for(const letter of 'PAPLE') await tiles.getByRole('button',{name:letter,exact:true}).first().click();
-    assert.match(await arcade.locator('.extra-note').textContent(),/not quite right/);
+    await arcade.locator('.extra-note').filter({hasText:'not quite right'}).waitFor();
     await arcade.getByRole('button',{name:/Reset/}).click();
-    assert.equal(await arcade.locator('.extra-note').textContent(),'');
+    await arcade.locator('.extra-note').filter({hasText:'not quite right'}).waitFor({state:'hidden'});
     for(const letter of 'APPLE') await tiles.getByRole('button',{name:letter,exact:true}).first().click();
-    assert.match(await arcade.locator('.extra-note').textContent(),/Correct spelling/);
+    await arcade.locator('.extra-note').filter({hasText:'Correct spelling'}).waitFor();
 
     await game(/Word Search/).click();
     const {terms,grid}=buildWordSearch(0);
@@ -236,18 +236,18 @@ try{
       const start=grid[row].join('').indexOf(term);
       for(let offset=0;offset<term.length;offset++) await arcade.getByRole('button',{name:`Row ${row+1} column ${start+offset+1} letter ${term[offset]}`,exact:true}).click();
     }
-    assert.match(await arcade.locator('.extra-note').textContent(),/5 of 5 words found/);
+    await arcade.locator('.extra-note').filter({hasText:'5 of 5 words found'}).waitFor();
 
     await game(/Life Cycles/).click();
     const stages=arcade.locator('.extra-answer-grid');
     await stages.getByRole('button',{name:/Adult chicken/}).click();
-    assert.match(await arcade.locator('.extra-note').textContent(),/stage that comes next/);
+    await arcade.locator('.extra-note').filter({hasText:'stage that comes next'}).waitFor();
     for(const [name,emoji] of LIFE_CYCLES[0].steps) await stages.getByRole('button',{name:`${emoji} ${name}`,exact:true}).click();
-    assert.match(await arcade.locator('.extra-fact').textContent(),/starting the life cycle again/);
+    await arcade.locator('.extra-fact').filter({hasText:'starting the life cycle again'}).waitFor();
 
     await game(/Picture Puzzle/).click();
     for(const piece of [1,2,2,4,3,4]) await arcade.getByRole('button',{name:`Piece ${piece}`,exact:true}).click();
-    assert.match(await arcade.locator('.extra-note').textContent(),/Picture complete/);
+    await arcade.locator('.extra-note').filter({hasText:'Picture complete'}).waitFor();
     assert.match(await arcade.locator('.arcade-meta').textContent(),/stars earned/);
     await page.locator('nav.nav').getByRole('button',{name:'Word Tiles versus Bot'}).click();
     await page.locator('.word-bot-game').waitFor();
