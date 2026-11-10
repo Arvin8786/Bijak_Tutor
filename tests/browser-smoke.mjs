@@ -123,7 +123,7 @@ try{
   assert.ok(await page.locator('.practice-stage h2').isVisible());
   if(width===1280){
     await page.getByRole('button',{name:'Learning map'}).click();
-    await page.locator('.curriculum-map').getByLabel('Year',{exact:true}).selectOption('1');
+    await page.locator('.curriculum-map select').nth(1).selectOption('1');
     await page.locator('nav.nav').getByRole('button',{name:'Practice Arena'}).click();
     const arena=page.locator('.practice-arena');
     const bank=questionBank(LESSONS,1,'SK','Matematik');
