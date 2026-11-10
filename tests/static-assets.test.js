@@ -10,11 +10,10 @@ test('app HTML icon links reference tracked files',()=>{
     assert.ok(fs.existsSync('public/'+url.slice(2)),'Missing icon: '+url);
   }
 });
-test('service worker precaches only existing assets',()=>{
-  const match=sw.match(/const CORE = (\[[^;]+\]);/);
-  assert.ok(match,'Service-worker precache list missing');
-  const entries=[...match[1].matchAll(/'([^']+)'/g)].map(m=>m[1]);
-  assert.ok(match[1].includes("BASE + 'icons/icon.svg'"),'Scoped icon not in pre-cache');
+test('service worker’s static offline files are included in the public build',()=>{
+  const staticFiles=[...sw.match(/const CORE = \[([^\]]+)\]/)[1].matchAll(/'([^']+)'/g)].map(m=>m[1]);
+  assert.ok(staticFiles.includes('icons/icon.svg'));
+  for(const file of staticFiles) assert.ok(fs.existsSync(file==='index.html'?file:'public/'+file),file);
 });
 test('manifest references existing icons',()=>{
   assert.ok(manifest.icons.length>0);

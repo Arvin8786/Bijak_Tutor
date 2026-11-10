@@ -8,15 +8,15 @@ export default function PracticeArena({lessons,year,school,language='ms',onOpenL
  const options=availablePracticeSubjects(lessons,year,school);
  const selectedSubject=subject==='all'||options.some(x=>x.subject===subject)?subject:'all';
  const bank=useMemo(()=>questionBank(lessons,year,school,selectedSubject),[lessons,year,school,selectedSubject]);
- const questions=useMemo(()=>selectPractice(bank,10,year+'-'+school+'-'+selectedSubject+'-'+today()+'-'+session),[bank,year,school,selectedSubject,session]);
+ const questions=useMemo(()=>selectPractice(bank,10,year+'-'+school+'-'+selectedSubject+'-'+(mode==='daily'?today():session)),[bank,year,school,selectedSubject,mode,session]);
  const cards=useMemo(()=>flashCards(lessons,year,school,selectedSubject),[lessons,year,school,selectedSubject]);
  const q=questions[index],card=cards[index%Math.max(1,cards.length)];
  const reset=()=>{setIndex(0);setChosen('');setChecked(false);setScore(0);setRevealed(false)};
- const check=()=>{if(checked||!chosen.trim())return;setChecked(true);if(markPractice(q,chosen))setScore(n=>n+1)};
+ const check=()=>{if(!q||checked||!chosen.trim())return;setChecked(true);if(markPractice(q,chosen))setScore(n=>n+1)};
  const next=()=>{setIndex(n=>n+1);setChosen('');setChecked(false);setRevealed(false)};
  const startAgain=()=>{reset();setSession(s=>s+1)};
  const available=questions.length;
- const finished=mode==='quiz'&&index>=available;
+ const finished=mode!=='cards'&&available>0&&index>=available;
  return <section className="practice-arena" aria-label="BijakLearn subject practice and flashcards">
   <div className="practice-hero"><div><span className="mini-label">🎯 LEARN • TRY • REVIEW</span><h1>{say(language,'practice')}</h1><p>Short practice sessions and flashcards from your available Tahun {year} lessons. Learn from every answer!</p></div><span aria-hidden="true">🏆</span></div>
   <div className="practice-controls">
@@ -38,7 +38,7 @@ export default function PracticeArena({lessons,year,school,language='ms',onOpenL
       <small>{revealed?(card.example||'Tap to turn over'):'Tap to reveal the meaning and example'}</small>
     </button>
     <div className="practice-actions"><button type="button" onClick={()=>setRevealed(v=>!v)}>{revealed?'Hide answer':'Show answer'}</button><button type="button" className="primary" onClick={next}>Next card →</button><button type="button" onClick={()=>onOpenLesson(card.id)}>Read lesson</button></div>
-   </>):finished?<div className="practice-finish"><div>🎉</div><h2>Well done for trying!</h2><p>You answered {score} out of {available} questions correctly. Review any tricky topics and try another set.</p><button type="button" className="primary" onClick={startAgain}>Try another practice set</button><button type="button" onClick={()=>{setMode('cards');reset()}}>Review flashcards</button></div>:!available?<div className="practice-empty">Practice activities for this selection are being prepared. Try another year or subject.</div>:<>
+   </>):finished?<div className="practice-finish"><div>🎉</div><h2>Well done for trying!</h2><p>You answered {score} out of {available} questions correctly. Review any tricky topics and try another set.</p><button type="button" className="primary" onClick={startAgain}>{mode==='daily'?'Retry today’s challenge':'Try another practice set'}</button><button type="button" onClick={()=>{setMode('cards');reset()}}>Review flashcards</button></div>:!available?<div className="practice-empty">Practice activities for this selection are being prepared. Try another year or subject.</div>:<>
      <div className="practice-scorebar"><span>{mode==='daily'?'🌟 Daily Challenge':'📝 Quick Quiz'}</span><strong>{index+1} / {available}</strong><span>⭐ {score} correct</span></div>
      <div className="practice-progress-track"><span style={{width:Math.round(index/available*100)+'%'}}/></div>
      <p className="practice-topic">📚 {q.subject} · {q.lessonTitle}</p>

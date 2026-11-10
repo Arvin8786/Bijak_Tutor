@@ -19,7 +19,7 @@ Deploy `dist/` to GitHub Pages via the existing workflow. The optional *Remember
 
 See [Operational release guide](docs/OPERATIONAL_RELEASE.md) for the separate Google Apps Script deployment, full curriculum import, owner-only membership/scholarship administration and security requirements. Build generates `release/CurriculumData.gs`, `release/CurriculumImport.gs`, `release/AdminOperations.gs` and `release/CURRICULUM_COVERAGE.json`.
 
-**Measured pilot content:** 180 authored lessons, 904 formative assessment items, **0 independently teacher-approved lessons**, and 36 subject/year/stream catalogue combinations without authored lessons. These figures are not a percentage of the official Malaysian curriculum. Qualified educators must verify the curriculum mappings, facts, answers and languages before public school use.
+The build generates the current lesson and assessment counts in `release/CURRICULUM_COVERAGE.json`. To test the compiled app, use the [full test checklist](docs/FULL_TEST_CHECKLIST.md). Guided Mathematics and Science review lessons for Years 1–6 are listed under **Ulang Kaji Berpandu**. Qualified educators should review materials before classroom use.
 
 The deployed GitHub Pages PWA is **not** securely connected to the private Apps Script backend. Do not process real child personal data, subscriptions or scholarship evidence in the demo.
 

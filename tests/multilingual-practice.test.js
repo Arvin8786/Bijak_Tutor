@@ -5,6 +5,14 @@ import {LESSONS} from '../src/lessons.js';
 import {LANGUAGES,UI_COPY,readLocale,writeLocale} from '../src/localization.js';
 import {availablePracticeSubjects,questionBank,selectPractice,markPractice,flashCards} from '../src/practiceBank.js';
 
+test('a punctuation choice only credits the selected correct mark', () => {
+ const question = {answer: '.', options: ['.', '?', '!']};
+ assert.equal(markPractice(question, '.'), true);
+ assert.equal(markPractice(question, '?'), false);
+ assert.equal(markPractice(question, '!'), false);
+ assert.equal(markPractice({answer: '14'}, '１４'), true);
+});
+
 test('Four supported UI languages have valid core navigation labels',()=>{
  assert.deepEqual(LANGUAGES.map(x=>x.code),['ms','en','zh','ta']);
  for(const language of LANGUAGES){

@@ -1,10 +1,14 @@
 /* Public offline shell only — never cache auth, API responses, personal data or private content. */
 const VERSION = 'bijaklearn-static-v9'; // replaced by scripts/stamp-release.mjs on build
 const BASE = new URL(self.registration.scope).pathname;
-const CORE = [BASE, BASE + 'index.html', BASE + 'manifest.webmanifest', BASE + 'icons/icon.svg'];
+const BUNDLED_ASSETS = []; // populated by scripts/stamp-release.mjs
+const CORE = ['index.html', 'manifest.webmanifest', 'icons/icon.svg', ...BUNDLED_ASSETS].map(path => BASE + path);
 self.addEventListener('install', event => {
- event.waitUntil(caches.open(VERSION).then(cache => cache.addAll(CORE)));
- self.skipWaiting();
+ event.waitUntil((async () => {
+  const cache = await caches.open(VERSION);
+  await cache.addAll(CORE.map(path => new Request(path, {cache: 'reload'})));
+  await self.skipWaiting();
+ })());
 });
 self.addEventListener('activate', event => {
  event.waitUntil((async () => {
@@ -19,15 +23,15 @@ self.addEventListener('fetch', event => {
  const req=event.request;
  if(req.method !== 'GET')return;
  const url=new URL(req.url);
- if(url.origin !== self.location.origin)return;
- const pathWithinApp=url.pathname.startsWith(BASE)?'/'+url.pathname.slice(BASE.length):url.pathname;
+ if(url.origin !== self.location.origin || !url.pathname.startsWith(BASE))return;
+ const pathWithinApp='/'+url.pathname.slice(BASE.length);
  if(pathWithinApp.startsWith('/api/') || pathWithinApp.startsWith('/auth/') || pathWithinApp.startsWith('/private/'))return;
  // Any navigation first requests the newest HTML. The cache is an offline fallback only.
  if(req.mode==='navigate'){
-  event.respondWith(fetch(req,{cache:'no-store'}).then(res=>{
-   if(res.ok){const clone=res.clone();event.waitUntil(caches.open(VERSION).then(c=>c.put(BASE+'index.html',clone)))}
-   return res;
-  }).catch(async()=>await caches.match(BASE+'index.html')||Response.error()));
+  event.respondWith(fetch(req,{cache:'no-store'}).catch(async()=>{
+   const cache=await caches.open(VERSION);
+   return await cache.match(BASE+'index.html')||Response.error();
+  }));
   return;
  }
  if(!(/\.(?:js|css|png|jpg|jpeg|svg|webp|woff2?|webmanifest)$/.test(url.pathname)))return;

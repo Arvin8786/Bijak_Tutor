@@ -1,0 +1,40 @@
+.study-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin: 1rem 0;
+}
+.study-shortcuts a,
+.study-shortcuts button {
+  min-height: 44px;
+  padding: .65rem .9rem;
+  border: 1px solid #c6d9ef;
+  border-radius: .75rem;
+  background: #edf6ff;
+  color: #173c67;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+.study-shortcuts a { display: inline-flex; align-items: center; }
+.study-shortcuts :focus-visible,
+.lesson-search input:focus-visible { outline: 3px solid #185da2; outline-offset: 2px; }
+.lesson-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: .5rem 1rem;
+  margin: 1rem 0;
+  padding: .75rem;
+  background: #f3f8ff;
+  border-radius: .75rem;
+}
+.lesson-search label { flex: 1 1 14rem; color: #173c67; font-weight: 700; }
+.lesson-search input { width: 100%; min-height: 44px; margin-top: .25rem; }
+.lesson-search span { color: #374e69; padding: .45rem 0; }
+.lesson-no-results, .map-optional { margin: .75rem 0; }
+.map-optional { display: inline-flex; align-items: center; gap: .5rem; }
+.map-optional input { width: auto; }
+@media (max-width: 480px) {
+  .study-shortcuts > * { width: 100%; }
+}

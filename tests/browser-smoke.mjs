@@ -1,9 +1,14 @@
 import {chromium} from 'playwright';
 import {spawn} from 'node:child_process';
 import assert from 'node:assert/strict';
+import {LESSONS} from '../src/lessons.js';
+import {questionBank, selectPractice} from '../src/practiceBank.js';
+import {buildWordSearch, LIFE_CYCLES} from '../src/extendedPracticeData.js';
 
-const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'pipe'});
-const base='http://127.0.0.1:4173/';
+// Serve the unchanged production bundle at a project URL, as GitHub Pages does.
+const projectPath='/Bijak_Tutor/';
+const base='http://127.0.0.1:4173'+projectPath;
+const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--base',projectPath,'--host','127.0.0.1','--port','4173','--strictPort'],{stdio:['ignore','ignore','inherit']});
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 let browser;
 try{
@@ -15,13 +20,12 @@ try{
   const page=await browser.newPage({viewport:{width,height:850}});
   const exceptions=[];
   page.on('pageerror',e=>exceptions.push(e.message));
-  await page.goto(base,{waitUntil:'networkidle'});
-  await page.getByRole('heading',{name:/Welcome to BijakLearn Junior/i}).waitFor({timeout:10000}).catch(()=>{});
+  const response=await page.goto(base,{waitUntil:'networkidle'});
+  assert.ok(response?.ok(),`Production page did not load at ${base}`);
+  assert.equal(new URL(page.url()).pathname,projectPath,'Expected the GitHub Pages project path');
   const welcome=page.locator('.welcome-gate');
-  if(await welcome.isVisible()){
-   await welcome.getByRole('button',{name:/English/i}).click();
-   await welcome.getByRole('button',{name:/Continue/i}).click();
-  }
+  await welcome.getByRole('button',{name:/English/i}).click();
+  await welcome.getByRole('button',{name:/Continue/i}).click();
 
   await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   assert.equal(await page.getByRole('button',{name:/Explore local demo/i}).count(),0,'Public showcase must not show demo gate');
@@ -117,6 +121,55 @@ try{
   assert.ok(await page.locator('.flip-card.revealed').isVisible());
   await page.getByRole('button',{name:/Quick Quiz/i}).click();
   assert.ok(await page.locator('.practice-stage h2').isVisible());
+  if(width===1280){
+    await page.getByRole('button',{name:'Learning map'}).click();
+    await page.locator('.curriculum-map select').nth(1).selectOption('1');
+    await page.locator('nav.nav').getByRole('button',{name:'Practice Arena'}).click();
+    const arena=page.locator('.practice-arena');
+    const bank=questionBank(LESSONS,1,'SK','Matematik');
+    const testDay='2026-11-10';
+    await page.clock.setFixedTime(new Date(testDay+'T12:00:00Z'));
+    const dailyQuestions=selectPractice(bank,10,'1-SK-Matematik-'+testDay);
+    await arena.getByRole('combobox').selectOption('Matematik');
+    await arena.getByRole('button',{name:'Daily Challenge'}).click();
+    const firstPrompt=await arena.locator('.practice-stage h2').textContent();
+    for(let i=0;i<10;i++){
+      const prompt=await arena.locator('.practice-stage h2').textContent();
+      const question=dailyQuestions[i];
+      assert.equal(prompt,question.text,'Daily challenge shows the expected question');
+      const options=arena.locator('.practice-options');
+      if(await options.count()) await options.getByRole('button',{name:String(question.answer),exact:true}).click();
+      else await arena.locator('input').fill(String(question.answer));
+      await arena.getByRole('button',{name:'Check answer',exact:true}).click();
+      await arena.locator('.practice-feedback.correct').waitFor();
+      await arena.getByRole('button',{name:/Next question|Finish practice/}).click();
+    }
+    await arena.locator('.practice-finish').filter({hasText:'10 out of 10'}).waitFor();
+    await arena.getByRole('button',{name:'Retry today’s challenge'}).click();
+    assert.equal(await arena.locator('.practice-stage h2').textContent(),firstPrompt);
+
+    await page.getByRole('button',{name:'Learning map'}).click();
+    const library=page.locator('.curriculum-map');
+    await library.getByLabel('Find a lesson').fill('no matching lesson');
+    await library.getByText('No matching lessons.').waitFor();
+    await library.getByRole('button',{name:'Clear filters'}).click();
+    await library.getByLabel('Find a lesson').fill('melengkapkan sepuluh');
+    assert.equal(await library.locator('.illustrated-lesson').count(),1);
+    await library.locator('.illustrated-lesson').click();
+    await page.getByRole('heading',{name:'Tambah dengan melengkapkan sepuluh'}).waitFor();
+    await page.getByRole('tab',{name:/Try the quiz/}).click();
+    await page.locator('.colour-quiz').getByRole('button',{name:'12',exact:true}).click();
+    await page.getByRole('button',{name:'Check my answer'}).click();
+    await page.locator('.feedback.gentle').waitFor();
+    await page.getByRole('button',{name:'Try with guidance'}).click();
+    await page.locator('.colour-quiz').getByRole('button',{name:'13',exact:true}).click();
+    await page.getByRole('button',{name:'Check my answer'}).click();
+    await page.locator('.feedback.good').waitFor();
+    await page.getByRole('button',{name:/Next question/}).click();
+    await page.getByRole('textbox',{name:'Your answer'}).fill('１４');
+    await page.getByRole('button',{name:'Check my answer'}).click();
+    await page.locator('.feedback.good').waitFor();
+  }
   await page.locator('nav.nav').getByRole('button',{name:/Study Buddy/i}).click();
   await page.getByLabel('What would you like to learn?').fill('28 + 15');
   await page.getByRole('button',{name:/Explain to me/i}).click();
@@ -145,7 +198,8 @@ try{
       ['Life Cycles','.extra-life-steps'],['Body Parts','.extra-pictured'],
       ['People at Work','.extra-pictured'],['Weather Lab','.extra-pictured'],
       ['Shape Explorer','.extra-pictured'],['Patterns & Logic','.extra-pattern'],
-      ['Picture Puzzle','.extra-jigsaw'],['Make & Create','.extra-craft-steps']
+      ['Picture Puzzle','.extra-jigsaw'],['Make & Create','.extra-craft-steps'],
+      ['Creative Sketchbook','.sketch-studio canvas']
     ];
     for(const [name,selector] of extraActivities){
       await page.locator('.arcade-modes').getByRole('button',{name:new RegExp(name,'i')}).click();
@@ -158,6 +212,43 @@ try{
     assert.ok(await page.locator('.extra-expression').textContent(),'Level 3 addition is missing');
     await page.locator('.extra-answer-grid button').first().click();
     assert.ok(await page.locator('.extra-feedback').isVisible(),'Math activity did not give feedback');
+    const arcade=page.locator('.activity-arcade');
+    const game=name=>arcade.locator('.arcade-modes').getByRole('button',{name});
+    await game(/Count & Compare/).click();
+    await arcade.getByLabel('Practice difficulty').selectOption('1');
+    await arcade.getByRole('button',{name:/Next activity/}).click();
+    await arcade.locator('.extra-answer-grid').getByRole('button',{name:'Stars',exact:true}).click();
+    await arcade.locator('.extra-feedback.success').waitFor();
+
+    await game(/Spelling Builder/).click();
+    const tiles=arcade.locator('.extra-spell-tiles');
+    for(const letter of 'PAPLE') await tiles.getByRole('button',{name:letter,exact:true}).first().click();
+    await arcade.locator('.extra-note').filter({hasText:'not quite right'}).waitFor();
+    await arcade.getByRole('button',{name:/Reset/}).click();
+    await arcade.locator('.extra-note').filter({hasText:'not quite right'}).waitFor({state:'hidden'});
+    for(const letter of 'APPLE') await tiles.getByRole('button',{name:letter,exact:true}).first().click();
+    await arcade.locator('.extra-note').filter({hasText:'Correct spelling'}).waitFor();
+
+    await game(/Word Search/).click();
+    const {terms,grid}=buildWordSearch(0);
+    for(const term of terms){
+      const row=grid.findIndex(letters=>letters.join('').includes(term));
+      const start=grid[row].join('').indexOf(term);
+      for(let offset=0;offset<term.length;offset++) await arcade.getByRole('button',{name:`Row ${row+1} column ${start+offset+1} letter ${term[offset]}`,exact:true}).click();
+    }
+    await arcade.locator('.extra-note').filter({hasText:'5 of 5 words found'}).waitFor();
+
+    await game(/Life Cycles/).click();
+    const stages=arcade.locator('.extra-answer-grid');
+    await stages.getByRole('button',{name:/Adult chicken/}).click();
+    await arcade.locator('.extra-note').filter({hasText:'stage that comes next'}).waitFor();
+    for(const [name,emoji] of LIFE_CYCLES[0].steps) await stages.getByRole('button',{name:`${emoji} ${name}`,exact:true}).click();
+    await arcade.locator('.extra-fact').filter({hasText:'starting the life cycle again'}).waitFor();
+
+    await game(/Picture Puzzle/).click();
+    for(const piece of [1,2,2,4,3,4]) await arcade.getByRole('button',{name:`Piece ${piece}`,exact:true}).click();
+    await arcade.locator('.extra-note').filter({hasText:'Picture complete'}).waitFor();
+    assert.match(await arcade.locator('.arcade-meta').textContent(),/stars earned/);
     await page.locator('nav.nav').getByRole('button',{name:'Word Tiles versus Bot'}).click();
     await page.locator('.word-bot-game').waitFor();
     const rack=page.locator('.word-bot-rack button');
@@ -194,6 +285,18 @@ try{
   const over=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);
   assert.equal(over,false,'Horizontal overflow at '+width+'px');
   await page.close();
+  console.log('Passed browser flows at '+width+'px');
  }
+ // A fresh install must open the compiled app offline without a second online navigation.
+ const offlineContext=await browser.newContext();
+ const offlinePage=await offlineContext.newPage();
+ await offlinePage.goto(base);
+ await offlinePage.locator('.welcome-gate').getByRole('button',{name:'English'}).click();
+ await offlinePage.locator('.welcome-gate').getByRole('button',{name:'Continue'}).click();
+ await offlinePage.waitForFunction(()=>Boolean(navigator.serviceWorker.controller));
+ await offlineContext.setOffline(true);
+ await offlinePage.reload();
+ await offlinePage.getByRole('heading',{name:/Choose a subject/i}).waitFor();
+ await offlineContext.close();
  console.log('Browser smoke tests passed: existing Junior features, Adult Learn AI, Junior/Adult Creative Hobbies, ProEase attribution and mobile widths.');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}

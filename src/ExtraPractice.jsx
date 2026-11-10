@@ -46,7 +46,11 @@ function WordSearch({round,onWin}){
   if(last&&!(last[0]===r&&last[1]+1===c)){setSelection([[r,c]]);return}
   const cells=[...selection,[r,c]],value=cells.map(([x,y])=>grid[x][y]).join('');
   if(terms.includes(value)&&!found.includes(value)){
-   setFound(f=>{const next=[...f,value];if(next.length===terms.length)onWin();return next});setSelection([]);return;
+   const next=[...found,value];
+   setFound(next);
+   setSelection([]);
+   if(next.length===terms.length)onWin();
+   return;
   }
   if(terms.some(w=>w.startsWith(value)))setSelection(cells);else setSelection([[r,c]]);
  };
@@ -76,11 +80,11 @@ function PicturePuzzle({index,onWin}){
 function SpellingTiles({index,onWin}){
  const entry=PHONICS[index%PHONICS.length],word=entry[1].toUpperCase(),letters=[...word];
  const scrambled=letters.map((letter,i)=>({letter,id:i})).sort((a,b)=>(a.id*11+3)%letters.length-(b.id*11+3)%letters.length);
- const [chosen,setChosen]=useState([]),[feedback,setFeedback]=useState('');
- useEffect(()=>{setChosen([]);setFeedback('')},[index]);
+ const [chosen,setChosen]=useState([]);
  const built=chosen.map(i=>letters[i]).join('');
  const solved=chosen.length===letters.length&&built===word;
- useEffect(()=>{if(solved){setFeedback('⭐ Correct spelling!');onWin()}else if(chosen.length===letters.length)setFeedback('That is not quite right. Undo a letter and try again.')},[chosen.length,built]);
+ const feedback=solved?'⭐ Correct spelling!':chosen.length===letters.length?'That is not quite right. Undo a letter and try again.':'';
+ useEffect(()=>{if(solved)onWin()},[solved,onWin]);
  return <><h2>✏️ Spell the word</h2><div className="extra-pictured">{entry[2]}</div><p>Choose the tiles to spell <strong>{entry[1]}</strong> correctly.</p>
  <div className="extra-spell-slots" aria-live="polite">{letters.map((_,i)=><span key={i}>{built[i]||'_'}</span>)}</div>
  <div className="extra-spell-tiles">{scrambled.filter(x=>!chosen.includes(x.id)).map(x=><button key={x.id} disabled={solved} type="button" onClick={()=>setChosen(s=>[...s,x.id])}>{x.letter}</button>)}</div>
@@ -90,8 +94,7 @@ function LifeCycle({index,onWin}){
  const item=LIFE_CYCLES[index%LIFE_CYCLES.length],len=item.steps.length;
  const [placed,setPlaced]=useState([]),[feedback,setFeedback]=useState('');
  useEffect(()=>{setPlaced([]);setFeedback('')},[index]);
- const expected=item.steps[placed.length];
- const options=item.steps.map((stage,i)=>({stage,i})).sort((a,b)=>((a.i*5+index+1)%len)-((b.i*5+index+1)%len));
+ const options=item.steps.map((stage,i)=>({stage,i})).sort((a,b)=>((a.i+index+1)%len)-((b.i+index+1)%len));
  const choose=(stage,i)=>{if(i===placed.length){const next=[...placed,stage];setPlaced(next);setFeedback('✓ Well done — '+stage[0]);if(next.length===len)onWin()}else setFeedback('Look for the stage that comes next in the life cycle.')};
  return <><h2>{item.emoji} Life Cycle: {item.name}</h2><p>Build the life cycle by choosing its stages in the right order.</p><div className="extra-life-steps">{placed.map(([name,emoji],i)=><span key={i}>{emoji}<small>{name}</small></span>)}{placed.length<len&&<span className="waiting">❓<small>Stage {placed.length+1}</small></span>}</div>
  {placed.length<len?<div className="extra-answer-grid">{options.filter(({i})=>i>=placed.length).map(({stage,i})=><button type="button" key={i} onClick={()=>choose(stage,i)}>{stage[1]} {stage[0]}</button>)}</div>:<p className="extra-fact">🌟 {item.fact}</p>}
@@ -100,9 +103,8 @@ function LifeCycle({index,onWin}){
 export default function ExtraPractice({mode,index,level,onStar}){
  const [answered,setAnswered]=useState(null),[detail,setDetail]=useState('');
  const [language,setLanguage]=useState('en');
- const [patternInput,setPatternInput]=useState('');
  const already=useRef('');
- useEffect(()=>{setAnswered(null);setDetail('');setPatternInput('');already.current=''},[index,mode,level]);
+ useEffect(()=>{setAnswered(null);setDetail('');already.current=''},[index,mode,level]);
  const award=()=>{const key=mode+'-'+index+'-'+level;if(already.current!==key){already.current=key;onStar()}};
  const respond=(value,expected,explanation='')=>{
   if(answered!==null)return;
@@ -110,7 +112,7 @@ export default function ExtraPractice({mode,index,level,onStar}){
   setAnswered({yes,expected});setDetail(yes?'🌟 Correct! '+explanation:'💛 Good attempt. Correct answer: '+expected+'. '+explanation);
   if(yes)award();
  };
- const number=arithmeticChallenge(index,level,mode==='count'?'add':'add');
+ const number=arithmeticChallenge(index,level);
  const count=1+(index*7+level*3)%([0,9,20,45][level]||9);
  const shape=SHAPES[index%SHAPES.length];
  const pair=mode==='phonics'?PHONICS[index%PHONICS.length]:null;
@@ -121,10 +123,21 @@ export default function ExtraPractice({mode,index,level,onStar}){
  const options=source.length?chooseAlternatives(source,index,language==='ms'?1:0):[];
  const currentLanguage=language==='ms'?'ms-MY':'en-GB';
  return <div className="extra-practice">
-  {['body','jobs','weather','shapes'].includes(mode)&&<div className="extra-language"><label>Word language <select value={language} onChange={e=>{setLanguage(e.target.value);setAnswered(null)}}><option value="en">English</option><option value="ms">Bahasa Melayu</option></select></label></div>}
+  {['body','jobs','weather','shapes'].includes(mode)&&<div className="extra-language"><label>Word language <select value={language} onChange={e=>{setLanguage(e.target.value);setAnswered(null);setDetail('')}}><option value="en">English</option><option value="ms">Bahasa Melayu</option></select></label></div>}
   {mode==='add'&&<><h2>➕ Picture addition</h2><p>Count both groups, then find the total.</p><div className="extra-picture-numbers"><span>{number.first>20?<strong>🍎 × {number.first}</strong>:Array.from({length:number.first},(_,i)=><b key={i}>🍎</b>)}</span><strong>+</strong><span>{number.second>20?<strong>🍌 × {number.second}</strong>:Array.from({length:number.second},(_,i)=><b key={i}>🍌</b>)}</span></div>
    <div className="extra-expression">{number.first} + {number.second} = ?</div><QuickOptions options={number.options} expected={number.answer} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,`${number.first} plus ${number.second} is ${a}.`)}/></>}
-  {mode==='count'&&<><h2>🔢 Count & Compare</h2><p>How many {['stars','flowers','cars','balls'][index%4]} are there?</p><div className="extra-counting">{Array.from({length:count},(_,i)=><span key={i}>{['⭐','🌷','🚗','⚽'][index%4]}</span>)}</div><QuickOptions options={[count,count+1,Math.max(0,count-1)].sort((a,b)=>((a+index*3)%5)-((b+index*3)%5))} expected={count} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,'Count one at a time.')}/></>}
+  {mode==='count'&&<><h2>🔢 Count & Compare</h2>
+   {index%2===0?<><p>How many stars are there?</p>
+    <div className="extra-counting">{Array.from({length:count},(_,i)=><span key={i}>⭐</span>)}</div>
+    <QuickOptions options={[count,count+1,count-1].sort((a,b)=>((a+index*3)%5)-((b+index*3)%5))} expected={count} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,'Count one at a time.')}/>
+   </>:<><p>Which group has more objects?</p>
+    <div className="extra-picture-numbers">
+     <span role="img" aria-label={number.first+' stars'}>{number.first>20?<strong>⭐ × {number.first}</strong>:Array.from({length:number.first},(_,i)=><b key={i}>⭐</b>)}</span>
+     <span role="img" aria-label={number.second+' flowers'}>{number.second>20?<strong>🌷 × {number.second}</strong>:Array.from({length:number.second},(_,i)=><b key={i}>🌷</b>)}</span>
+    </div>
+    <QuickOptions options={['Stars','Flowers','Same number']} expected={number.first===number.second?'Same number':number.first>number.second?'Stars':'Flowers'} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,`There are ${number.first} stars and ${number.second} flowers.`)}/>
+   </>}
+  </>}
   {mode==='phonics'&&<><h2>🔤 Alphabet Sounds</h2><div className="extra-pictured">{pair[2]}</div><p><strong>{pair[1]}</strong> begins with which letter?</p>
    <QuickOptions options={[pair[0],PHONICS[(index+5)%26][0],PHONICS[(index+11)%26][0]].sort()} expected={pair[0]} onAnswer={(v,a)=>respond(v,a,pair[0]+' is the first letter in '+pair[1]+'.')} answered={answered!==null}/>
    <button type="button" onClick={()=>say(pair[1])}>🔊 Listen to {pair[1]}</button><div className="extra-trace"><DrawingPad letter={pair[0]}/></div></>}
@@ -140,7 +153,7 @@ export default function ExtraPractice({mode,index,level,onStar}){
    <QuickOptions options={options} expected={answer} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,mode==='jobs'?item[3]:mode==='weather'?item[3]:mode==='shapes'?`It has ${shape[3]} corners in this simple classification.`:`In Bahasa Melayu: ${item[1]}.`)}/>
    <button type="button" onClick={()=>say(answer,currentLanguage)}>🔊 Hear the word</button></>}
   {mode==='patterns'&&<><h2>🧠 Complete the Pattern</h2><p>What should come next?</p><div className="extra-pattern">{pattern.shown.map((s,i)=><span key={i}>{s}</span>)}<strong>?</strong></div>
-   <div className="extra-answer-grid">{[pattern.answer,...new Set(['8','🔴','9','🟡','A','⭐','🟦','5','3','🍎'].filter(x=>x!==pattern.answer))].slice(0,3).map(v=><button type="button" key={v} disabled={answered!==null} onClick={()=>respond(v,pattern.answer,'Look for the repeating or growing rule.')}>{v}</button>)}</div></>}
+   <div className="extra-answer-grid">{pattern.options.map(v=><button type="button" key={v} disabled={answered!==null} onClick={()=>respond(v,pattern.answer,'Look for the repeating or growing rule.')}>{v}</button>)}</div></>}
   {mode==='jigsaw'&&<PicturePuzzle index={index} onWin={award}/>}
   {mode==='sketch'&&<SketchStudio key={index} index={index} onStar={award}/>}
   {mode==='craft'&&<><h2>{craft[1]} {craft[0]}</h2><p>Follow these original instructions with appropriate adult help.</p><ol className="extra-craft-steps">{craft[2].map((s,i)=><li key={i}>{s}</li>)}</ol><p className="extra-fact">🛡️ {craft[3]}</p>

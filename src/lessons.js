@@ -5,6 +5,7 @@ import {JUNIOR_STREAM_LESSONS} from './juniorStreams.js';
 import {enrichPractice} from './learningPractice.js';
 import {withMathPractice} from './mathPractice.js';
 import {OPTIONAL_STARTER_LESSONS} from './optionalStarterLessons.js';
+import {REVIEW_LESSONS} from './reviewLessons.js';
 import {SUPPLEMENTARY_LESSONS} from './supplementaryExplorations.js';
 /* Original demonstration lessons, not a claimed complete KPM/DSKP mapping. */
 export const ORIGINAL_LESSONS=[
@@ -330,4 +331,4 @@ export const SKILL_DEMO_LESSONS = [
 ];
 export const PRIMARY_SUBJECTS=[['Matematik','🧮'],['Bahasa Melayu','📖'],['English','🔤'],['Sains','🔬'],['Sejarah','🌏'],['Bahasa Cina','🀄'],['Bahasa Tamil','✍️'],['Pendidikan Islam','🌙'],['Pendidikan Moral','🤝'],['Reka Bentuk dan Teknologi','🛠️'],['Pendidikan Seni Visual','🎨'],['Pendidikan Muzik','🎼'],['Pendidikan Jasmani dan Kesihatan','🏃']];
 
-export const LESSONS = [...SKILL_DEMO_LESSONS, ...ORIGINAL_LESSONS, ...EXPANDED_LESSONS, ...withMathPractice(enrichPractice([...JUNIOR_FOUNDATION_LESSONS,...JUNIOR_ENRICHMENT_LESSONS,...JUNIOR_STREAM_LESSONS,...OPTIONAL_STARTER_LESSONS])), ...SUPPLEMENTARY_LESSONS];
+export const LESSONS = [...SKILL_DEMO_LESSONS, ...ORIGINAL_LESSONS, ...EXPANDED_LESSONS, ...withMathPractice(enrichPractice([...JUNIOR_FOUNDATION_LESSONS,...JUNIOR_ENRICHMENT_LESSONS,...JUNIOR_STREAM_LESSONS,...OPTIONAL_STARTER_LESSONS])), ...SUPPLEMENTARY_LESSONS, ...REVIEW_LESSONS];

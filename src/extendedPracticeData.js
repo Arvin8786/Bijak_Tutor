@@ -80,12 +80,12 @@ export const CRAFTS=[
  ['Make a seed observation chart','🌱',['Choose a safe seed with an adult.','Observe it in suitable conditions.','Draw its changes over several days.'],'Do not taste unknown seeds or plants.']
 ];
 export const SEQUENCE_PATTERNS=[
- {tiles:['🔴','🔵'],answer:'🔴'}, {tiles:['⭐','🌙'],answer:'⭐'}, {tiles:['🍎','🍌','🍐'],answer:'🍎'},
- {tiles:['🐱','🐱','🐶'],answer:'🐱'}, {tiles:['1','2','3'],answer:'4'},
+ {tiles:['🔴','🔵'],answer:'🔴'}, {tiles:['⭐','🌙'],answer:'⭐'}, {tiles:['🍎','🍌','🍐','🍎','🍌','🍐'],answer:'🍎'},
+ {tiles:['🐱','🐱','🐶','🐱','🐱','🐶'],answer:'🐱'}, {tiles:['1','2','3'],answer:'4'},
  {tiles:['2','4','6'],answer:'8'}, {tiles:['5','10','15'],answer:'20'},
  {tiles:['🔺','🟦','🔺','🟦'],answer:'🔺'}, {tiles:['A','B','C'],answer:'D'},
  {tiles:['🌞','🌧️','🌞','🌧️'],answer:'🌞'}, {tiles:['1','3','5'],answer:'7'},
- {tiles:['🟡','🟡','🟢'],answer:'🟡'}
+ {tiles:['🟡','🟡','🟢','🟡','🟡','🟢'],answer:'🟡'}
 ];
 export const WORDSEARCH_WORDS=[
  ['SUN','RAIN','WIND','HOT','COLD'],['CAT','DOG','FISH','BIRD','ANT'],
@@ -101,7 +101,14 @@ export function arithmeticChallenge(index,level=1,kind='add'){
  const opts=[answer,answer+1,answer+2,Math.max(0,answer-1)].filter((x,i,s)=>s.indexOf(x)===i).slice(0,3);
  return {first,second,answer,options:opts.sort((x,y)=>((x*7+n)%19)-((y*7+n)%19))};
 }
-export function getPattern(index){const entry=SEQUENCE_PATTERNS[index%SEQUENCE_PATTERNS.length];const shown=entry.tiles.length===2?[...entry.tiles,...entry.tiles]:[...entry.tiles];return {...entry,shown}}
+export function getPattern(index){const entry=SEQUENCE_PATTERNS[index%SEQUENCE_PATTERNS.length];const shown=entry.tiles.length===2?[...entry.tiles,...entry.tiles]:[...entry.tiles];const distractors = [...new Set(shown)].filter(tile => tile !== entry.answer).slice(0, 2);
+ for (const tile of ['🟢', '🟣']) {
+  if (distractors.length < 2 && tile !== entry.answer && !distractors.includes(tile)) distractors.push(tile);
+ }
+ const options = [...distractors];
+ options.splice(index % 3, 0, entry.answer);
+ return {...entry, shown, options};
+}
 export function buildWordSearch(index,size=9){
  const terms=WORDSEARCH_WORDS[index%WORDSEARCH_WORDS.length];
  // Deterministic horizontal placement, one word per row; no fake hidden words.
