@@ -114,7 +114,7 @@ function PwaControls(){
   if(!isLive){
    checkRelease();
    tick=window.setInterval(checkRelease,60000);
-   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){
+   if(window.isSecureContext&&'serviceWorker' in navigator){
     navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`,{updateViaCache:'none'}).then(reg=>reg.update()).catch(err=>console.warn('PWA offline cache unavailable:',err));
    }
   }
