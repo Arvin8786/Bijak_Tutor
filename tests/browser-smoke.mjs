@@ -38,14 +38,26 @@ try{
   await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   const badgeOverflow=await page.locator('.playful-subjects .subject-picker').evaluateAll(cards=>cards.some(card=>{const badge=card.querySelector('.ready-dot,.catalog-dot');if(!badge)return false;const r=badge.getBoundingClientRect(),p=card.getBoundingClientRect();return r.right>p.right+2||r.left<p.left-2||badge.scrollWidth>badge.clientWidth+2||getComputedStyle(badge).fontSize.replace('px','')>13}));
   assert.equal(badgeOverflow,false,'Subject badges clip or use giant text at '+width+'px');
-  let cards=page.locator('.illustrated-lesson');
-  assert.ok(await cards.count()>0,'Default year has no lessons');
-  await cards.first().click();
+  const subjectCard=page.getByRole('button',{name:/Matematik.*Open book/i});
+  const pageControls=page.getByRole('navigation',{name:'Page navigation'});
+  await subjectCard.click();
+  const subjectPage=page.locator('.subject-page');
+  await subjectPage.getByRole('heading',{name:'Matematik',exact:true}).waitFor();
+  await subjectPage.getByLabel('Find a lesson').fill('pasangan rahsia');
+  await subjectPage.getByRole('button',{name:/Pasangan rahsia/}).click();
   await page.locator('.lesson-reader').waitFor();
   assert.ok((await page.locator('.study-steps .study-step').count())>=1,'Study steps not displayed');
   await page.getByRole('tab',{name:/Try the quiz/}).click();
   assert.ok(await page.locator('.colour-quiz').isVisible());
-  await page.getByRole('button',{name:/Back to subjects/i}).click();
+  await pageControls.getByRole('button',{name:'Back',exact:true}).click();
+  await subjectPage.getByRole('heading',{name:'Matematik',exact:true}).waitFor();
+  assert.equal(await subjectPage.getByLabel('Find a lesson').inputValue(),'pasangan rahsia');
+  await pageControls.getByRole('button',{name:'Back',exact:true}).click();
+  await subjectCard.waitFor();
+  await page.waitForFunction(()=>document.activeElement?.id==='subject-math');
+  await subjectCard.click();
+  await pageControls.getByRole('button',{name:'Go to Home',exact:true}).click();
+  await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   await page.getByRole('button',{name:/Learning map/i}).click();
   await page.locator('.curriculum-map').waitFor();
   const year=page.locator('.curriculum-map select').nth(1);
@@ -55,7 +67,7 @@ try{
   await page.locator('.curriculum-map .illustrated-lesson').first().click();
   await page.locator('.lesson-reader').waitFor();
   assert.ok((await page.locator('.lesson-reader h1').textContent()).length>2);
-  if(width===1280){await page.getByRole('button',{name:/Learning map/i}).click();for(const stream of ['SK','SJKC','SJKT']){await page.locator('.curriculum-map select').first().selectOption(stream);for(let y=1;y<=6;y++){await page.locator('.curriculum-map select').nth(1).selectOption(String(y));await page.locator('.curriculum-map select').nth(2).selectOption('Matematik');const cards=page.locator('.curriculum-map .illustrated-lesson');assert.ok(await cards.count()>0,stream+' year '+y+' has no lessons');await cards.first().click();await page.locator('.lesson-reader').waitFor();await page.getByRole('button',{name:/Back to subjects/i}).click();await page.getByRole('button',{name:/Learning map/i}).click()}}}
+  if(width===1280){await pageControls.getByRole('button',{name:'Back',exact:true}).click();for(const stream of ['SK','SJKC','SJKT']){await page.locator('.curriculum-map select').first().selectOption(stream);for(let y=1;y<=6;y++){await page.locator('.curriculum-map select').nth(1).selectOption(String(y));await page.locator('.curriculum-map select').nth(2).selectOption('Matematik');const cards=page.locator('.curriculum-map .illustrated-lesson');assert.ok(await cards.count()>0,stream+' year '+y+' has no lessons');await cards.first().click();await page.locator('.lesson-reader').waitFor();await pageControls.getByRole('button',{name:'Back',exact:true}).click()}}}
   if(width===1280){
     // Audit real selected subject/year lesson cards rather than only checking source data.
     await page.locator('nav.nav').getByRole('button',{name:/Learning map/i}).click();
@@ -322,12 +334,14 @@ try{
  const offlineContext=await browser.newContext();
  const offlinePage=await offlineContext.newPage();
  await offlinePage.goto(base);
- await offlinePage.locator('.welcome-gate').getByRole('button',{name:'English'}).click();
- await offlinePage.locator('.welcome-gate').getByRole('button',{name:'Continue'}).click();
+ await offlinePage.locator('.welcome-gate').getByRole('button',{name:'Teruskan'}).click();
  await offlinePage.waitForFunction(()=>Boolean(navigator.serviceWorker.controller));
  await offlineContext.setOffline(true);
  await offlinePage.reload();
- await offlinePage.getByRole('heading',{name:/Choose a subject/i}).waitFor();
+ await offlinePage.getByRole('button',{name:/Matematik.*Buka buku/i}).click();
+ await offlinePage.locator('.subject-page').getByRole('heading',{name:'Matematik',exact:true}).waitFor();
+ await offlinePage.getByRole('button',{name:'Kembali',exact:true}).click();
+ await offlinePage.getByRole('heading',{name:/Pilih mata pelajaran/i}).waitFor();
  await offlineContext.close();
  console.log('Browser smoke tests passed: existing Junior features, Adult Learn AI, Junior/Adult Creative Hobbies, ProEase attribution and mobile widths.');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}

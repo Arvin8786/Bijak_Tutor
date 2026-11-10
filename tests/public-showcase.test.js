@@ -16,7 +16,7 @@ test('guest visitors are not represented as authenticated parents or premium mem
  const src=fs.readFileSync('src/main.jsx','utf8');
  assert.match(src,/name:'Guest',email:''/);
  assert.match(src,/access:\{active:false,plan:'FREE'\}/);
- assert.match(src,/isLive&&<button onClick=\{\(\)=>\{setReport\(null\);setPage\('pin'\)/);
+ assert.match(src,/isLive&&<button onClick=\{\(\)=>setPage\('pin'\)/);
  assert.match(src,/Family account enrolment and paid memberships are not active/);
 });
 

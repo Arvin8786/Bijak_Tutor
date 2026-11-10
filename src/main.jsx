@@ -146,7 +146,47 @@ function App(){
  const [uiLanguage,setUiLanguage]=useState(()=>readLocale()||'ms');
  const [welcomeDone,setWelcomeDone]=useState(()=>!!readLocale());
  useEffect(()=>{document.documentElement.lang=uiLanguage},[uiLanguage]);
- const [token,setToken]=useState(''),[boot,setBoot]=useState(null),[childId,setChildId]=useState(''),[page,setPage]=useState('home'),[lesson,setLesson]=useState(null),[qIndex,setQIndex]=useState(0),[answer,setAnswer]=useState(''),[hints,setHints]=useState(0),[result,setResult]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[pin,setPin]=useState(''),[oldPin,setOldPin]=useState(''),[report,setReport]=useState(null),[newName,setNewName]=useState(''),[year,setYear]=useState(1),[school,setSchool]=useState('SK'),[language,setLanguage]=useState('ms');
+ const [token,setToken]=useState(''),[boot,setBoot]=useState(null),[childId,setChildId]=useState(''),[qIndex,setQIndex]=useState(0),[answer,setAnswer]=useState(''),[hints,setHints]=useState(0),[result,setResult]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[pin,setPin]=useState(''),[oldPin,setOldPin]=useState(''),[report,setReport]=useState(null),[newName,setNewName]=useState(''),[year,setYear]=useState(1),[school,setSchool]=useState('SK'),[language,setLanguage]=useState('ms');
+ const [routes,setRoutes]=useState([{page:'home'}]);
+ const route=routes.at(-1);
+ const {page,lesson}=route;
+ const mainRef=useRef(null);
+ const restoreSubject=useRef(null);
+
+ function setPage(next, context={}) {
+  setRoutes(history=>{
+   if(next==='home')return history.length===1?history:history.slice(0,1);
+   const current=history.at(-1);
+   if(current.page===next&&current.lesson===context.lesson&&current.subject===context.subject)return history;
+   return [...history,{page:next,...context}];
+  });
+ }
+ function resetLessonPractice() {
+  setStudyTab('notes');
+  setQIndex(0);
+  setAnswer('');
+  setHints(0);
+  setResult(null);
+ }
+ function goBack() {
+  const previous=routes.at(-2);
+  if(!previous)return;
+  if(page==='subject'&&previous.page==='home')restoreSubject.current=route;
+  if(previous.page==='lesson'&&previous.lesson!==lesson)resetLessonPractice();
+  setRoutes(history=>history.length>1?history.slice(0,-1):history);
+ }
+ useEffect(()=>{
+  if(!mainRef.current)return;
+  const previousSubject=restoreSubject.current;
+  restoreSubject.current=null;
+  if(page==='home'&&previousSubject){
+   document.getElementById('subject-'+previousSubject.subjectId)?.focus({preventScroll:true});
+   window.scrollTo({top:previousSubject.returnScroll,behavior:'instant'});
+  }else{
+   mainRef.current.focus({preventScroll:true});
+   window.scrollTo({top:0,behavior:'instant'});
+  }
+ },[route]);
  const [growthAudience,setGrowthAudience]=useState('junior'),[growthKind,setGrowthKind]=useState('ai');
  const [subjectPreference,chooseSubject]=useState('Matematik'),[browseChapter,setBrowseChapter]=useState('all'),[studyTab,setStudyTab]=useState('notes');
  const [rememberDemo,setRememberDemo]=useState(savedDemo());
@@ -200,7 +240,8 @@ function App(){
  const [lessonQuery,setLessonQuery]=useState('');
  const setBrowseSubject=subject=>{chooseSubject(subject);setLessonQuery('')};
  const subjectOptions=availableSubjects(browseSchool,browseYear,{includeOptional:showOptional});
- const browseSubject=subjectOptions.some(subject=>subject.name===subjectPreference)?subjectPreference:'Matematik';
+ const selectedSubject=subjectOptions.some(subject=>subject.name===subjectPreference)?subjectPreference:'Matematik';
+ const browseSubject=route.subject||selectedSubject;
  const subjectLessons=lessonsForSubject(boot?.lessons,browseSubject,browseYear,browseSchool);
  const chapters=[...new Set(subjectLessons.map(l=>l.chapter||'Fundamentals'))];
  const activeChapter=chapters.includes(browseChapter)?browseChapter:'all';
@@ -231,8 +272,8 @@ function App(){
     // Reading is available to everyone in demo mode, even before a profile is made.
     // Never bypass authenticated access controls in the live backend.
     const l=isLive?await call('getLesson',childId,id):{...listed,questions:(listed.check||[]).map(q=>({id:q.id,mode:q.mode,text:q.text,options:q.options||[],transfer:!!q.transfer}))};
-    setLesson({...l, activity: listed.activity});setStudyTab('notes');setQIndex(0);setAnswer('');setHints(0);setResult(null);setPage('lesson');
-    window.scrollTo?.({top:0,behavior:'instant'});
+    resetLessonPractice();
+    setPage('lesson',{lesson:{...l,activity:listed.activity}});
   }catch(e){setError('Unable to open the lesson: '+(e?.message||'unknown error'))}
  }
  async function submit(){if(!q||!answer.trim())return;try{const r=await call('submitAttempt',childId,lesson.id,q.id,answer,hints);setResult(r)}catch{}}
@@ -242,10 +283,14 @@ function App(){
  async function scholarship(){try{await call('requestScholarship');await refresh();alert('Scholarship request submitted for private manual review.')}catch{}}
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
  if(!token)return isLive?<><PwaControls/><GoogleLogin onToken={login}/></>:<><PwaControls/><main className="showcase-loading" role="status"><span aria-hidden="true">🦁</span><h1>Welcome to BijakLearn Junior</h1><p>Opening your learning adventure…</p></main></>;
- return <div className="app"><PwaControls/><header><button className="logo" onClick={()=>setPage('home')}><img src="./icons/app-icon.svg" width="44" height="44" alt=""/> <span>BijakLearn <b>Junior</b></span></button><div className="topactions"><button type="button" className="language-switch" onClick={()=>setWelcomeDone(false)}>{say(uiLanguage,'change')} · {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button>{isLive?<><span>{boot?.parent?.name}</span><button onClick={()=>{setToken('');setBoot(null);setReport(null)}}>Sign out</button></>:<span className="showcase-welcome">✨ Learn • Play • Discover</span>}</div></header>
+ return <div className="app"><PwaControls/><header><button className="logo" onClick={()=>setPage('home')}><img src="./icons/app-icon.svg" width="44" height="44" alt=""/> <span>BijakLearn <b>Junior</b></span></button><div className="topactions"><button type="button" className="language-switch" onClick={()=>setWelcomeDone(false)}>{say(uiLanguage,'change')} · {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button>{isLive?<><span>{boot?.parent?.name}</span><button onClick={()=>{setToken('');setBoot(null);setReport(null);setPage('home')}}>Sign out</button></>:<span className="showcase-welcome">✨ Learn • Play • Discover</span>}</div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
- <nav className="nav"><button onClick={()=>setPage('home')} aria-label="Home">🏠 {say(uiLanguage,'home')}</button><button onClick={()=>setPage('preschool')} aria-label="Preschool">🐣 {say(uiLanguage,'preschool')}</button><button onClick={()=>setPage('packs')} aria-label="Learning Packs">🚀 {say(uiLanguage,'packs')}</button><button onClick={()=>setPage('map')} aria-label="Learning map">🗺️ {say(uiLanguage,'map')}</button><button onClick={()=>setPage('tutor')} aria-label="Study Buddy">🤖 {say(uiLanguage,'tutor')}</button><button onClick={()=>setPage('practice')} aria-label="Practice Arena">🎯 {say(uiLanguage,'practice')}</button><button onClick={()=>{setGrowthAudience('adult');setGrowthKind('ai');setPage('growth')}} aria-label="Adults Page">🧑‍🎓 Adults</button><button onClick={()=>{setGrowthAudience('junior');setGrowthKind('ai');setPage('growth')}} aria-label="Junior Lab">🎒 Junior Lab</button><button onClick={()=>{setGrowthKind('ai');setPage('growth')}} aria-label="Learn AI">🧠 Learn AI</button><button onClick={()=>{setGrowthKind('hobby');setPage('growth')}} aria-label="Creative Hobbies">🎨 Creative Hobbies</button><button onClick={()=>setPage('wordgame')} aria-label="Word Tiles versus Bot">🔡 Word Tiles vs Bot</button><button onClick={()=>setPage('arcade')} aria-label="Activity Playground">🎪 Activity Playground</button>{isLive&&<button onClick={()=>{setReport(null);setPage('pin')}}>👨‍👩‍👧 Parent insights</button>}<button onClick={()=>setPage('membership')} aria-label="Membership">💚 {say(uiLanguage,'membership')}</button></nav>
- <main id="main-content">
+ <nav className="nav"><button onClick={()=>setPage('home')} aria-label="Home">🏠 {say(uiLanguage,'home')}</button><button onClick={()=>setPage('preschool')} aria-label="Preschool">🐣 {say(uiLanguage,'preschool')}</button><button onClick={()=>setPage('packs')} aria-label="Learning Packs">🚀 {say(uiLanguage,'packs')}</button><button onClick={()=>setPage('map')} aria-label="Learning map">🗺️ {say(uiLanguage,'map')}</button><button onClick={()=>setPage('tutor')} aria-label="Study Buddy">🤖 {say(uiLanguage,'tutor')}</button><button onClick={()=>setPage('practice')} aria-label="Practice Arena">🎯 {say(uiLanguage,'practice')}</button><button onClick={()=>{setGrowthAudience('adult');setGrowthKind('ai');setPage('growth')}} aria-label="Adults Page">🧑‍🎓 Adults</button><button onClick={()=>{setGrowthAudience('junior');setGrowthKind('ai');setPage('growth')}} aria-label="Junior Lab">🎒 Junior Lab</button><button onClick={()=>{setGrowthKind('ai');setPage('growth')}} aria-label="Learn AI">🧠 Learn AI</button><button onClick={()=>{setGrowthKind('hobby');setPage('growth')}} aria-label="Creative Hobbies">🎨 Creative Hobbies</button><button onClick={()=>setPage('wordgame')} aria-label="Word Tiles versus Bot">🔡 Word Tiles vs Bot</button><button onClick={()=>setPage('arcade')} aria-label="Activity Playground">🎪 Activity Playground</button>{isLive&&<button onClick={()=>setPage('pin')}>👨‍👩‍👧 Parent insights</button>}<button onClick={()=>setPage('membership')} aria-label="Membership">💚 {say(uiLanguage,'membership')}</button></nav>
+ <main id="main-content" ref={mainRef} tabIndex={-1}>
+ {page!=='home'&&<nav className="page-controls" aria-label={say(uiLanguage,'pageNavigation')}>
+  <button type="button" onClick={goBack}><span aria-hidden="true">←</span> {say(uiLanguage,'back')}</button>
+  <button type="button" onClick={()=>setPage('home')}><span aria-hidden="true">🏠</span> {say(uiLanguage,'goHome')}</button>
+ </nav>}
  {timeConsent&&<p className="time-child-notice" role="status">⏱️ Learning-time recording is on. Your parent can see approximate study time, activities and breaks. You can ask them to pause it.</p>}
  {page==='arcade'&&<ActivityArcade/>}
  {page==='wordgame'&&<WordTilesGame/>}
@@ -265,37 +310,47 @@ function App(){
  <button type="button" className="word-bot-home" onClick={()=>setPage('wordgame')}><span aria-hidden="true">🔡</span><span><strong>Word Tiles vs Bot</strong><small>Build vocabulary and challenge a friendly spelling bot — English and Bahasa Melayu.</small></span><span aria-hidden="true">→</span></button>
  <div className="growth-home-spotlight"><button type="button" className="growth-home-card" onClick={()=>{setGrowthAudience('junior');setGrowthKind('ai');setPage('growth')}}><span className="growth-spot-icon" aria-hidden="true">🤖</span><span><strong>Learn AI</strong><small>Understand smart technology, safe prompts and how to check answers. Junior and Adult lessons.</small></span></button><button type="button" className="growth-home-card" onClick={()=>{setGrowthAudience('junior');setGrowthKind('hobby');setPage('growth')}}><span className="growth-spot-icon" aria-hidden="true">🌿</span><span><strong>Creative Hobbies</strong><small>Try drawing, music, journaling and everyday creative challenges. Junior and Adult tracks.</small></span></button></div>
  <div className="home-mascot-band"><div><span className="mini-label">🌟 BIJAKLEARN JUNIOR</span><h2>{say(uiLanguage,'greeting')}</h2><p>{say(uiLanguage,'touch')}</p></div><MascotFriends language={uiLanguage} compact/></div>
- <div className="tutor-teaser"><span aria-hidden="true">🤖</span><div><strong>Stuck on a question?</strong><p>Ask Study Buddy for a worked calculation, a concept explanation, or listen to the answer.</p></div><button type="button" className="primary" onClick={()=>{setLesson(null);setPage('tutor')}}>Ask Study Buddy →</button></div>
+ <div className="tutor-teaser"><span aria-hidden="true">🤖</span><div><strong>Stuck on a question?</strong><p>Ask Study Buddy for a worked calculation, a concept explanation, or listen to the answer.</p></div><button type="button" className="primary" onClick={()=>setPage('tutor')}>Ask Study Buddy →</button></div>
  <div className="home-packs-teaser"><div><span className="mini-label">🎯 NEW PRACTICE MODULES</span><h2>Daily questions and flashcards</h2><p>Choose a subject and a school year, then try short quizzes, daily challenges and flashcards.</p></div><button type="button" className="primary" onClick={()=>setPage('practice')}>🎯 Open Practice Arena</button></div>
  <div className="home-packs-teaser"><div><span className="mini-label">🚀 NEW LEARNING PACKS</span><h2>Ready for a little adventure?</h2><p>Pick a themed mission, explore real study notes, and try short quizzes in a friendly learning journey.</p></div><button type="button" className="primary" onClick={()=>setPage('packs')}>Explore learning packs →</button></div>
  <section className="library-section" id="study-library">
    <div className="section-heading"><div><span className="mini-label">📚 EXPLORE YOUR LIBRARY</span><h2>{say(uiLanguage,'explore')}</h2><p>Pick a colourful subject card to see its learning materials.</p></div><span className="heading-spark" aria-hidden="true">🌟</span></div>
    <div className="library-filters"><label>Learning pathway <select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>School year <select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{[1,2,3,4,5,6].map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><span className="library-hint">{child?'Showing subjects for '+child.name:'Browse without creating a learner'}</span></div>
    <div className="optional-subject-toggle"><button type="button" aria-pressed={showOptional} onClick={()=>setShowOptional(v=>!v)}>{showOptional?'Hide optional-language catalogues':'Show additional optional languages'} <span aria-hidden="true">{showOptional?'−':'+'}</span></button><small>Optional subjects vary by school and some do not yet have authored study content.</small></div>
-   <div className="subjects playful-subjects">{subjectOptions.map((s,i)=>{const total=lessonCountForSubject(boot?.lessons,s.name,browseYear,browseSchool);return <button type="button" className={'subject subject-picker '+(browseSubject===s.name?'active-subject':'')} style={{'--card-hue':(i*43+185)%360}} key={s.id} onClick={()=>{setBrowseSubject(s.name);setBrowseChapter('all')}} aria-pressed={browseSubject===s.name}><span className="subject-illustration" aria-hidden="true">{s.icon}</span><strong>{s.name}</strong><small>{total?total+' lessons to explore':'Content in preparation'}</small>{total>0?<span className="ready-dot">{say(uiLanguage,'lesson')} ✦</span>:<span className="catalog-dot">{say(uiLanguage,'preparing')}</span>}</button>})}</div>
-   <SubjectMindMap key={browseSubject} subject={browseSubject}/>
-   <div className="learning-shelf">
-    <div className="shelf-title"><div><span className="mini-label">📖 STUDY CONTENTS</span><h2>{browseSubject}</h2><p>{subjectLessons.length?subjectLessons.length+' learning activities for Tahun '+browseYear:'Study activities for this subject are in preparation.'}</p></div><span aria-hidden="true" className="book-stack">📚</span></div>
-    {subjectLessons.length>0?<><LessonSearch query={lessonQuery} onChange={setLessonQuery} count={visibleLessons.length}/><div className="chapter-chips" aria-label="Filter lessons by topic"><button type="button" aria-pressed={activeChapter==='all'} className={activeChapter==='all'?'selected':''} onClick={()=>setBrowseChapter('all')}>All topics ({subjectLessons.length})</button>{chapters.map(ch=><button type="button" key={ch} aria-pressed={activeChapter===ch} className={activeChapter===ch?'selected':''} onClick={()=>setBrowseChapter(ch)}>{ch}</button>)}</div><div className="cards lesson-shelf">{visibleLessons.map((l,i)=><button key={l.id} type="button" className="lesson illustrated-lesson" onClick={()=>openLesson(l.id)} aria-label={'Open '+l.title}><span className="lesson-art" aria-hidden="true">{l.icon}</span><span className="lesson-index">LESSON {String(i+1).padStart(2,'0')}</span><strong>{l.title}</strong><small>{l.chapter||'Foundational skills'} · Tahun {l.year}</small><span className="lesson-link">📖 Read & explore <span aria-hidden="true">→</span></span></button>)}</div>{noSearchResults&&<p className="lesson-no-results">No matching lessons. <button type="button" onClick={()=>{setLessonQuery('');setBrowseChapter('all')}}>Clear filters</button></p>}</>:<div className="empty-library"><span className="empty-graphic" aria-hidden="true">🪴 📕 ✨</span><h3>Something exciting is growing here!</h3><p>Extra learning adventures for {browseSubject} are still being prepared. You can switch to <button type="button" onClick={()=>{setBrowseSubject('Matematik');setBrowseChapter('all')}}>Matematik for Tahun {browseYear}</button> to explore available lessons.</p></div>}
-    <p className="draft-note">🛡️ This is supplementary enrichment, not a school syllabus. Topics include introductory concepts and spiral practice; educators are reviewing the content.</p>
-   </div>
+   <div className="subjects playful-subjects">{subjectOptions.map((subject,index)=>{
+    const total=lessonCountForSubject(boot?.lessons,subject.name,browseYear,browseSchool);
+    return <button type="button" className="subject subject-picker" id={'subject-'+subject.id}
+     style={{'--card-hue':(index*43+185)%360}} key={subject.id}
+     onClick={()=>{
+      setBrowseSubject(subject.name);
+      setBrowseChapter('all');
+      setPage('subject',{subject:subject.name,subjectId:subject.id,returnScroll:window.scrollY});
+     }}>
+     <span className="subject-illustration" aria-hidden="true">{subject.icon}</span>
+     <strong>{subject.name}</strong>
+     <small>{total?total+' lessons to explore':'Content in preparation'}</small>
+     {total>0?<span className="ready-dot">{say(uiLanguage,'lesson')} ✦</span>:<span className="catalog-dot">{say(uiLanguage,'preparing')}</span>}
+    </button>;
+   })}</div>
  </section></>}
 
- {page==='map'&&<section className="curriculum-map"><div className="section-heading"><div><span className="mini-label">🗺️ EXPLORE ALL LESSONS</span><h1>My Learning Adventure</h1><p>Choose your preferred learning pathway, level and topic. These are supplementary lessons, not school classes or exams.</p></div></div>
- <div className="library-filters"><label>Learning pathway<select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Year<select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{[1,2,3,4,5,6].map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><label>Subject<select value={browseSubject} onChange={e=>{setBrowseSubject(e.target.value);setBrowseChapter('all')}}>{subjectOptions.map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label></div>
- {browseSchool==='SK'&&<label className="map-optional"><input type="checkbox" checked={showOptional} onChange={event=>setShowOptional(event.target.checked)}/> Show optional languages</label>}
+ {(page==='map'||page==='subject')&&<section className={page==='subject'?'subject-page':'curriculum-map'}><div className="section-heading"><div><span className="mini-label">🗺️ EXPLORE ALL LESSONS</span><h1>{page==='subject'?browseSubject:'My Learning Adventure'}</h1><p>{page==='subject'
+ ? 'Tahun '+browseYear+' · '+browseSchool+' · '+subjectLessons.length+' '+(subjectLessons.length===1?'lesson':'lessons')
+ : 'Choose your preferred learning pathway, level and topic. These are supplementary lessons, not school classes or exams.'}</p></div></div>
+ {page==='map'&&<><div className="library-filters"><label>Learning pathway<select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Year<select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{[1,2,3,4,5,6].map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><label>Subject<select value={browseSubject} onChange={e=>{setBrowseSubject(e.target.value);setBrowseChapter('all')}}>{subjectOptions.map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label></div>
+ {browseSchool==='SK'&&<label className="map-optional"><input type="checkbox" checked={showOptional} onChange={event=>setShowOptional(event.target.checked)}/> Show optional languages</label>}</>}
  <SubjectMindMap key={browseSubject} subject={browseSubject}/>
  {subjectLessons.length>0&&<LessonSearch query={lessonQuery} onChange={setLessonQuery} count={visibleLessons.length}/>}
- <div className="chapter-chips"><button className={activeChapter==='all'?'selected':''} onClick={()=>setBrowseChapter('all')}>All topics</button>{chapters.map(ch=><button key={ch} className={activeChapter===ch?'selected':''} onClick={()=>setBrowseChapter(ch)}>{ch}</button>)}</div>
+ <div className="chapter-chips" aria-label="Filter lessons by topic"><button type="button" aria-pressed={activeChapter==='all'} className={activeChapter==='all'?'selected':''} onClick={()=>setBrowseChapter('all')}>All topics</button>{chapters.map(ch=><button type="button" key={ch} aria-pressed={activeChapter===ch} className={activeChapter===ch?'selected':''} onClick={()=>setBrowseChapter(ch)}>{ch}</button>)}</div>
  <div className="cards lesson-shelf">{visibleLessons.map((l,i)=><button type="button" className="lesson illustrated-lesson" key={l.id} onClick={()=>openLesson(l.id)}><span className="lesson-art" aria-hidden="true">{l.icon}</span><span className="lesson-index">LESSON {i+1}</span><strong>{l.title}</strong><small>{l.chapter||l.subject} · Tahun {l.year}</small><span className="lesson-link">📖 Open lesson →</span></button>)}</div>
  {noSearchResults&&<p className="lesson-no-results">No matching lessons. <button type="button" onClick={()=>{setLessonQuery('');setBrowseChapter('all')}}>Clear filters</button></p>}
- {!subjectLessons.length&&<div className="empty-library"><h2>More lessons are being prepared</h2><p>Study materials for this subject and year are being prepared. Choose another year or subject to explore currently available lessons.</p><button className="primary" onClick={()=>{setBrowseSubject('Matematik');setBrowseChapter('all')}}>Explore Tahun {browseYear} Mathematics</button></div>}
+ {!subjectLessons.length&&<div className="empty-library"><h2>More lessons are being prepared</h2><p>Study materials for this subject and year are being prepared. Choose another year or subject to explore currently available lessons.</p><button type="button" className="primary" onClick={()=>{setBrowseSubject('Matematik');setBrowseChapter('all');setPage('map')}}>Explore Tahun {browseYear} Mathematics</button></div>}
  <p className="draft-note">Content and curriculum mappings remain under educational review.</p></section>}
 
  {page==='lesson'&&lesson&&<div className="lesson-reader">
-  <div className="reader-toolbar"><button type="button" className="back" onClick={()=>setPage('home')}>← Back to subjects</button><span className="draft-tag">📚 Learning content</span></div>
+  <div className="reader-toolbar"><span className="draft-tag">📚 Learning content</span></div>
   <div className="lessonhead colourful-lessonhead"><span className="lesson-head-art" aria-hidden="true">{lesson.icon}</span><div><span className="mini-label">{lesson.subject} • TAHUN {lesson.year}</span><h1>{lesson.title}</h1><p>Discover the idea, study the examples, then test your understanding.</p></div></div>
-  <LessonNavigation active={studyTab} onChange={setStudyTab} questionCount={lesson.questions.length} onTutor={()=>setPage('tutor')}/>
+  <LessonNavigation active={studyTab} onChange={setStudyTab} questionCount={lesson.questions.length} onTutor={()=>setPage('tutor',{lesson})}/>
   <div id="lesson-panel" role="tabpanel" aria-labelledby={'lesson-tab-'+studyTab} tabIndex={0}>
   {studyTab==='notes'?<>
    <LearningVisuals title={lesson.title} subject={lesson.subject}/>
