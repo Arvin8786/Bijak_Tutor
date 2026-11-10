@@ -12,5 +12,13 @@ const path='dist/sw.js';let sw=fs.readFileSync(path,'utf8');
 const before="const VERSION = 'bijaklearn-static-v9';";
 if(!sw.includes(before))throw Error('Expected worker cache version marker not found');
 sw=sw.replace(before,`const VERSION = 'bijaklearn-static-${version}';`);
+const assetMarker = 'const BUNDLED_ASSETS = [];';
+if (!sw.includes(assetMarker)) throw Error('Expected offline asset marker not found');
+const assets = fs.readdirSync('dist/assets')
+ .filter(file => /\.(?:js|css)$/.test(file))
+ .sort()
+ .map(file => 'assets/' + file);
+if (!assets.some(asset => asset.endsWith('.js'))) throw Error('Missing built JavaScript for offline use');
+sw = sw.replace(assetMarker, `const BUNDLED_ASSETS = ${JSON.stringify(assets)};`);
 fs.writeFileSync(path,sw);
 console.log('Stamped PWA release',version);

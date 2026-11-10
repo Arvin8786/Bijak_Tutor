@@ -30,4 +30,12 @@ export function availableSubjects(school='SK',year=1,{includeOptional=false}={})
   if(!SCHOOL_STREAMS.includes(school)|| !Number.isInteger(+year)||+year<1||+year>6)return [];
   return PRIMARY_SUBJECT_CATALOG.filter(x=>(x.streams==='all'||x.streams.includes(school))&&(x.stage==='all'||(x.stage==='lower'?+year<=3:+year>=4))&&(includeOptional||x.group!=='optional'));
 }
-export function lessonCountForSubject(lessons,subject,year) {return (lessons||[]).filter(l=>l.subject===subject&&Number(l.year)===Number(year)).length;}
+export function lessonsForSubject(lessons, subject, year, school) {
+  return (lessons || []).filter(lesson =>
+    lesson.subject === subject && Number(lesson.year) === Number(year) &&
+    (!school || !lesson.school || lesson.school === 'ALL' || lesson.school === school)
+  );
+}
+export function lessonCountForSubject(lessons, subject, year, school) {
+  return lessonsForSubject(lessons, subject, year, school).length;
+}
