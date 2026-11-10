@@ -13,7 +13,7 @@
 
 1. Back up the existing spreadsheet securely; never place it in a public GitHub repository.
 2. Deploy updated `apps-script/Code.gs` with the normal Apps Script process.
-3. In the Apps Script editor run `upgradeCurriculumV5()` under the admin account. It creates the two new tabs, preserves previous records, and seeds any absent demonstration lessons and questions.
+3. In the Apps Script editor run `upgradeCurriculumV5_()` under the admin account. It creates the two new tabs, preserves previous records, and seeds any absent demonstration lessons and questions.
 4. Check `CurriculumVersions` and `SkillMap` sheets. Items remain `DEMO_NOT_REVIEWED`; a qualified curriculum reviewer should confirm standards and questions before enabling them for real students.
 5. No Google Sheets dataset, student information, credentials or answer keys should be committed into GitHub.
 

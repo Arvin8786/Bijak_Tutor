@@ -1,4 +1,4 @@
-import React,{useEffect,useRef,useState} from 'react';
+import React,{useCallback,useEffect,useRef,useState} from 'react';
 import {TRACK_CONSENT,trackingEnabled,setTrackingEnabled,readUsage,wipeUsage,recordUsage,summariseUsage,IDLE_LIMIT_MS,MAX_TICK_MS} from './learningTime.js';
 import {createRoot} from 'react-dom/client';
 import {LESSONS} from './lessons';
@@ -30,6 +30,7 @@ import LearningMission from './LearningMission.jsx';
 import './learning-mission.css';
 import './activity-arcade.css';
 import './study-library.css';
+import AccountAccessPanel from './AccountAccessPanel.jsx';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
 
 function LessonSearch({query, onChange, count}) {
@@ -58,7 +59,12 @@ async function localCall(method,args){
  throw Error('Unsupported demo operation: '+method)
 }
 function api(method,...args){if(!isLive)return localCall(method,args);return new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));}
-function GoogleLogin({onToken}){const [issue,setIssue]=useState('');useEffect(()=>{if(!isLive)return;let tries=0;const timer=setInterval(()=>{const id=window.BIJAKLEARN_GOOGLE_CLIENT_ID;if(window.google?.accounts?.id&&id){clearInterval(timer);try{window.google.accounts.id.initialize({client_id:id,callback:res=>onToken(res.credential),ux_mode:'popup'});window.google.accounts.id.renderButton(document.getElementById('google-signin'),{theme:'outline',size:'large',shape:'pill',text:'signin_with',width:260});}catch(e){setIssue(e.message)}}else if(++tries>80){clearInterval(timer);setIssue('Google sign-in could not load on this browser.')}} ,250);return()=>clearInterval(timer)},[onToken]);return <section className="signin"><div className="mascot">🦁</div><h1>Welcome to BijakLearn Junior</h1><p>Parents sign in securely before managing their children’s learning.</p>{isLive?<div id="google-signin"/>:<button className="primary" onClick={()=>onToken('DEMO')}>Explore learning</button>}{issue&&<p className="error">{issue}</p>}<small>{isLive?'Google account required for parent access.':'Use a fictional nickname for optional practice on this device.'}</small></section>}
+function accountNotice(error) {
+ if (error.message.includes('[ACCOUNT_PENDING]')) return 'Your account is waiting for administrator approval. Sign in again once access is granted.';
+ if (error.message.includes('[ACCOUNT_REVOKED]')) return 'Your account access has been blocked. Contact your BijakLearn administrator.';
+ return '';
+}
+function GoogleLogin({onToken,notice}){const [issue,setIssue]=useState('');useEffect(()=>{if(!isLive)return;let tries=0;const timer=setInterval(()=>{const id=window.BIJAKLEARN_GOOGLE_CLIENT_ID;if(window.google?.accounts?.id&&id){clearInterval(timer);try{window.google.accounts.id.initialize({client_id:id,callback:res=>onToken(res.credential),ux_mode:'popup'});window.google.accounts.id.renderButton(document.getElementById('google-signin'),{theme:'outline',size:'large',shape:'pill',text:'signin_with',width:260});}catch(e){setIssue(e.message)}}else if(++tries>80){clearInterval(timer);setIssue('Google sign-in could not load on this browser.')}} ,250);return()=>clearInterval(timer)},[onToken]);return <section className="signin"><div className="mascot">🦁</div><h1>Welcome to BijakLearn Junior</h1><p>Parents sign in securely before managing their children’s learning.</p>{isLive?<div id="google-signin"/>:<button className="primary" onClick={()=>onToken('DEMO')}>Explore learning</button>}{notice&&<p className="error" role="alert">{notice}</p>}{issue&&<p className="error">{issue}</p>}<small>{isLive?'Google account required for parent access.':'Use a fictional nickname for optional practice on this device.'}</small></section>}
 function PwaControls(){
  const [online,setOnline]=useState(navigator.onLine);
  const [installEvent,setInstallEvent]=useState(null);
@@ -145,6 +151,8 @@ function App(){
  const [welcomeDone,setWelcomeDone]=useState(()=>!!readLocale());
  useEffect(()=>{document.documentElement.lang=uiLanguage},[uiLanguage]);
  const [token,setToken]=useState(''),[boot,setBoot]=useState(null),[childId,setChildId]=useState(''),[page,setPage]=useState('home'),[lesson,setLesson]=useState(null),[qIndex,setQIndex]=useState(0),[answer,setAnswer]=useState(''),[hints,setHints]=useState(0),[result,setResult]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[pin,setPin]=useState(''),[oldPin,setOldPin]=useState(''),[report,setReport]=useState(null),[newName,setNewName]=useState(''),[year,setYear]=useState(1),[school,setSchool]=useState('SK'),[language,setLanguage]=useState('ms');
+ const [loginNotice,setLoginNotice]=useState('');
+ const activeToken=useRef('');
  const [growthAudience,setGrowthAudience]=useState('junior'),[growthKind,setGrowthKind]=useState('ai');
  const [subjectPreference,chooseSubject]=useState('Matematik'),[browseChapter,setBrowseChapter]=useState('all'),[studyTab,setStudyTab]=useState('notes');
  const [rememberDemo,setRememberDemo]=useState(savedDemo());
@@ -209,8 +217,55 @@ function App(){
   return (activeChapter==='all'||topic===activeChapter)&&searchTerms.every(term=>searchable.includes(term));
  });
  const noSearchResults=subjectLessons.length>0&&visibleLessons.length===0;
- async function call(method,...args){setError('');setBusy(true);try{return await api(method,token,...args)}catch(e){setError(e.message);throw e}finally{setBusy(false)}}
- async function login(t){setToken(t);try{const b=await api('getBootstrap',t);setBoot(b);setChildId(b.children[0]?.id||'');setPage('home')}catch(e){setError(e.message);setToken('')}}
+ const endSession=useCallback((notice='')=>{
+  activeToken.current='';
+  setToken('');
+  setBoot(null);
+  setChildId('');
+  setLesson(null);
+  setResult(null);
+  setReport(null);
+  setUsageReport(null);
+  setAnswer('');
+  setPin('');
+  setOldPin('');
+  setNewName('');
+  setPage('home');
+  setError('');
+  setLoginNotice(notice);
+ },[]);
+ const authRequest=useCallback(async(method,...args)=>{
+  const credential=activeToken.current;
+  if(!credential)throw Error('Sign in again to continue.');
+  try{
+   const data=await api(method,credential,...args);
+   if(activeToken.current!==credential)throw Error('Sign in again to continue.');
+   return data;
+  }catch(error){
+   const notice=accountNotice(error);
+   if(notice&&activeToken.current===credential)endSession(notice);
+   throw error;
+  }
+ },[endSession]);
+ async function call(method,...args){
+  setError('');setBusy(true);
+  try{return await (isLive?authRequest(method,...args):api(method,token,...args))}
+  catch(error){if(!isLive||activeToken.current===token)setError(error.message);throw error}
+  finally{setBusy(false)}
+ }
+ const login=useCallback(async credential=>{
+  activeToken.current=credential;
+  setLoginNotice('');
+  try{
+   const data=await authRequest('getBootstrap');
+   setBoot(data);
+   setChildId(data.children[0]?.id||'');
+   setPage('home');
+   setToken(credential);
+  }catch(error){
+   if(activeToken.current===credential)endSession(accountNotice(error)||'Sign-in could not be completed. Please try again.');
+  }
+ },[authRequest,endSession]);
  async function refresh(){const b=await call('getBootstrap');setBoot(b);if(!b.children.some(x=>x.id===childId))setChildId(b.children[0]?.id||'');}
  function toggleDemoSave(enabled){
   setRememberDemo(enabled);
@@ -239,17 +294,18 @@ function App(){
  async function savePin(){try{await call('setParentPin',pin,oldPin);alert('Parent PIN saved. Keep it private.')}catch{}}
  async function scholarship(){try{await call('requestScholarship');await refresh();alert('Scholarship request submitted for private manual review.')}catch{}}
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
- if(!token)return isLive?<><PwaControls/><GoogleLogin onToken={login}/></>:<><PwaControls/><main className="showcase-loading" role="status"><span aria-hidden="true">🦁</span><h1>Welcome to BijakLearn Junior</h1><p>Opening your learning adventure…</p></main></>;
- return <div className="app"><PwaControls/><header><button className="logo" onClick={()=>setPage('home')}><img src="./icons/icon.svg" width="44" height="44" alt="BijakLearn Junior schoolchildren logo"/> <span>BijakLearn <b>Junior</b></span></button><div className="topactions"><button type="button" className="language-switch" onClick={()=>setWelcomeDone(false)}>{say(uiLanguage,'change')} · {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button>{isLive?<><span>{boot?.parent?.name}</span><button onClick={()=>{setToken('');setBoot(null);setReport(null)}}>Sign out</button></>:<span className="showcase-welcome">✨ Learn • Play • Discover</span>}</div></header>
+ if(!token)return isLive?<><PwaControls/><GoogleLogin onToken={login} notice={loginNotice}/></>:<><PwaControls/><main className="showcase-loading" role="status"><span aria-hidden="true">🦁</span><h1>Welcome to BijakLearn Junior</h1><p>Opening your learning adventure…</p></main></>;
+ return <div className="app"><PwaControls/><header><button className="logo" onClick={()=>setPage('home')}><img src="./icons/icon.svg" width="44" height="44" alt="BijakLearn Junior schoolchildren logo"/> <span>BijakLearn <b>Junior</b></span></button><div className="topactions"><button type="button" className="language-switch" onClick={()=>setWelcomeDone(false)}>{say(uiLanguage,'change')} · {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button>{isLive?<><span>{boot?.parent?.name}</span><button onClick={()=>endSession()}>Sign out</button></>:<span className="showcase-welcome">✨ Learn • Play • Discover</span>}</div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
- <nav className="nav"><button onClick={()=>setPage('home')} aria-label="Home">🏠 {say(uiLanguage,'home')}</button><button onClick={()=>setPage('preschool')} aria-label="Preschool">🐣 {say(uiLanguage,'preschool')}</button><button onClick={()=>setPage('packs')} aria-label="Learning Packs">🚀 {say(uiLanguage,'packs')}</button><button onClick={()=>setPage('map')} aria-label="Learning map">🗺️ {say(uiLanguage,'map')}</button><button onClick={()=>setPage('tutor')} aria-label="Study Buddy">🤖 {say(uiLanguage,'tutor')}</button><button onClick={()=>setPage('practice')} aria-label="Practice Arena">🎯 {say(uiLanguage,'practice')}</button><button onClick={()=>{setGrowthAudience('adult');setGrowthKind('ai');setPage('growth')}} aria-label="Adults Page">🧑‍🎓 Adults</button><button onClick={()=>{setGrowthAudience('junior');setGrowthKind('ai');setPage('growth')}} aria-label="Junior Lab">🎒 Junior Lab</button><button onClick={()=>{setGrowthKind('ai');setPage('growth')}} aria-label="Learn AI">🧠 Learn AI</button><button onClick={()=>{setGrowthKind('hobby');setPage('growth')}} aria-label="Creative Hobbies">🎨 Creative Hobbies</button><button onClick={()=>setPage('wordgame')} aria-label="Word Tiles versus Bot">🔡 Word Tiles vs Bot</button><button onClick={()=>setPage('arcade')} aria-label="Activity Playground">🎪 Activity Playground</button>{isLive&&<button onClick={()=>{setReport(null);setPage('pin')}}>👨‍👩‍👧 Parent insights</button>}<button onClick={()=>setPage('membership')} aria-label="Membership">💚 {say(uiLanguage,'membership')}</button></nav>
+ <nav className="nav"><button onClick={()=>setPage('home')} aria-label="Home">🏠 {say(uiLanguage,'home')}</button><button onClick={()=>setPage('preschool')} aria-label="Preschool">🐣 {say(uiLanguage,'preschool')}</button><button onClick={()=>setPage('packs')} aria-label="Learning Packs">🚀 {say(uiLanguage,'packs')}</button><button onClick={()=>setPage('map')} aria-label="Learning map">🗺️ {say(uiLanguage,'map')}</button><button onClick={()=>setPage('tutor')} aria-label="Study Buddy">🤖 {say(uiLanguage,'tutor')}</button><button onClick={()=>setPage('practice')} aria-label="Practice Arena">🎯 {say(uiLanguage,'practice')}</button><button onClick={()=>{setGrowthAudience('adult');setGrowthKind('ai');setPage('growth')}} aria-label="Adults Page">🧑‍🎓 Adults</button><button onClick={()=>{setGrowthAudience('junior');setGrowthKind('ai');setPage('growth')}} aria-label="Junior Lab">🎒 Junior Lab</button><button onClick={()=>{setGrowthKind('ai');setPage('growth')}} aria-label="Learn AI">🧠 Learn AI</button><button onClick={()=>{setGrowthKind('hobby');setPage('growth')}} aria-label="Creative Hobbies">🎨 Creative Hobbies</button><button onClick={()=>setPage('wordgame')} aria-label="Word Tiles versus Bot">🔡 Word Tiles vs Bot</button><button onClick={()=>setPage('arcade')} aria-label="Activity Playground">🎪 Activity Playground</button>{isLive&&boot?.canManageAccounts&&<button type="button" onClick={()=>setPage('account-access')}>Manage account access</button>}{isLive&&<button onClick={()=>{setReport(null);setPage('pin')}}>👨‍👩‍👧 Parent insights</button>}<button onClick={()=>setPage('membership')} aria-label="Membership">💚 {say(uiLanguage,'membership')}</button></nav>
  <main id="main-content">
  {timeConsent&&<p className="time-child-notice" role="status">⏱️ Learning-time recording is on. Your parent can see approximate study time, activities and breaks. You can ask them to pause it.</p>}
+ {isLive&&boot?.canManageAccounts&&page==='account-access'&&<AccountAccessPanel request={authRequest}/>}
  {page==='arcade'&&<ActivityArcade/>}
  {page==='wordgame'&&<WordTilesGame/>}
- {page==='growth'&&<GrowthHub audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?async id=>await api("getGrowthModule",token,id):null} checkAnswer={isLive?async(lessonId,answerIndex)=>await api("checkGrowthAnswer",token,lessonId,answerIndex):null}/>}
+ {page==='growth'&&<GrowthHub audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?id=>authRequest("getGrowthModule",id):null} checkAnswer={isLive?(lessonId,answerIndex)=>authRequest("checkGrowthAnswer",lessonId,answerIndex):null}/>}
  {page==='practice'&&<PracticeArena lessons={LESSONS} year={browseYear} school={browseSchool} language={uiLanguage} onOpenLesson={openLesson}/>}
- {page==='tutor'&&<StudyBuddy lessons={LESSONS} year={browseYear} subject={lesson?.subject||''} currentLesson={lesson} askOnline={isLive?async(question,context)=>await api('askTutor',token,question,context):null}/>}
+ {page==='tutor'&&<StudyBuddy lessons={LESSONS} year={browseYear} subject={lesson?.subject||''} currentLesson={lesson} askOnline={isLive?(question,context)=>authRequest('askTutor',question,context):null}/>}
  {page==='packs'&&<><div className="library-filters"><label>Learning pathway<select value={browseSchool} disabled={!!child} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Year<select value={browseYear} disabled={!!child} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>Tahun {y}</option>)}</select></label><span className="library-hint">Short learning adventures created from available lessons</span></div><AdventurePacks lessons={LESSONS.filter(l=>(!l.school||l.school==='ALL'||l.school===browseSchool))} year={browseYear} school={browseSchool} childId={childId} attempts={isLive?{}:mockAttempts} onOpen={openLesson} onPreschool={()=>setPage('preschool')}/></>}
  {page==='preschool'&&<PreschoolStudio/>}
  {page==='home'&&<><div className="hero"><div><span className="eyebrow">MY LEARNING ADVENTURE</span><h1>Learn, explore and grow! 🌈</h1><p>Learn through pictures, try new questions, and turn mistakes into understanding.</p></div><div className="hero-mascots"><MascotFriends language={uiLanguage} compact/></div><button type="button" className="preschool-launch" onClick={()=>setPage("preschool")}>🐣 Try Prasekolah: ABC, tracing & spelling →</button></div><section className="panel"><h2>Personalise your learning space</h2><div className="demo-save-settings"><div><strong>⭐ Optional practice nickname</strong><p>Explore every lesson without an account. You can use a fictional nickname to remember practice on this device for up to 30 days. Please do not enter a real child’s name or private details.</p></div><label className="demo-save-check"><input type="checkbox" checked={rememberDemo} onChange={e=>toggleDemoSave(e.target.checked)}/> Remember practice on this device</label><button type="button" onClick={resetDemo}>Clear saved practice</button></div>{boot?.children.length?<div className="chips">{boot.children.map(c=><button key={c.id} className={childId===c.id?'selected':''} onClick={()=>setChildId(c.id)}>{c.name} · Tahun {c.year}</button>)}</div>:<p>You can explore all lessons without a profile. Add a fictional practice nickname only if you want to try the progress tools.</p>}<details><summary>+ Add practice nickname</summary><form onSubmit={createChild} className="form"><label>Fictional nickname<input required maxLength={40} value={newName} onChange={e=>setNewName(e.target.value)}/></label><label>Year<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>Tahun {y}</option>)}</select></label><label>School<select value={school} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Language<select value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(langLabels).map(([k,v])=><option value={k} key={k}>{v}</option>)}</select></label><button className="primary" disabled={busy}>Add practice profile</button></form></details></section>

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {LESSONS} from '../src/lessons.js';
 import {questionBank, selectPractice} from '../src/practiceBank.js';
 import {buildWordSearch, LIFE_CYCLES} from '../src/extendedPracticeData.js';
+import {checkAccountAccessBrowser} from './account-access-browser.mjs';
 
 // Serve the unchanged production bundle at a project URL, as GitHub Pages does.
 const projectPath='/Bijak_Tutor/';
@@ -298,5 +299,7 @@ try{
  await offlinePage.reload();
  await offlinePage.getByRole('heading',{name:/Choose a subject/i}).waitFor();
  await offlineContext.close();
+ await checkAccountAccessBrowser(browser, base);
+ console.log('Passed pending, approval, blocking, restoration and revoked-session browser flows.');
  console.log('Browser smoke tests passed: existing Junior features, Adult Learn AI, Junior/Adult Creative Hobbies, ProEase attribution and mobile widths.');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}
