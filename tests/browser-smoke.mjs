@@ -2,8 +2,10 @@ import {chromium} from 'playwright';
 import {spawn} from 'node:child_process';
 import assert from 'node:assert/strict';
 
-const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','4173','--strictPort'],{stdio:'pipe'});
-const base='http://127.0.0.1:4173/';
+// Serve the unchanged production bundle at a project URL, as GitHub Pages does.
+const projectPath='/Bijak_Tutor/';
+const base='http://127.0.0.1:4173'+projectPath;
+const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--base',projectPath,'--host','127.0.0.1','--port','4173','--strictPort'],{stdio:['ignore','ignore','inherit']});
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 let browser;
 try{
@@ -15,7 +17,9 @@ try{
   const page=await browser.newPage({viewport:{width,height:850}});
   const exceptions=[];
   page.on('pageerror',e=>exceptions.push(e.message));
-  await page.goto(base,{waitUntil:'networkidle'});
+  const response=await page.goto(base,{waitUntil:'networkidle'});
+  assert.ok(response?.ok(),`Production page did not load at ${base}`);
+  assert.equal(new URL(page.url()).pathname,projectPath,'Expected the GitHub Pages project path');
   await page.getByRole('heading',{name:/Welcome to BijakLearn Junior/i}).waitFor({timeout:10000}).catch(()=>{});
   const welcome=page.locator('.welcome-gate');
   if(await welcome.isVisible()){
