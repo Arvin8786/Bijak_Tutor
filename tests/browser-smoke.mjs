@@ -284,7 +284,7 @@ try{
     await lab.getByRole('status').filter({hasText:'20 minutes past 9'}).waitFor();
     await pageControls.getByRole('button',{name:'Back',exact:true}).click();
     await paths.getByRole('button',{name:'Open Fraction Lab'}).click();
-    await lab.getByLabel('Equal parts').selectOption('8');
+    await lab.getByRole('combobox',{name:'Equal parts'}).selectOption('8');
     for(let i=0;i<6;i++)await lab.getByRole('slider').press('ArrowRight');
     await lab.getByRole('button',{name:'Check my work'}).click();
     await lab.getByRole('status').filter({hasText:'three quarters'}).waitFor();
