@@ -24,12 +24,25 @@ export function sanitizeDemo(data){
      at:typeof a.at==='string'&&Number.isFinite(Date.parse(a.at))?a.at:new Date(0).toISOString()
    })),reviewDue:typeof skill.reviewDue==='string'?skill.reviewDue:null,mastered:false};
  }
- return {children,attempts,savedAt:Date.now()};
+ const progress={};
+ const lessonId=value=>typeof value==='string'&&/^[\w-]{1,80}$/.test(value);
+ const ids=values=>Array.isArray(values)?[...new Set(values.filter(lessonId))].slice(-100):[];
+ for(const id of allowed){
+  const entry=input.progress?.[id];
+  if(!entry)continue;
+  progress[id]={
+   lastLesson:lessonId(entry.lastLesson)?entry.lastLesson:null,
+   activities:ids(entry.activities),
+   quizzes:ids(entry.quizzes),
+  };
+ }
+ return {children,attempts,progress,savedAt:Date.now()};
 }
 export function loadDemo(storage=globalThis.localStorage,now=Date.now()){
- try{const data=JSON.parse(storage.getItem(DEMO_STORAGE_KEY)||'null');if(!data||!data.savedAt||now-data.savedAt>MAX_AGE_MS||data.savedAt>now+60000)return {children:[],attempts:{},savedAt:now};return sanitizeDemo(data)}catch{return {children:[],attempts:{},savedAt:now}}
+ const empty={children:[],attempts:{},progress:{},savedAt:now};
+ try{const data=JSON.parse(storage.getItem(DEMO_STORAGE_KEY)||'null');if(!data||!data.savedAt||now-data.savedAt>MAX_AGE_MS||data.savedAt>now+60000)return empty;return sanitizeDemo(data)}catch{return empty}
 }
-export function saveDemo(children,attempts,storage=globalThis.localStorage){
- try{const data=sanitizeDemo({children,attempts});storage.setItem(DEMO_STORAGE_KEY,JSON.stringify(data));return true}catch{return false}
+export function saveDemo(children,attempts,storage=globalThis.localStorage,progress={}){
+ try{const data=sanitizeDemo({children,attempts,progress});storage.setItem(DEMO_STORAGE_KEY,JSON.stringify(data));return true}catch{return false}
 }
 export function clearDemo(storage=globalThis.localStorage){try{storage.removeItem(DEMO_STORAGE_KEY);return true}catch{return false}}

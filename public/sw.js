@@ -2,7 +2,7 @@
 const VERSION = 'bijaklearn-static-v9'; // replaced by scripts/stamp-release.mjs on build
 const BASE = new URL(self.registration.scope).pathname;
 const BUNDLED_ASSETS = []; // populated by scripts/stamp-release.mjs
-const CORE = ['index.html', 'manifest.webmanifest', 'icons/icon.svg', ...BUNDLED_ASSETS].map(path => BASE + path);
+const CORE = ['index.html', 'manifest.webmanifest', 'icons/icon.svg', 'icons/app-icon.svg', ...BUNDLED_ASSETS].map(path => BASE + path);
 self.addEventListener('install', event => {
  event.waitUntil((async () => {
   const cache = await caches.open(VERSION);

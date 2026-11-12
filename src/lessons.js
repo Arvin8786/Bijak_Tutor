@@ -1,3 +1,5 @@
+import {DISCOVERY_LESSONS} from './discoveryModules.js';
+import {EXPLORE_LESSONS} from './exploreLessons.js';
 import {EXPANDED_LESSONS} from './expandedLessons.js';
 import {JUNIOR_FOUNDATION_LESSONS} from './juniorFoundation.js';
 import {JUNIOR_ENRICHMENT_LESSONS} from './juniorEnrichment.js';
@@ -331,4 +333,4 @@ export const SKILL_DEMO_LESSONS = [
 ];
 export const PRIMARY_SUBJECTS=[['Matematik','🧮'],['Bahasa Melayu','📖'],['English','🔤'],['Sains','🔬'],['Sejarah','🌏'],['Bahasa Cina','🀄'],['Bahasa Tamil','✍️'],['Pendidikan Islam','🌙'],['Pendidikan Moral','🤝'],['Reka Bentuk dan Teknologi','🛠️'],['Pendidikan Seni Visual','🎨'],['Pendidikan Muzik','🎼'],['Pendidikan Jasmani dan Kesihatan','🏃']];
 
-export const LESSONS = [...SKILL_DEMO_LESSONS, ...ORIGINAL_LESSONS, ...EXPANDED_LESSONS, ...withMathPractice(enrichPractice([...JUNIOR_FOUNDATION_LESSONS,...JUNIOR_ENRICHMENT_LESSONS,...JUNIOR_STREAM_LESSONS,...OPTIONAL_STARTER_LESSONS])), ...SUPPLEMENTARY_LESSONS, ...REVIEW_LESSONS];
+export const LESSONS = [...SKILL_DEMO_LESSONS, ...ORIGINAL_LESSONS, ...EXPANDED_LESSONS, ...withMathPractice(enrichPractice([...JUNIOR_FOUNDATION_LESSONS,...JUNIOR_ENRICHMENT_LESSONS,...JUNIOR_STREAM_LESSONS,...OPTIONAL_STARTER_LESSONS])), ...SUPPLEMENTARY_LESSONS, ...REVIEW_LESSONS, ...EXPLORE_LESSONS, ...DISCOVERY_LESSONS];

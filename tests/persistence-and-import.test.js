@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {loadDemo,saveDemo,clearDemo,sanitizeDemo,DEMO_STORAGE_KEY} from '../src/demoStore.js';
 import {LESSONS} from '../src/lessons.js';
+import {missedQuestions,PATHS} from '../src/learningPaths.js';
 class MemoryStore {constructor(){this.map=new Map()}getItem(k){return this.map.get(k)||null}setItem(k,v){this.map.set(k,v)}removeItem(k){this.map.delete(k)}}
 test('Device demo saving is opt-in from UI and persists fictional practice without raw answers',()=>{
  const s=new MemoryStore(),children=[{id:'demo-1',name:'Test Fox',year:3,school:'SK',language:'ms'}];
@@ -24,6 +25,33 @@ test('Demo storage drops expired state, extra profiles and invalid cross-family 
  assert.equal(Object.keys(result.attempts).length,0);
  s.setItem(DEMO_STORAGE_KEY,JSON.stringify({...result,savedAt:Date.now()-32*86400000}));
  assert.equal(loadDemo(s).children.length,0);
+});
+test('learning progress follows the chosen fictional profile and clearing removes it',()=>{
+ const storage=new MemoryStore(),children=[{id:'demo-1',name:'Fox'},{id:'demo-2',name:'Otter'}];
+ const progress={
+  'demo-1':{lastLesson:'y1-math-add',activities:['addition','addition'],quizzes:['review-math-y1']},
+  'demo-2':{lastLesson:'discover-duration',activities:['time'],quizzes:[]},
+  stranger:{lastLesson:'other'},
+  guest:{lastLesson:'y1-math-add'},
+ };
+ assert.equal(saveDemo(children,{},storage,progress),true);
+ assert.deepEqual(loadDemo(storage).progress,{'demo-1':{...progress['demo-1'],activities:['addition']},'demo-2':progress['demo-2']});
+ clearDemo(storage);
+ assert.deepEqual(loadDemo(storage).progress,{});
+});
+test('path lessons match their year and review hides corrected questions and other profiles',()=>{
+ for(const path of PATHS)for(const id of path.lessons){
+  const lesson=LESSONS.find(item=>item.id===id);
+  assert.ok(lesson&&lesson.year===path.year&&lesson.subject===path.subject,id);
+ }
+ const lesson=LESSONS.find(item=>item.id==='review-math-y1');
+ const [first,second]=lesson.check.map(question=>question.id);
+ const attempts={
+  ['fox/'+lesson.id]:{attempts:[{questionId:first,correct:false},{questionId:first,correct:true},{questionId:second,correct:false}]},
+  ['otter/'+lesson.id]:{attempts:[{questionId:first,correct:false}]},
+ };
+ assert.deepEqual(missedQuestions(attempts,'fox',LESSONS).map(item=>item.question.id),[second]);
+ assert.deepEqual(missedQuestions(attempts,'otter',LESSONS).map(item=>item.question.id),[first]);
 });
 test('Generated Apps Script import is not publicly callable without parent identity',()=>{
  const core=fs.readFileSync('apps-script/Code.gs','utf8');
