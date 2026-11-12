@@ -31,6 +31,9 @@ import './learning-mission.css';
 import './activity-arcade.css';
 import './study-library.css';
 import './interactive-learning.css';
+import './learning-journey.css';
+import {ContinueLearning, LearningPaths, PracticeLab, ReviewQuestions} from './LearningJourney.jsx';
+import {PATHS, missedQuestions} from './learningPaths.js';
 import {DiscoveryActivity, DiscoveryLibrary} from './DiscoveryLearning.jsx';
 import {LessonNavigation, LearningMindMap, LessonQuickCheck, SubjectMindMap} from './InteractiveLearning.jsx';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
@@ -46,8 +49,8 @@ const langLabels={ms:'Bahasa Melayu',en:'English',ta:'தமிழ்',zh:'中�
 const DEMO_SAVE_CONSENT='bijaklearn:demo-save-consent';
 const savedDemo=()=>{try{return localStorage.getItem(DEMO_SAVE_CONSENT)==='yes'}catch{return false}};
 const initialDemo=savedDemo()?loadDemo():{children:[],attempts:{}};
-let mockChildren=initialDemo.children,mockAttempts=initialDemo.attempts,mockPin='';
-const persistDemo=()=>{if(savedDemo())saveDemo(mockChildren,mockAttempts)};
+let mockChildren=initialDemo.children,mockAttempts=initialDemo.attempts,mockProgress=initialDemo.progress||{},mockPin='';
+const persistDemo=()=>{if(savedDemo())saveDemo(mockChildren,mockAttempts,undefined,mockProgress)};
 const fakeUser={name:'Guest',email:''};
 const fakeLessons=LESSONS.map(l=>({id:l.id,year:l.year,title:l.title,subject:l.subject,school:l.school||'ALL',icon:l.icon,chapter:l.chapter||'Foundational skills',status:l.status||'DRAFT_TEACHER_REVIEW',premium:false}));
 async function localCall(method,args){
@@ -158,7 +161,7 @@ function App(){
   setRoutes(history=>{
    if(next==='home')return history.length===1?history:history.slice(0,1);
    const current=history.at(-1);
-   if(current.page===next&&current.lesson===context.lesson&&current.subject===context.subject)return history;
+   if(current.page===next&&current.lesson===context.lesson&&current.subject===context.subject&&current.pathId===context.pathId)return history;
    return [...history,{page:next,...context}];
   });
  }
@@ -188,6 +191,21 @@ function App(){
    window.scrollTo({top:0,behavior:'instant'});
   }
  },[route]);
+ const [progress,setProgress]=useState(mockProgress);
+ const learner=childId||'guest';
+ const currentProgress=progress[learner]||{lastLesson:null,activities:[],quizzes:[]};
+ const selectedPath=PATHS.find(path=>path.id===route.pathId);
+ const missed=!isLive&&(page==='home'||page==='review')?missedQuestions(mockAttempts,childId,LESSONS):[];
+ const lastLesson=boot?.lessons.find(item=>item.id===currentProgress.lastLesson);
+ function updateProgress(field,value){
+  if(isLive)return;
+  const previous=mockProgress[learner]||{lastLesson:null,activities:[],quizzes:[]};
+  if(field==='lastLesson'?previous.lastLesson===value:previous[field].includes(value))return;
+  const updated=field==='lastLesson'?value:[...previous[field],value];
+  mockProgress={...mockProgress,[learner]:{...previous,[field]:updated}};
+  setProgress(mockProgress);
+  persistDemo();
+ }
  const [growthAudience,setGrowthAudience]=useState('junior'),[growthKind,setGrowthKind]=useState('ai');
  const [subjectPreference,chooseSubject]=useState('Matematik'),[browseChapter,setBrowseChapter]=useState('all'),[studyTab,setStudyTab]=useState('notes');
  const [rememberDemo,setRememberDemo]=useState(savedDemo());
@@ -262,10 +280,10 @@ function App(){
   catch{setError('Local browser storage is not available on this device')}
  }
  async function resetDemo(){
-  mockChildren=[];mockAttempts={};mockPin='';clearDemo();setChildId('');setReport(null);await refresh();setPage('home')
+  mockChildren=[];mockAttempts={};mockProgress={};setProgress({});mockPin='';clearDemo();setChildId('');setReport(null);await refresh();setPage('home')
  }
  async function createChild(e){e.preventDefault();try{const x=await call('addChild',{name:newName,year,school,language});await refresh();setChildId(x.id);setNewName('');setPage('home')}catch{}}
- async function openLesson(id){
+ async function openLesson(id,{quiz=false,questionId}={}){
   setError('');
   const listed=LESSONS.find(item=>item.id===id);
   if(!listed){setError('This study topic could not be found. Please choose another lesson.');return}
@@ -274,11 +292,22 @@ function App(){
     // Never bypass authenticated access controls in the live backend.
     const l=isLive?await call('getLesson',childId,id):{...listed,questions:(listed.check||[]).map(q=>({id:q.id,mode:q.mode,text:q.text,options:q.options||[],transfer:!!q.transfer}))};
     resetLessonPractice();
-    setPage('lesson',{lesson:{...l,activity:listed.activity}});
+    if(quiz||questionId){
+     setStudyTab('quiz');
+     setQIndex(Math.max(0,l.questions.findIndex(question=>question.id===questionId)));
+    }
+    updateProgress('lastLesson',id);
+    setPage('lesson',{lesson:{...l,activity:listed.activity},review:Boolean(questionId)});
   }catch(e){setError('Unable to open the lesson: '+(e?.message||'unknown error'))}
  }
  async function submit(){if(!q||!answer.trim())return;try{const r=await call('submitAttempt',childId,lesson.id,q.id,answer,hints);setResult(r)}catch{}}
- function next(){setQIndex(x=>x+1);setAnswer('');setHints(0);setResult(null)}
+ function next(){
+  if(!route.review&&qIndex+1===lesson.questions.length)updateProgress('quizzes',lesson.id);
+  setQIndex(x=>x+1);
+  setAnswer('');
+  setHints(0);
+  setResult(null);
+ }
  async function viewReport(){try{const r=await call('getParentReport',childId,pin);setReport(r);setUsageReport(summariseUsage(childId));setPage('parent')}catch{}}
  async function savePin(){try{await call('setParentPin',pin,oldPin);alert('Parent PIN saved. Keep it private.')}catch{}}
  async function scholarship(){try{await call('requestScholarship');await refresh();alert('Scholarship request submitted for private manual review.')}catch{}}
@@ -293,6 +322,11 @@ function App(){
   <button type="button" onClick={()=>setPage('home')}><span aria-hidden="true">🏠</span> {say(uiLanguage,'goHome')}</button>
  </nav>}
  {timeConsent&&<p className="time-child-notice" role="status">⏱️ Learning-time recording is on. Your parent can see approximate study time, activities and breaks. You can ask them to pause it.</p>}
+ {page==='paths'&&<LearningPaths lessons={boot?.lessons||[]} onOpen={openLesson} finished={currentProgress.activities}
+  onLab={pathId=>setPage('lab',{pathId})} onReview={isLive?undefined:pathId=>setPage('review',{pathId})}/>}
+ {page==='lab'&&selectedPath&&<PracticeLab key={selectedPath.id} path={selectedPath} onComplete={()=>updateProgress('activities',selectedPath.id)}/>}
+ {page==='review'&&!isLive&&<ReviewQuestions items={selectedPath?missed.filter(item=>selectedPath.lessons.includes(item.lesson.id)):missed}
+  onRetry={(id,questionId)=>openLesson(id,{questionId})}/>}
  {page==='discovery'&&<DiscoveryLibrary availableLessons={boot?.lessons||[]} onOpen={openLesson}/>}
  {page==='arcade'&&<ActivityArcade/>}
  {page==='wordgame'&&<WordTilesGame/>}
@@ -303,9 +337,12 @@ function App(){
  {page==='preschool'&&<PreschoolStudio/>}
  {page==='home'&&<><div className="hero"><div><span className="eyebrow">MY LEARNING ADVENTURE</span><h1>Learn, explore and grow! 🌈</h1><p>Learn through pictures, try new questions, and turn mistakes into understanding.</p></div><div className="hero-mascots"><MascotFriends language={uiLanguage} compact/></div><button type="button" className="preschool-launch" onClick={()=>setPage("preschool")}>🐣 Try Prasekolah: ABC, tracing & spelling →</button></div><section className="panel"><h2>Personalise your learning space</h2><div className="demo-save-settings"><div><strong>⭐ Optional practice nickname</strong><p>Explore every lesson without an account. You can use a fictional nickname to remember practice on this device for up to 30 days. Please do not enter a real child’s name or private details.</p></div><label className="demo-save-check"><input type="checkbox" checked={rememberDemo} onChange={e=>toggleDemoSave(e.target.checked)}/> Remember practice on this device</label><button type="button" onClick={resetDemo}>Clear saved practice</button></div>{boot?.children.length?<div className="chips">{boot.children.map(c=><button key={c.id} className={childId===c.id?'selected':''} onClick={()=>setChildId(c.id)}>{c.name} · Tahun {c.year}</button>)}</div>:<p>You can explore all lessons without a profile. Add a fictional practice nickname only if you want to try the progress tools.</p>}<details><summary>+ Add practice nickname</summary><form onSubmit={createChild} className="form"><label>Fictional nickname<input required maxLength={40} value={newName} onChange={e=>setNewName(e.target.value)}/></label><label>Year<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>Tahun {y}</option>)}</select></label><label>School<select value={school} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Language<select value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(langLabels).map(([k,v])=><option value={k} key={k}>{v}</option>)}</select></label><button className="primary" disabled={busy}>Add practice profile</button></form></details></section>
 
+ {!isLive&&<ContinueLearning lastLesson={lastLesson} activities={currentProgress.activities.length} quizzes={currentProgress.quizzes.length}
+  missed={missed.length} onOpen={openLesson} onReview={()=>setPage('review')} onPaths={()=>setPage('paths')}/>}
  <div className="study-shortcuts" aria-label="Learning shortcuts">
   <a href="#study-library">📚 Browse the study library</a>
   <button type="button" onClick={()=>setPage('discovery')}>🧩 {say(uiLanguage,'discovery')}</button>
+  {isLive&&<button type="button" onClick={()=>setPage('paths')}>Explore learning paths</button>}
   <button type="button" onClick={()=>setPage('practice')}>🎯 Start a practice quiz</button>
   <button type="button" onClick={()=>setPage('arcade')}>🎪 Play a learning game</button>
  </div>
@@ -361,8 +398,8 @@ function App(){
    <section className="study-chapter"><div className="section-heading"><div><span className="mini-label">🪜 ONE STEP AT A TIME</span><h2>Let's learn together</h2></div></div><div className="study-steps">{(lesson.steps||[]).map((s,i)=><article className="study-step" key={i}><span className="step-number">{i+1}</span><div><h3>{s.title}</h3><p>{s.body}</p></div><span className="step-emoji" aria-hidden="true">{['🔎','🧠','✨'][i%3]}</span></article>)}</div></section>
    {lesson.enrichment&&<LearningMission enrichment={lesson.enrichment} title={lesson.title}/>}
    {lesson.activity&&(lesson.activity.kind
-    ? <DiscoveryActivity key={lesson.id} activity={lesson.activity} language={uiLanguage}/>
-    : <LessonQuickCheck key={lesson.id} question={lesson.activity}/>)}
+    ? <DiscoveryActivity key={lesson.id} activity={lesson.activity} language={uiLanguage} onComplete={()=>updateProgress('activities',lesson.id)}/>
+    : <LessonQuickCheck key={lesson.id} question={lesson.activity} onComplete={()=>updateProgress('activities',lesson.id)}/>)}
    <div className="study-cta"><div><strong>Ready for a challenge?</strong><p>Try the questions when you understand the lesson.</p></div><button type="button" className="primary" onClick={()=>{setStudyTab('quiz');setQIndex(0);setResult(null);setAnswer('');setHints(0)}}>Start practice →</button></div>
   </>:studyTab==='map'?<LearningMindMap key={lesson.id} title={lesson.title} icon={lesson.icon}
    branches={lesson.mind?.length?lesson.mind:[['Idea utama',lesson.summary],...lesson.steps.map(step=>[step.title,step.body])]}/>:<section className="panel quiz colour-quiz"><div className="quiz-progress"><span>🎯 Practice challenge</span><span>{Math.min(qIndex+1,lesson.questions.length)} / {lesson.questions.length}</span></div><div className="progress-track"><div style={{width:(100*Math.min(qIndex,lesson.questions.length)/Math.max(1,lesson.questions.length))+'%'}}/></div>{q?<><h2>{q.text}</h2>{q.options.length?<div className="choices">{q.options.map(x=><button type="button" className={answer===x?'selected':''} key={x} disabled={!!result} onClick={()=>setAnswer(x)}>{x}</button>)}</div>:<label>Your answer<input value={answer} disabled={!!result} onChange={e=>setAnswer(e.target.value)} placeholder="Type your answer here"/></label>}<div className="actions">{!result?<><button type="button" onClick={()=>setHints(h=>h+1)}>💡 Hint {hints? '('+hints+' used)':''}</button><button type="button" className="primary" disabled={busy||!answer.trim()} onClick={submit}>Check my answer</button></>:<><button type="button" onClick={()=>{setAnswer('');setResult(null);setHints(x=>x+1)}}>Try with guidance</button><button type="button" className="primary" onClick={next}>Next question →</button></>}</div>{hints>0&&!result&&<p className="hint">Try drawing the objects or using your fingers. What changes when you move one?</p>}{result&&<div className={'feedback '+(result.correct?'good':'gentle')}><strong>{result.correct?'🌟 Wonderful effort!':'💛 Good try — we learn from mistakes!'}</strong>{result.correct&&<div className="celebrate-stars" aria-hidden="true">⭐ ✨ 🎉 ✨ ⭐</div>}<p>{result.feedback}</p><p>{result.mastery.mastered?'⭐ Great independent practice! Keep exploring.':'Keep practising in different ways. One correct answer alone never passes a topic.'}</p></div>}</>:<div className="feedback good"><h2>🎉 You explored all the questions!</h2><p>Keep revisiting the study content and try again with fresh examples.</p><button type="button" className="primary" onClick={()=>{setQIndex(0);setAnswer('');setResult(null);setHints(0)}}>Practice again</button><button type="button" onClick={()=>setStudyTab('notes')}>Review study notes</button></div>}</section>}

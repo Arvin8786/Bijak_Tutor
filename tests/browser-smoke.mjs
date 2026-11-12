@@ -243,6 +243,57 @@ try{
     }
     await activity.getByRole('status').filter({hasText:'Finished!'}).waitFor();
   }
+  if(width===375){
+    await pageControls.getByRole('button',{name:'Go to Home',exact:true}).click();
+    const continueLearning=page.locator('.continue-learning');
+    await continueLearning.getByRole('button',{name:/Resume Diari percambahan/}).click();
+    await page.locator('.lesson-reader').getByRole('heading',{name:'Diari percambahan kacang'}).waitFor();
+    await pageControls.getByRole('button',{name:'Go to Home',exact:true}).click();
+    await continueLearning.getByRole('button',{name:'Explore learning paths'}).click();
+    const paths=page.locator('.learning-paths');
+    const addition=paths.locator('.journey-path').filter({hasText:'Addition Lab'});
+    await addition.getByRole('button',{name:'Open Addition Lab'}).click();
+    const lab=page.locator('.practice-lab');
+    const first=lab.getByRole('slider',{name:'First group size'});
+    const second=lab.getByRole('slider',{name:'Second group size'});
+    for(let i=0;i<3;i++)await first.press('ArrowRight');
+    for(let i=0;i<2;i++)await second.press('ArrowRight');
+    await lab.getByRole('spinbutton',{name:'How many altogether?'}).fill('7');
+    await lab.getByRole('button',{name:'Check my work'}).click();
+    await lab.getByRole('status').filter({hasText:'4 counters plus 3 counters make 7'}).waitFor();
+    await pageControls.getByRole('button',{name:'Back',exact:true}).click();
+    await addition.getByRole('button',{name:'Take the path quiz'}).click();
+    await page.locator('.colour-quiz').getByRole('button',{name:'11',exact:true}).click();
+    await page.getByRole('button',{name:'Check my answer'}).click();
+    await page.locator('.colour-quiz .feedback.gentle').waitFor();
+    await pageControls.getByRole('button',{name:'Go to Home',exact:true}).click();
+    await continueLearning.getByRole('button',{name:'Review missed questions'}).click();
+    const wrong=page.locator('.review-questions li').filter({hasText:'7 + 6 = ?'});
+    await wrong.getByRole('button',{name:'Retry this question'}).click();
+    await page.locator('.colour-quiz').getByRole('button',{name:'13',exact:true}).click();
+    await page.getByRole('button',{name:'Check my answer'}).click();
+    await page.locator('.colour-quiz .feedback.good').waitFor();
+    await pageControls.getByRole('button',{name:'Back',exact:true}).click();
+    assert.equal(await wrong.count(),0);
+
+    await pageControls.getByRole('button',{name:'Go to Home',exact:true}).click();
+    await continueLearning.getByRole('button',{name:'Explore learning paths'}).click();
+    await paths.getByRole('button',{name:'Open Clock Lab'}).click();
+    for(let i=0;i<7;i++)await lab.getByRole('button',{name:'+5 minutes',exact:true}).click();
+    await lab.getByRole('button',{name:'Check my work'}).click();
+    await lab.getByRole('status').filter({hasText:'20 minutes past 9'}).waitFor();
+    await pageControls.getByRole('button',{name:'Back',exact:true}).click();
+    await paths.getByRole('button',{name:'Open Fraction Lab'}).click();
+    await lab.getByRole('combobox',{name:'Equal parts'}).selectOption('8');
+    for(let i=0;i<6;i++)await lab.getByRole('slider').press('ArrowRight');
+    await lab.getByRole('button',{name:'Check my work'}).click();
+    await lab.getByRole('status').filter({hasText:'three quarters'}).waitFor();
+    await pageControls.getByRole('button',{name:'Back',exact:true}).click();
+    await paths.getByRole('button',{name:'Open Shadow Lab'}).click();
+    await lab.getByRole('button',{name:'Larger',exact:true}).click();
+    await lab.getByRole('button',{name:'Run the model'}).click();
+    await lab.getByRole('status').filter({hasText:'Your prediction matched'}).waitFor();
+  }
   await page.locator('nav.nav').getByRole('button',{name:/Study Buddy/i}).click();
   await page.getByLabel('What would you like to learn?').fill('28 + 15');
   await page.getByRole('button',{name:/Explain to me/i}).click();
