@@ -1,22 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title">
-  <title id="title">BijakLearn Junior smiling book and star</title>
-  <defs>
-    <linearGradient id="sky" x2="1" y2="1" gradientUnits="objectBoundingBox">
-      <stop stop-color="#21559b"/>
-      <stop offset="1" stop-color="#6335aa"/>
-    </linearGradient>
-  </defs>
-  <path fill="url(#sky)" d="M0 0h512v512H0z"/>
-  <circle cx="256" cy="256" r="199" fill="#e8ecff" opacity=".12"/>
-  <path fill="#ffce67" d="m256 87 12 28 30 3-23 20 7 30-26-16-26 16 7-30-23-20 30-3z"/>
-  <circle cx="177" cy="151" r="9" fill="#94e8dd"/>
-  <circle cx="343" cy="148" r="7" fill="#ffb7ca"/>
-  <path d="M119 228c42-27 93-29 137-1 44-28 95-26 137 1v129c-43-22-93-15-137 12-44-27-94-34-137-12z" fill="#142f69" opacity=".45" transform="translate(0 11)"/>
-  <path d="M119 214c42-27 93-29 137-1 44-28 95-26 137 1v129c-43-22-93-15-137 12-44-27-94-34-137-12z" fill="#fff4dd" stroke="#112e67" stroke-width="12" stroke-linejoin="round"/>
-  <path d="M256 213c44-28 95-26 137 1v129c-43-22-93-15-137 12z" fill="#e2f5ef" stroke="#112e67" stroke-width="12" stroke-linejoin="round"/>
-  <circle cx="204" cy="260" r="12" fill="#112e67"/>
-  <circle cx="308" cy="260" r="12" fill="#112e67"/>
-  <path d="M226 286q30 34 60 0" fill="none" stroke="#112e67" stroke-width="10" stroke-linecap="round"/>
-  <circle cx="177" cy="282" r="10" fill="#f5a3ad"/>
-  <circle cx="335" cy="282" r="10" fill="#f5a3ad"/>
+<title id="title">BijakLearn Junior smiling adventure book and star</title>
+<defs><linearGradient id="sky" x2="1" y2="1"><stop stop-color="#7653ba"/><stop offset="1" stop-color="#326f91"/></linearGradient><linearGradient id="page" x2="0" y2="1"><stop stop-color="#fffdf3"/><stop offset="1" stop-color="#ffe9b7"/></linearGradient></defs>
+<path fill="url(#sky)" d="M0 0h512v512H0z"/>
+<circle cx="256" cy="256" r="190" fill="#d7c9ff" opacity=".18"/>
+<path d="M87 166h68m-52-20h58m197 16h62m-76-21h50" stroke="#e2f2ff" stroke-width="15" stroke-linecap="round" opacity=".5"/>
+<path d="m256 91 13 27 30 4-22 21 5 30-26-14-26 14 5-30-22-21 30-4Z" fill="#ffd86e" stroke="#fff3bb" stroke-width="5" stroke-linejoin="round"/>
+<path d="m151 345-23 39 54-16m179-23 23 39-54-16" fill="#67d5bd" stroke="#253c69" stroke-width="9" stroke-linejoin="round"/>
+<path d="M119 223q67-40 137-5 70-35 137 5v127q-65-24-137 13-72-37-137-13Z" fill="#253c69" opacity=".35" transform="translate(0 13)"/>
+<path d="M119 210q67-40 137-5 70-35 137 5v127q-65-24-137 13-72-37-137-13Z" fill="url(#page)" stroke="#253c69" stroke-width="11" stroke-linejoin="round"/>
+<path d="M256 205q70-35 137 5v127q-65-24-137 13Z" fill="#e1f7ed" stroke="#253c69" stroke-width="11" stroke-linejoin="round"/>
+<path d="M151 218q32-10 65-2m79 0q32-8 65 2" fill="none" stroke="#a7b9b9" stroke-width="5" stroke-linecap="round"/>
+<ellipse cx="204" cy="258" rx="11" ry="14" fill="#253c69"/><ellipse cx="308" cy="258" rx="11" ry="14" fill="#253c69"/>
+<circle cx="201" cy="254" r="3" fill="#fff"/><circle cx="305" cy="254" r="3" fill="#fff"/>
+<ellipse cx="177" cy="282" rx="16" ry="9" fill="#efabb9"/><ellipse cx="335" cy="282" rx="16" ry="9" fill="#efabb9"/>
+<path d="M231 287q25 26 50 0" fill="none" stroke="#253c69" stroke-width="9" stroke-linecap="round"/>
+<path d="m105 274 5-11 5 11 12 4-12 5-5 12-5-12-12-5Zm293-25 4-9 4 9 10 4-10 4-4 10-4-10-10-4Z" fill="#ffe6a2"/>
+<circle cx="177" cy="143" r="7" fill="#78ddc6"/><circle cx="335" cy="127" r="6" fill="#ffc8d6"/>
 </svg>
