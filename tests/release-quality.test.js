@@ -7,6 +7,7 @@ import {auditContent} from '../src/contentAudit.js';
 import {markPractice} from '../src/answerMarking.js';
 import {solveWorkedCalculation} from '../src/tutorEngine.js';
 import {calculateExpression} from '../src/arithmetic.js';
+import {questionBank,selectPractice} from '../src/practiceBank.js';
 
 test('all authored lessons pass content integrity and direct arithmetic checks',()=>{
  const report=auditContent(LESSONS);
@@ -46,4 +47,13 @@ test('public and packaged backend marking agree on numeric equivalence and stric
  for(const [question,response,expected] of cases){assert.equal(markPractice(question,response),expected);assert.equal(context.markPractice_(question,response),expected)}
  const fraction=LESSONS.find(l=>l.id==='jr-math-4-1').check.find(q=>q.id.endsWith('-math-1'));
  assert.equal(markPractice(fraction,'3/9'),true);
+});
+
+test('practice sets do not repeat identical prompts from different lessons',()=>{
+ const sample=[{questionKey:'a',text:'4 + 3 = ?'},{questionKey:'b',text:'4 + 3 = ?'},{questionKey:'c',text:'5 + 2 = ?'}];
+ assert.equal(selectPractice(sample,10,'test').length,2);
+ for(let year=1;year<=6;year++){
+  const bank=questionBank(LESSONS,year,'SK');
+  for(let seed=0;seed<25;seed++){const items=selectPractice(bank,10,String(seed));assert.equal(new Set(items.map(q=>q.text)).size,items.length)}
+ }
 });
