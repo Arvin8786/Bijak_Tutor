@@ -181,4 +181,24 @@ export const MATH_GRADED_PRACTICE = {
     ]
   ]
 };
-export function withMathPractice(lessons){return lessons.map(l=>{const items=MATH_GRADED_PRACTICE[l.id];if(!items)return l;return {...l,check:[...l.check,...items.map(([text,answer],i)=>({id:l.id+'-math-'+(i+1),mode:'text',text,answer,transfer:i>=2,why:'Semak langkah pengiraan dan bandingkan jawapan anda: '+answer}))]};})}
+function workedFeedback(id,text,answer){
+ const n=(text.match(/\d+(?:\.\d+)?/g)||[]).map(Number);
+ if(id==='jr-math-2-1')return 'Kenal pasti kedudukan digit '+n[1]+' dalam '+n[0]+'. Nilai tempatnya memberikan nilai '+answer+'.';
+ if(id==='jr-math-2-2')return 'Tambah sa: '+n[0]%10+' + '+n[1]%10+' = '+(n[0]%10+n[1]%10)+'. Jika cukup 10, kumpul semula satu puluh. Jumlah '+n[0]+' + '+n[1]+' = '+answer+'.';
+ if(id==='jr-math-3-1')return n[0]+' kumpulan dengan '+n[1]+' setiap kumpulan: '+n[0]+' × '+n[1]+' = '+answer+'.';
+ if(id==='jr-math-3-2')return 'Bahagi sama rata: '+n[0]+' ÷ '+n[1]+' = '+answer+'. Semak: '+answer+' × '+n[1]+' = '+n[0]+'.';
+ if(id==='jr-math-4-1')return 'Darab pembilang dan penyebut dengan 2: '+n[0]+' × 2 = '+(n[0]*2)+' dan '+n[1]+' × 2 = '+(n[1]*2)+'. Jadi '+n[0]+'/'+n[1]+' = '+answer+'.';
+ if(id==='jr-math-4-2')return n.length===1?'Empat sisi sama panjang: 4 × '+n[0]+' = '+answer+' cm.':'Tambah semua sisi: 2 × ('+n[0]+' + '+n[1]+') = '+answer+' cm.';
+ if(id==='jr-math-5-1')return n[0]+' = '+Math.round(n[0]*100)+'/100. Permudahkan pembilang dan penyebut dengan faktor yang sama untuk mendapat '+answer+'.';
+ if(id==='jr-math-5-2')return 'Luas = panjang × lebar = '+n[0]+' × '+n[1]+' = '+answer+' cm².';
+ if(id==='jr-math-6-1')return n[0]+'% bermaksud '+n[0]+' daripada 100: '+n[0]+'/100 = '+answer+' selepas dipermudahkan.';
+ return 'Isipadu = panjang × lebar × tinggi = '+n.join(' × ')+' = '+answer+' cm³.';
+}
+export function withMathPractice(lessons){return lessons.map(l=>{
+ const items=MATH_GRADED_PRACTICE[l.id];if(!items)return l;
+ return {...l,check:[...l.check,...items.map(([text,answer],i)=>({
+  id:l.id+'-math-'+(i+1),mode:answer.includes('/')?'text':'number',
+  answerFormat:answer.includes('/')?'equivalent-number':undefined,text,answer,transfer:i>=2,
+  why:workedFeedback(l.id,text,answer)
+ }))]};
+})}

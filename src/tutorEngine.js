@@ -1,15 +1,21 @@
+import {arithmeticExpression,calculateExpression} from './arithmetic.js';
 /**
  * Deterministic, on-device Study Buddy.
  * This is curriculum retrieval and a checked arithmetic explainer, not a generative AI model.
  * Unknown topics are NOT made up. It never sends personal data to third parties.
  */
-const fmt=n=>Number.isInteger(n)?String(n):String(Number(n.toFixed(8)));
-const regexMath=/(-?\d+(?:\.\d+)?)\s*([+×*÷/−-])\s*(-?\d+(?:\.\d+)?)/;
+const fmt=n=>Number.isInteger(n)?String(n):String(Number(n.toPrecision(12)));
 const words=text=>String(text||'').toLowerCase().normalize('NFKC').match(/[\p{L}\p{N}]+/gu)||[];
 const STOP=new Set(['what','is','how','the','a','an','can','you','please','explain','show','me','tell','about','why','does','do','of','and','to','it','in','a','berapa','apakah','cara','bagaimana','apa','ialah','yang','dan','untuk','dengan','saya','boleh','terangkan','tunjukkan','kira','mengapa','contoh','theory','concept','formula']);
 export function solveWorkedCalculation(input){
  const text=String(input||'').trim();if(text.length>500)return null;
- const m=text.match(regexMath);if(!m)return null;
+ const expression=arithmeticExpression(text);
+ const calculated=calculateExpression(expression);if(!calculated)return null;
+ if(calculated.error)return {title:'Division by zero',steps:['We cannot divide a number by zero.','Try a non-zero divisor instead.'],kind:'math'};
+ const m=expression.match(/^(-?\d+(?:\.\d+)?)\s*([+*\/-])\s*(-?\d+(?:\.\d+)?)$/);
+ if(!m)return {title:expression.replaceAll('*','×').replaceAll('/','÷')+' '+(calculated.approximate?'≈':'=')+' '+calculated.answer,
+  steps:['Work inside brackets first, then multiply and divide from left to right, then add and subtract from left to right.',...calculated.steps],
+  kind:'math',answer:calculated.answer,source:'Checked arithmetic; ≈ means rounded'};
  const a=Number(m[1]),b=Number(m[3]),op=m[2];
  if(!Number.isFinite(a)||!Number.isFinite(b)||Math.abs(a)>1e10||Math.abs(b)>1e10)return null;
  let value,steps=[];
@@ -52,12 +58,12 @@ export function solveWorkedCalculation(input){
     steps.push(`Bring down ${digit}. ${fmt(b)} fits into ${fmt(chunk)} exactly ${quotientDigit} time${quotientDigit===1?'':'s'}; subtract ${fmt(quotientDigit*b)}, remainder ${fmt(chunk-quotientDigit*b)}.`);
     remainder=chunk-quotientDigit*b;
    }
-   if(remainder)steps.push(`Remainder ${remainder}; the exact decimal answer is ${fmt(value)}.`);
+   if(remainder)steps.push(`Remainder ${remainder}; the decimal answer is approximately ${fmt(value)}.`);
   }else steps.push(`Calculate ${fmt(a)} ÷ ${fmt(b)}.`);
-  steps.push(`Answer: ${fmt(value)}.`,`Check: ${fmt(value)} × ${fmt(b)} = ${fmt(a)}.`);
+  steps.push(`Answer: ${calculated.approximate?'approximately ':''}${fmt(value)}.`,`Check: ${fmt(value)} × ${fmt(b)} ${calculated.approximate?'≈':'='} ${fmt(a)}.`);
  }
  if(!Number.isFinite(value))return null;
- return {title:`${fmt(a)} ${op==='*'?'×':op==='/'?'÷':op} ${fmt(b)} = ${fmt(value)}`,steps,kind:'math',answer:fmt(value),source:'Checked arithmetic'};
+ return {title:`${fmt(a)} ${op==='*'?'×':op==='/'?'÷':op} ${fmt(b)} ${calculated.approximate?'≈':'='} ${fmt(value)}`,steps,kind:'math',answer:fmt(value),source:'Checked arithmetic'};
 }
 function overlaps(needle,hay){return needle===hay||(needle.length>=5&&hay.length>=5&&(hay.startsWith(needle)||needle.startsWith(hay)))}
 export function findLessonForQuestion(question,lessons=[],opts={}){

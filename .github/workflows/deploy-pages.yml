@@ -29,6 +29,12 @@ jobs:
         run: npm test
       - name: Compile site for GitHub Pages
         run: npm run build
+      - name: Install browser test tools
+        run: npm install --no-save playwright@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Check production browser flows before publishing
+        run: node tests/browser-smoke.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload compiled site

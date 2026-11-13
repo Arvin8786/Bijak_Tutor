@@ -26,7 +26,7 @@ function importFullJuniorCurriculum_(){
       for(const q of (l.check||[])){
         if(!q.id||!q.text||q.answer===undefined||existingQuestions.has(l.id+'/'+q.id))continue;
         pendingQuestions.push({questionId:q.id,lessonId:l.id,mode:q.mode||'choice',text:q.text,
-          optionsJson:JSON.stringify(q.options||[]),correctAnswer:String(q.answer),why:q.why||'',
+          optionsJson:JSON.stringify(q.options||[]),correctAnswer:String(q.answer),answerFormat:q.answerFormat||'',why:q.why||'',
           transfer:q.transfer?'TRUE':'FALSE',misconceptionsJson:JSON.stringify(l.misconceptions||{})});
         existingQuestions.add(l.id+'/'+q.id);
       }

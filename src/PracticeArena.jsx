@@ -3,7 +3,7 @@ import {availablePracticeSubjects,questionBank,selectPractice,markPractice,flash
 import {say} from './localization.js';
 
 const today=()=>new Date().toISOString().slice(0,10);
-export default function PracticeArena({lessons,year,school,language='ms',onOpenLesson}){
+export default function PracticeArena({lessons,year,school,language='ms',onOpenLesson,onAttempt}){
  const [subject,setSubject]=useState('all'),[mode,setMode]=useState('quiz'),[index,setIndex]=useState(0),[chosen,setChosen]=useState(''),[checked,setChecked]=useState(false),[score,setScore]=useState(0),[revealed,setRevealed]=useState(false),[session,setSession]=useState(0);
  const options=availablePracticeSubjects(lessons,year,school);
  const selectedSubject=subject==='all'||options.some(x=>x.subject===subject)?subject:'all';
@@ -12,7 +12,7 @@ export default function PracticeArena({lessons,year,school,language='ms',onOpenL
  const cards=useMemo(()=>flashCards(lessons,year,school,selectedSubject),[lessons,year,school,selectedSubject]);
  const q=questions[index],card=cards[index%Math.max(1,cards.length)];
  const reset=()=>{setIndex(0);setChosen('');setChecked(false);setScore(0);setRevealed(false)};
- const check=()=>{if(!q||checked||!chosen.trim())return;setChecked(true);if(markPractice(q,chosen))setScore(n=>n+1)};
+ const check=()=>{if(!q||checked||!chosen.trim())return;setChecked(true);onAttempt?.(q,chosen);if(markPractice(q,chosen))setScore(n=>n+1)};
  const next=()=>{setIndex(n=>n+1);setChosen('');setChecked(false);setRevealed(false)};
  const startAgain=()=>{reset();setSession(s=>s+1)};
  const available=questions.length;
@@ -48,6 +48,6 @@ export default function PracticeArena({lessons,year,school,language='ms',onOpenL
      <div className="practice-actions">{!checked?<button type="button" className="primary" disabled={!chosen.trim()} onClick={check}>Check answer</button>:<button type="button" className="primary" onClick={next}>{index+1===available?'Finish practice →':'Next question →'}</button>}<button type="button" onClick={startAgain}>Start over</button></div>
     </>}
   </div>
-  <p className="practice-notice">These are formative practice activities based on authored study materials, not official examinations or certified mastery scores. The daily challenge refreshes its question order each day and does not require an account.</p>
+  <p className="practice-notice">These are formative practice activities based on authored study materials, not official examinations or certified mastery scores. Lesson-linked answers also appear in Home → Review missed questions on this device. The daily challenge refreshes its question order each day and does not require an account.</p>
  </section>;
 }
