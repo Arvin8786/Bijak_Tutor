@@ -60,7 +60,7 @@ export function solveWorkedCalculation(input){
    }
    if(remainder)steps.push(`Remainder ${remainder}; the decimal answer is approximately ${fmt(value)}.`);
   }else steps.push(`Calculate ${fmt(a)} ÷ ${fmt(b)}.`);
-  steps.push(`Answer: ${calculated.approximate?'approximately ':''}${fmt(value)}.`,`Check: ${fmt(value)} × ${fmt(b)} ${Number(fmt(value))===value?'=':'≈'} ${fmt(a)}.`);
+  steps.push(`Answer: ${calculated.approximate?'approximately ':''}${fmt(value)}.`,`Check: ${fmt(value)} × ${fmt(b)} ${calculated.approximate?'≈':'='} ${fmt(a)}.`);
  }
  if(!Number.isFinite(value))return null;
  return {title:`${fmt(a)} ${op==='*'?'×':op==='/'?'÷':op} ${fmt(b)} ${calculated.approximate?'≈':'='} ${fmt(value)}`,steps,kind:'math',answer:fmt(value),source:'Checked arithmetic'};

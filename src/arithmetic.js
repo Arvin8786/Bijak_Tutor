@@ -11,6 +11,7 @@ export function calculateExpression(expression) {
  if(tokens.join('')!==expression.replace(/\s/g,'')||tokens.length>60)return null;
  let position=0;const steps=[];
  const fmt=n=>String(Number(n.toPrecision(12)));
+ const rounded=n=>Math.abs(Number(fmt(n))-n)>Number.EPSILON*8*Math.max(1,Math.abs(n));
  const factor=()=>{
   const token=tokens[position++];
   if(token==='+'||token==='-'){const value=factor();return token==='-'?-value:value}
@@ -22,11 +23,11 @@ export function calculateExpression(expression) {
   if(op==='/'&&right===0)throw Error('Division by zero');
   const value=op==='+'?left+right:op==='-'?left-right:op==='*'?left*right:left/right;
   if(!Number.isFinite(value)||Math.abs(value)>1e12)throw Error('Result too large');
-  steps.push(`${fmt(left)} ${op==='*'?'×':op==='/'?'÷':op} ${fmt(right)} ${Number(fmt(value))===value?'=':'≈'} ${fmt(value)}`);
+  steps.push(`${fmt(left)} ${op==='*'?'×':op==='/'?'÷':op} ${fmt(right)} ${rounded(value)?'≈':'='} ${fmt(value)}`);
   return value;
  };
  const product=()=>{let value=factor();while(['*','/'].includes(tokens[position])){const op=tokens[position++];value=operation(value,op,factor())}return value};
  const sum=()=>{let value=product();while(['+','-'].includes(tokens[position])){const op=tokens[position++];value=operation(value,op,product())}return value};
- try{const value=sum();if(position!==tokens.length)return null;return {value,answer:fmt(value),steps,approximate:Number(fmt(value))!==value}}
+ try{const value=sum();if(position!==tokens.length)return null;return {value,answer:fmt(value),steps,approximate:rounded(value)}}
  catch(error){return error.message==='Division by zero'?{error:error.message}:null}
 }

@@ -24,6 +24,7 @@ test('Study Buddy evaluates whole expressions, precedence and brackets without p
   assert.equal(solveWorkedCalculation(input).answer,answer,input);
  }
  for(const text of ['2+3foo','2+3;alert(1)','2**3','2(3+4)','10 apples + 2 oranges','2+3 4','1e5+1','10%+2'])assert.equal(solveWorkedCalculation(text),null,text);
+ assert.equal(solveWorkedCalculation('0.1 + 0.2').title,'0.1 + 0.2 = 0.3');
  assert.match(solveWorkedCalculation('1 ÷ 3').title,/≈/);
  assert.ok(solveWorkedCalculation('1 ÷ 3').steps.some(x=>/approximately/.test(x)));
  assert.match(solveWorkedCalculation('2/(3-3)').title,/Division by zero/);
