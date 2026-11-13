@@ -15,7 +15,7 @@ npx playwright install chromium
 node tests/browser-smoke.mjs
 ```
 
-On Linux CI, use `npx playwright install --with-deps chromium` to install system dependencies as well. The browser suite serves the unchanged production bundle under `/Bijak_Tutor/`, exercises three viewport widths, and checks an offline reload after a fresh service worker install. Check the build’s curriculum report in `release/CURRICULUM_COVERAGE.json`.
+On Linux CI, use `npx playwright install --with-deps chromium` to install system dependencies as well. The browser suite serves the unchanged production bundle under `/Bijak_Tutor/`, exercises three viewport widths, and checks an offline reload after a fresh service worker install. Check the build’s curriculum report in `release/CURRICULUM_COVERAGE.json` and structural/answer audit in `release/CONTENT_QUALITY.json`. Production deployment runs the browser suite before publishing.
 
 ## Manual acceptance
 
@@ -23,7 +23,7 @@ On Linux CI, use `npx playwright install --with-deps chromium` to install system
 | --- | --- |
 | First visit and accessibility | Open in mobile Safari, Android Chrome and a desktop browser. Change the welcome language, navigate using touch and keyboard, and verify visible focus and readable content without sideways scrolling. Check core navigation in Malay, English, Chinese and Tamil. |
 | Study library | Browse SK, SJKC and SJKT across Years 1–6. Choose Matematik or Sains and search for **Ulang Kaji Berpandu**. Open a worked example and check that its teaching steps, answer feedback and retry state make sense. Try a search with no results and clear it. Verify that changing streams excludes lessons intended for another stream. |
-| Practice | Complete a Quick Quiz and a Daily Challenge, including wrong and correct answers. Verify the final score, retry the Daily Challenge, and confirm the questions stay the same that day. Reveal a flashcard and follow its lesson link. |
+| Practice | Verify `2 + 3 × 4 = 14`, `(2 + 3) × 4 = 20`, rounded division is labelled `≈`, equivalent numeric answers are accepted where allowed, and specific requested fraction forms remain strict. Complete a Quick Quiz and a Daily Challenge, including wrong and correct answers. Verify the final score, retry the Daily Challenge, and confirm the questions stay the same that day. Reveal a flashcard and follow its lesson link. |
 | Learning paths and labs | Start the Year 1 Addition Lab path. Read a lesson, complete the lab, finish its quiz with one deliberate mistake, then retry the missed question. Verify Continue Learning opens the latest lesson, counters stay accurate, and a second fictional profile has independent progress. With device saving enabled, check persistence across reload and clearing. Try the clock past 12, an equivalent fraction on the number line, and both outcomes of the shadow prediction. |
 | Physical device pass | On an iPhone and Android phone, follow the addition path with touch and a screen reader. Adjust both counter sliders and read the feedback. Check the clock buttons, read-aloud instructions, and an offline reopen from the installed app. Record the device, OS, browser and observed result. |
 | Playground and preschool | Open all 19 Playground modes. Try a wrong and a correct answer in games that score, then advance to the next round. Complete a word search, spelling round, life cycle and picture puzzle. Test touch drawing, clear/reset and audio when a browser voice is available. |

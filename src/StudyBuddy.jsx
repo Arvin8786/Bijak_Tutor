@@ -13,8 +13,8 @@ export default function StudyBuddy({lessons=[],year=1,subject='',currentLesson=n
  const [response,setResponse]=useState(null);
  const [busy,setBusy]=useState(false);
  const [status,setStatus]=useState('');
- const voiceRef=useRef(null),mounted=useRef(true);
- useEffect(()=>()=>{mounted.current=false;try{window.speechSynthesis?.cancel();voiceRef.current?.stop?.()}catch{}},[]);
+ const voiceRef=useRef(null),mounted=useRef(true),requestRef=useRef(0);
+ useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;requestRef.current++;try{window.speechSynthesis?.cancel();voiceRef.current?.stop?.()}catch{}}},[]);
  const speak=(text)=>{
    if(!('speechSynthesis' in window)){setStatus('Voice playback is not supported by this browser.');return}
    const read=String(text||'').slice(0,3000);
@@ -39,20 +39,21 @@ export default function StudyBuddy({lessons=[],year=1,subject='',currentLesson=n
  };
  const ask=async(q=question)=>{
    const text=String(q||'').trim();if(!text)return;
+   const request=++requestRef.current;
    setQuestion(text);setBusy(true);setStatus('');
    try{
      let result=null;
-     if(askOnline)try{result=await askOnline(text,{year,subject,lessonId:currentLesson?.id||null})}catch(e){setStatus('Online tutor unavailable. Showing available on-device guidance instead.')}
+     if(askOnline)try{result=await askOnline(text,{year,subject,lessonId:currentLesson?.id||null})}catch(e){if(mounted.current&&requestRef.current===request)setStatus('Online tutor unavailable. Showing available on-device guidance instead.')}
      if(!result||!Array.isArray(result.steps))result=tutorReply(text,lessons,{year,subject});
-     if(mounted.current)setResponse(result);
-   }finally{if(mounted.current)setBusy(false)}
+     if(mounted.current&&requestRef.current===request)setResponse(result);
+   }finally{if(mounted.current&&requestRef.current===request)setBusy(false)}
  };
  const context=currentLesson?.title||subject||'All subjects';
  return <section className="tutor-page" aria-label="Interactive Study Buddy">
   <div className="tutor-hero"><div><span className="mini-label">🧠 STUDY BUDDY • ASK & LEARN</span><h1>Ask a question, understand each step!</h1><p>Try a calculation, ask about a topic or listen to a short explanation. Learn at your own pace.</p></div><span className="tutor-mascot" aria-hidden="true">🤖</span></div>
   <div className="tutor-box">
    <div className="tutor-context">📘 Current learning area: <strong>{context}</strong> · Tahun {year}</div>
-   <div className="tutor-quick">{EXAMPLES.map(q=><button type="button" key={q} onClick={()=>ask(q)}>{q}</button>)}{currentLesson&&<button type="button" onClick={()=>ask('Explain '+currentLesson.title)}>Explain this lesson</button>}</div>
+   <div className="tutor-quick">{EXAMPLES.map(q=><button type="button" key={q} disabled={busy} onClick={()=>ask(q)}>{q}</button>)}{currentLesson&&<button type="button" onClick={()=>ask('Explain '+currentLesson.title)}>Explain this lesson</button>}</div>
    <label htmlFor="study-buddy-question">What would you like to learn?</label>
    <textarea id="study-buddy-question" maxLength={500} value={question} onChange={e=>setQuestion(e.target.value)} placeholder="Example: Please show me how to calculate 28 + 15, step by step." onKeyDown={e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();ask()}}}/>
    <div className="tutor-actions"><button type="button" className="primary" disabled={busy||!question.trim()} onClick={()=>ask()}>{busy?'Thinking…':'✨ Explain to me'}</button><button type="button" onClick={listen} aria-label="Speak your question">🎙️ Ask by voice</button>{response&&<><button type="button" onClick={()=>speak([response.title,...response.steps].join('. '))}>🔊 Read answer</button><button type="button" onClick={stopSpeech}>⏹ Stop</button></>}</div>

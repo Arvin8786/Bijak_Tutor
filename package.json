@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build && node scripts/stamp-release.mjs && node scripts/package-gas.mjs && node scripts/audit-curriculum.mjs",
+    "build": "vite build && node scripts/stamp-release.mjs && node scripts/package-gas.mjs && node scripts/audit-curriculum.mjs && node scripts/audit-content.mjs",
     "test": "node scripts/check-public-security.mjs && node --test tests/*.test.js",
     "audit:curriculum": "node scripts/audit-curriculum.mjs",
-    "check:public": "node scripts/check-public-security.mjs"
+    "check:public": "node scripts/check-public-security.mjs",
+    "audit:content": "node scripts/audit-content.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",

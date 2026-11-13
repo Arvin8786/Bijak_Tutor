@@ -3,10 +3,10 @@
 ## Project context
 - Canonical repository: `Arvin8786/Bijak_Tutor`; branch: `main`.
 - Frontend: React + Vite Progressive Web App.
-- Hosting target: Cloudflare Pages, connected to GitHub with automatic deploys.
+- Active public hosting: GitHub Pages, published by `.github/workflows/deploy-pages.yml` after tests, build and production browser checks. Cloudflare onboarding below is an alternative only; do not create a competing deployment without an explicit migration request.
 - Build: `npm run build`; static output: `dist/`; tests: `npm test`.
 - Backend and database: Google Apps Script + private Google Sheets; **no Firebase**.
-- Cloudflare-hosted frontend currently runs in **demo mode**; the secure live PWA-to-Apps-Script bridge is not finished.
+- Public static frontend currently runs in **demo mode**; the secure live PWA-to-Apps-Script bridge is not finished.
 - Primary curriculum for SK/SJKC/SJKT Tahun 1–6. Most subjects are catalog entries; drafted lessons are not teacher-approved.
 
 ## Cloudflare onboarding

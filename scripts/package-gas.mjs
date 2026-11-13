@@ -18,4 +18,6 @@ fs.copyFileSync('apps-script/AccountAccess.gs','release/AccountAccess.gs');
 fs.copyFileSync('apps-script/TutorAI.gs','release/TutorAI.gs');
 fs.copyFileSync('apps-script/ModuleService.gs','release/ModuleService.gs');
 const exportable=LESSONS.map(l=>({id:l.id,year:l.year,school:l.school||'ALL',subject:l.subject,chapter:l.chapter||'',title:l.title,summary:l.summary||'',visual:l.visual||'',icon:l.icon||'📚',status:l.status||'DRAFT_TEACHER_REVIEW',steps:l.steps||[],mind:l.mind||[],check:l.check||[],misconceptions:l.misconceptions||{}}));
-fs.writeFileSync('release/CurriculumData.gs',`const BIJAK_CURRICULUM_BUNDLE = ${JSON.stringify(exportable)};\n`);fs.copyFileSync('apps-script/appsscript.json','release/appsscript.json');console.log(`Ready: release/App.html, Code.gs, CurriculumImport.gs, AdminOperations.gs, AccountAccess.gs, TutorAI.gs, ModuleService.gs, CurriculumData.gs, appsscript.json (${LESSONS.length} lessons)`);
+fs.writeFileSync('release/CurriculumData.gs',`const BIJAK_CURRICULUM_BUNDLE = ${JSON.stringify(exportable)};\n`);fs.copyFileSync('apps-script/appsscript.json','release/appsscript.json');console.log(`Ready: release/App.html, Code.gs, CurriculumImport.gs, AdminOperations.gs, AccountAccess.gs, AnswerMarking.gs, TutorAI.gs, ModuleService.gs, CurriculumData.gs, appsscript.json (${LESSONS.length} lessons)`);
+
+fs.writeFileSync('release/AnswerMarking.gs',fs.readFileSync('src/answerMarking.js','utf8').replaceAll('export ','').replace(/\b(markPractice|normalizedAnswer|numericValue)\b/g,'$1_'));

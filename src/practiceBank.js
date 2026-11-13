@@ -24,12 +24,7 @@ export function selectPractice(questions,count=10,seed='session'){
  const shuffled=[...questions].sort((a,b)=>stableHash(seed+a.questionKey)-stableHash(seed+b.questionKey));
  return shuffled.slice(0,Math.max(0,count));
 }
-export function normalizedAnswer(value){return String(value??'').normalize('NFKC').toLowerCase().trim().replace(/\s+/g,' ').replace(/[.,!?。！?]+$/,'')}
-export function markPractice(question, response) {
- if (question.options?.length) return String(response) === String(question.answer);
- const answer = normalizedAnswer(response);
- return answer !== '' && answer === normalizedAnswer(question.answer);
-}
+export {normalizedAnswer,markPractice} from './answerMarking.js';
 export function flashCards(lessons,year,school,subject='all'){
  return (lessons||[]).filter(l=>Number(l.year)===Number(year)&&(!l.school||l.school==='ALL'||l.school===school)&&(subject==='all'||l.subject===subject))
  .map(l=>({id:l.id,front:l.title,back:l.summary,example:l.visual||l.steps?.[0]?.body||'',subject:l.subject})).filter(c=>c.back);

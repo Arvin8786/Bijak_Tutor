@@ -160,6 +160,20 @@ try{
     await arena.locator('.practice-finish').filter({hasText:'10 out of 10'}).waitFor();
     await arena.getByRole('button',{name:'Retry today’s challenge'}).click();
     assert.equal(await arena.locator('.practice-stage h2').textContent(),firstPrompt);
+    const missedQuestion=dailyQuestions[0];
+    assert.ok(missedQuestion.lessonId,'Review regression needs a lesson-linked question');
+    await arena.getByRole('button',{name:String(missedQuestion.options.find(value=>value!==missedQuestion.answer)),exact:true}).click();
+    await arena.getByRole('button',{name:'Check answer',exact:true}).click();
+    await arena.locator('.practice-feedback.retry').waitFor();
+    await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
+    await page.locator('.continue-learning').getByRole('button',{name:'Review missed questions'}).click();
+    const review=page.locator('.review-questions li').filter({hasText:missedQuestion.text});
+    await review.getByRole('button',{name:'Retry this question'}).click();
+    await page.locator('.colour-quiz').getByRole('button',{name:String(missedQuestion.answer),exact:true}).click();
+    await page.getByRole('button',{name:'Check my answer'}).click();
+    await page.locator('.colour-quiz .feedback.good').waitFor();
+    await pageControls.getByRole('button',{name:'Back',exact:true}).click();
+    assert.equal(await review.count(),0,'Corrected Arena answer must leave the missed-question queue');
 
     await page.getByRole('button',{name:'Learning map'}).click();
     const library=page.locator('.curriculum-map');
@@ -300,6 +314,14 @@ try{
   await page.getByRole('button',{name:/Explain to me/i}).click();
   await page.getByRole('heading',{name:/28 \+ 15 = 43/}).waitFor();
   assert.ok(await page.getByRole('button',{name:/Read answer/i}).isVisible());
+  if(width===375){
+    await page.getByLabel('What would you like to learn?').fill('(2 + 3) × 4');
+    await page.getByRole('button',{name:/Explain to me/i}).click();
+    await page.getByRole('heading',{name:'(2 + 3) × 4 = 20'}).waitFor();
+    await page.getByLabel('What would you like to learn?').fill('1 ÷ 3');
+    await page.getByRole('button',{name:/Explain to me/i}).click();
+    await page.locator('.tutor-answer h2').filter({hasText:'≈'}).waitFor();
+  }
   if(width===1280){
     await page.locator('nav.nav').getByRole('button',{name:'Activity Playground'}).click();
     await page.locator('.activity-arcade').waitFor();
