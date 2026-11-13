@@ -27,6 +27,23 @@ try{
   const welcome=page.locator('.welcome-gate');
   await welcome.getByRole('button',{name:/English/i}).click();
   await welcome.getByRole('button',{name:/Continue/i}).click();
+  if(width===375){
+    const motion=page.getByRole('button',{name:'Background animation',exact:true});
+    await motion.click();
+    assert.equal(await motion.getAttribute('aria-pressed'),'false');
+    assert.equal(await page.locator('.scene-cloud').first().evaluate(node=>getComputedStyle(node).animationName),'none');
+    await page.reload({waitUntil:'networkidle'});
+    assert.equal(await motion.getAttribute('aria-pressed'),'false','Calm mode should persist across reopening');
+    await motion.click();
+    assert.equal(await motion.getAttribute('aria-pressed'),'true');
+    await page.emulateMedia({reducedMotion:'reduce'});
+    await page.waitForFunction(()=>document.documentElement.dataset.motion==='off');
+    assert.equal(await motion.isEnabled(),false,'Device reduced-motion setting must be respected');
+    assert.equal(await page.locator('.scene-cloud').first().evaluate(node=>getComputedStyle(node).animationName),'none');
+    await page.emulateMedia({reducedMotion:'no-preference'});
+    await page.waitForFunction(()=>document.documentElement.dataset.motion==='on');
+    assert.equal(await page.locator('.playful-scene').getAttribute('aria-hidden'),'true');
+  }
 
   await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   assert.equal(await page.getByRole('button',{name:/Explore local demo/i}).count(),0,'Public showcase must not show demo gate');
