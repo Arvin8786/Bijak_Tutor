@@ -74,3 +74,10 @@ test('Backend mastery does not count multiple-choice reasoning as independent',(
  assert.ok(code.includes("['number','text','written'].includes(a.mode)"));
  assert.ok(code.includes('verified:false'));
 });
+
+test('malformed saved records are discarded without losing valid profiles',()=>{
+ const data=sanitizeDemo({children:[null,{id:'fox',name:'Fox'}],attempts:{'fox/bad':null,'fox/good':{attempts:[null,{questionId:'q',correct:true}]}},progress:{fox:{}}});
+ assert.equal(data.children.length,1);
+ assert.equal(data.attempts['fox/good'].attempts.length,1);
+ assert.equal(data.attempts['fox/bad'],undefined);
+});
