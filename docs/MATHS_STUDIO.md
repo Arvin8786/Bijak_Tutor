@@ -1,0 +1,3 @@
+# Original Maths Studio
+
+Provides year/topic selection, 5/10/15/20-question sessions, worked feedback, mistake review and temporary session history over BijakLearn’s existing original question bank. No code, questions, branding or assets were copied from BijakMath. The public reference https://bijakdigital21-lang.github.io/bijakmath/ informed feature selection only; its repository has no reuse licence. The user chose original implementation instead of a fork. Topic filters are discovery aids, not official syllabus mappings. Small banks yield fewer distinct questions. History clears when the studio unmounts; existing lesson practice remains separate.
