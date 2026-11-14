@@ -65,6 +65,28 @@ try{
    await studio.getByText(/5\/5/).waitFor();
    await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
   }
+  if(width===375){
+   await page.getByRole('button',{name:'🔬 Open Science Lab',exact:true}).click();
+   const lab=page.getByRole('region',{name:'Virtual Science Lab'});
+   await lab.getByRole('button',{name:'Run experiment',exact:true}).click();
+   await lab.getByRole('status').filter({hasText:'stays healthy'}).waitFor();
+   await lab.getByLabel('Enough water', {exact:true}).uncheck();
+   await lab.getByRole('button',{name:'Run experiment',exact:true}).click();
+   await lab.getByRole('status').filter({hasText:'wilts'}).waitFor();
+   await lab.getByLabel('Choose an experiment').selectOption('float');
+   await lab.getByLabel('Test object').selectOption('steel');
+   await lab.getByRole('button',{name:'Run experiment',exact:true}).click();
+   await lab.getByRole('status').filter({hasText:'sinks'}).waitFor();
+   await lab.getByLabel('Choose an experiment').selectOption('circuit');
+   await lab.getByRole('button',{name:'Run experiment',exact:true}).click();
+   await lab.getByRole('status').filter({hasText:'stays off'}).waitFor();
+   await lab.getByLabel('Switch closed', {exact:true}).check();
+   await lab.getByRole('button',{name:'Run experiment',exact:true}).click();
+   await lab.getByRole('status').filter({hasText:'bulb lights'}).waitFor();
+   await lab.getByRole('button',{name:'Reset experiment',exact:true}).click();
+   assert.equal(await lab.getByLabel('Switch closed',{exact:true}).isChecked(),false);
+   await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
+  }
   await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   assert.equal(await page.getByRole('button',{name:/Explore local demo/i}).count(),0,'Public showcase must not show demo gate');
   const pair=page.locator('.home-mascot-band');
