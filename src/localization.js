@@ -1,3 +1,5 @@
+import {SHELL_COPY} from './shellCopy.js';
+import {LAB_COPY} from './labCopy.js';
 export const LANGUAGES=[
  {code:'ms',name:'Bahasa Melayu',flag:'🇲🇾',native:'Bahasa Melayu'},
  {code:'en',name:'English',flag:'🇬🇧',native:'English'},
@@ -13,5 +15,8 @@ export const UI_COPY={
 export const LOCALE_STORAGE_KEY='bijaklearn:ui-language:v1';
 export function readLocale(storage=typeof window!=='undefined'?window.localStorage:null){try{const v=storage?.getItem(LOCALE_STORAGE_KEY);return LANGUAGES.some(l=>l.code===v)?v:null}catch{return null}}
 export function writeLocale(language,storage=typeof window!=='undefined'?window.localStorage:null){if(!LANGUAGES.some(l=>l.code===language))return false;try{storage?.setItem(LOCALE_STORAGE_KEY,language);return true}catch{return false}}
-export const say=(language,key)=>(UI_COPY[language]||UI_COPY.ms)[key]||UI_COPY.ms[key]||key;
+// Shell and lab text live in their own files and are merged here, so there is one place to look up any word.
+for(const code of Object.keys(UI_COPY))Object.assign(UI_COPY[code],SHELL_COPY[code],LAB_COPY[code]);
+const fill=(text,vars)=>vars?String(text).replace(/\{(\w+)\}/g,(m,k)=>k in vars?vars[k]:m):text;
+export const say=(language,key,vars)=>fill((UI_COPY[language]||UI_COPY.ms)[key]||UI_COPY.ms[key]||key,vars);
 export const speechLocale={ms:'ms-MY',en:'en-GB',zh:'zh-CN',ta:'ta-IN'};

@@ -1,7 +1,15 @@
 import React,{useEffect,useState} from 'react';
+import {say} from './localization.js';
 
 export default function PlayfulScene(){
  const [paused,setPaused]=useState(()=>{try{return localStorage.getItem('bijaklearn:calm-mode')==='yes'}catch{return false}});
+ // Follows the page language, which the app sets on <html lang>.
+ const [lang,setLang]=useState(()=>document.documentElement.lang||'ms');
+ useEffect(()=>{
+  const watch=new MutationObserver(()=>setLang(document.documentElement.lang||'ms'));
+  watch.observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+  return()=>watch.disconnect();
+ },[]);
  const [reduced,setReduced]=useState(()=>window.matchMedia('(prefers-reduced-motion: reduce)').matches);
  useEffect(()=>{
   const query=window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -21,9 +29,9 @@ export default function PlayfulScene(){
    <span className="scene-spark spark-three">✦</span><span className="scene-spark spark-four">✧</span>
    <span className="scene-hill hill-one"/><span className="scene-hill hill-two"/>
   </div>
-  <div className="scene-tools"><button type="button" aria-label="Background animation" aria-pressed={!paused&&!reduced}
-   disabled={reduced} onClick={toggle} title={reduced?'Your device prefers reduced motion':'Pause or play the decorative animations'}>
-   <span aria-hidden="true">{paused||reduced?'🌙':'✨'}</span> {reduced?'Calm mode':paused?'Play animations':'Pause animations'}
+  <div className="scene-tools"><button type="button" aria-label={say(lang,'calmMode')} aria-pressed={!paused&&!reduced}
+   disabled={reduced} onClick={toggle} title={say(lang,'calmMode')}>
+   <span aria-hidden="true">{paused||reduced?'🌙':'✨'}</span> {reduced?say(lang,'calmMode'):paused?say(lang,'calmOff'):say(lang,'calmOn')}
   </button></div>
  </>;
 }

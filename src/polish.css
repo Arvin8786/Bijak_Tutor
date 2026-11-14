@@ -1,0 +1,87 @@
+/* BijakLearn polish layer: one calm, consistent look for the app shell.
+   Loaded last on purpose. It replaces the competing .nav / header / hero rules in the older files. */
+:root{
+ --bl-ink:#1f2a44;--bl-muted:#5b6785;--bl-line:#e3e8f6;--bl-soft:#f5f7ff;--bl-card:#ffffff;
+ --bl-primary:#3b5bdb;--bl-primary-soft:#e8edff;--bl-good:#1f8f5f;--bl-warn:#b8730a;--bl-bad:#c0392b;
+ --bl-radius:18px;--bl-shadow:0 2px 12px rgba(42,58,106,.08);
+}
+body{color:var(--bl-ink)}
+.app :where(h1,h2,h3){color:var(--bl-ink);letter-spacing:-.01em}
+.app :where(button,select,input,textarea):focus-visible,.app a:focus-visible{outline:3px solid #7c93f5;outline-offset:2px}
+.app :where(button){min-height:44px}
+.app .primary{background:var(--bl-primary);border-color:var(--bl-primary);color:#fff;font-weight:700;box-shadow:0 2px 0 rgba(30,50,140,.25)}
+.app .primary:hover:not(:disabled){filter:brightness(1.06)}
+.app .panel{border-radius:var(--bl-radius);border-color:var(--bl-line);box-shadow:var(--bl-shadow)}
+
+/* ---------- Header: one slim bar ---------- */
+.app header{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap;
+ padding:10px max(16px,calc((100vw - 1150px)/2));background:#fff;border-bottom:1px solid var(--bl-line);box-shadow:none}
+.app header .logo{flex:0 1 auto;min-width:0;font-size:clamp(17px,2.4vw,22px);text-align:left;background:transparent;padding:4px 6px}
+.app header .logo img{border-radius:12px;box-shadow:none}
+.app .topactions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;font-size:13px;min-width:0}
+.app .language-switch{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;min-height:40px;padding:6px 14px;border-radius:999px;background:var(--bl-soft);border:1px solid var(--bl-line);font-weight:700;color:var(--bl-ink)}
+.streak-chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border-radius:999px;background:#fff7e6;border:1px solid #f4dba6;color:#7a520b;font-weight:700;font-size:13px;white-space:nowrap}
+.streak-chip.on{background:#fff0d6;border-color:#f2c66d}
+.chip-stars{padding-left:8px;border-left:1px solid #e9cf94}
+.app .pwa-controls{display:inline-flex;align-items:center;gap:8px;flex-wrap:nowrap;padding:0;min-height:0;background:transparent;position:static}
+.app .connection{font-size:12px;white-space:nowrap}
+.app .install-button{min-height:40px;border-radius:999px;background:var(--bl-primary);padding:6px 14px;font-weight:700}
+.app .pwa-update{font-size:12px;background:#fff6dc;border:1px solid #f2d98f;border-radius:999px;padding:4px 10px;display:inline-flex;gap:6px;align-items:center}
+.app .pwa-update button{min-height:32px;padding:2px 10px;border-radius:999px}
+.app .install-help{position:absolute;right:max(12px,calc((100vw - 1150px)/2));top:100%;z-index:30;width:min(360px,calc(100vw - 24px));margin:6px 0 0;padding:12px 14px;border-radius:14px;background:#fff;border:1px solid var(--bl-line);box-shadow:0 12px 30px rgba(31,42,68,.18);font-size:13px;color:var(--bl-ink);line-height:1.5}
+
+/* ---------- Navigation: three clear groups ---------- */
+.app nav.nav{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px 22px;max-width:1150px;margin:14px auto 0;padding:12px 16px;
+ background:#fff;border:1px solid var(--bl-line);border-radius:var(--bl-radius);box-shadow:var(--bl-shadow);position:static}
+.app .nav-group{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.app .nav-title{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#7a86a6;margin-right:4px}
+.app nav.nav .nav-group button{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:auto;min-width:0;min-height:40px;padding:6px 13px;
+ border-radius:12px;border:1px solid transparent;background:transparent;box-shadow:none;transform:none;color:#2a3558;font-weight:700;font-size:14px;white-space:nowrap}
+.app nav.nav .nav-group button:hover{background:var(--bl-primary-soft);filter:none;transform:none}
+.app nav.nav .nav-group button.active{background:var(--bl-primary-soft);border-color:#c3d0ff;color:#2437a8}
+
+/* ---------- Hero: shorter, calmer ---------- */
+.app .hero{min-height:0;padding:26px 30px;border-radius:24px;border:1px solid var(--bl-line);box-shadow:var(--bl-shadow);
+ background:linear-gradient(115deg,#e6f5f3 0%,#ece8fc 60%,#fff0d2 100%)}
+.app .hero h1{font-size:clamp(26px,3.6vw,40px);margin:6px 0 8px;max-width:620px}
+.app .hero p{font-size:16px;max-width:520px;margin:0 0 4px}
+.app .hero-mascots{max-width:210px;flex:0 0 auto}
+.app .hero-mascots :where(img,svg){max-width:100%;height:auto}
+.app .hero .preschool-launch{position:static;margin-top:14px;align-self:flex-start;border-radius:999px;font-weight:800;padding:10px 18px;background:#fff;border:1px solid #e5d9f3;color:#7a2f6b;white-space:normal;text-align:left}
+.app .hero:has(.preschool-launch){padding-bottom:26px;flex-wrap:wrap}
+
+/* ---------- Feature cards: Science Lab and Maths Studio ---------- */
+.studio-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:16px 0}
+.app .studio-card{display:flex;align-items:center;gap:14px;text-align:left;padding:16px 18px;border-radius:20px;min-height:92px;border:1px solid transparent;color:var(--bl-ink);box-shadow:var(--bl-shadow);transition:transform .15s ease,box-shadow .15s ease}
+.app .studio-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(42,58,106,.14);filter:none}
+.app .studio-card.science{background:linear-gradient(120deg,#dff5ea,#e3f0ff);border-color:#bfe5d2}
+.app .studio-card.maths{background:linear-gradient(120deg,#fff0cf,#ffe3df);border-color:#f2d9a4}
+.studio-card strong{display:block;font-size:18px;margin-bottom:2px}
+.studio-card small{display:block;color:var(--bl-muted);font-size:13.5px;line-height:1.45}
+.studio-card-icon{font-size:36px;flex:0 0 auto}
+.studio-card>span:last-child{margin-left:auto;font-size:20px;color:var(--bl-primary)}
+
+/* ---------- Shortcut and teaser buttons ---------- */
+.app .study-shortcuts{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.app .study-shortcuts :where(button,a){display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:8px 16px;border-radius:999px;background:#fff;border:1px solid var(--bl-line);color:var(--bl-ink);font-weight:700;text-decoration:none}
+.app .study-shortcuts :where(button,a):hover{background:var(--bl-primary-soft)}
+
+/* ---------- Floating calm-mode button: small and out of the way ---------- */
+.scene-tools{right:12px;bottom:12px}
+.scene-tools button{min-height:38px;padding:6px 12px;font-size:13px;box-shadow:0 2px 10px rgba(31,42,68,.12)}
+
+/* ---------- Small screens ---------- */
+@media (max-width:760px){
+ .app header{flex-wrap:wrap;padding:10px 14px}
+ .app .topactions{width:100%;justify-content:flex-start}
+ .app .connection{display:none}
+ .app nav.nav{margin:10px 10px 0;padding:10px;gap:8px}
+ .app .nav-group{width:100%;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+ .app .nav-title{flex:0 0 auto}
+ .app nav.nav .nav-group button{flex:0 0 auto;scroll-snap-align:start}
+ .app .hero{padding:20px 18px}
+ .app .hero-mascots{max-width:130px}
+ .studio-cards{margin:12px 0}
+}
+@media (prefers-reduced-motion:reduce){.app *{scroll-behavior:auto}}
+.app header .logo span{white-space:nowrap}
