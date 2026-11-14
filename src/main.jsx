@@ -38,6 +38,7 @@ import {ContinueLearning, LearningPaths, PracticeLab, ReviewQuestions} from './L
 import {PATHS, missedQuestions} from './learningPaths.js';
 import {DiscoveryActivity, DiscoveryLibrary} from './DiscoveryLearning.jsx';
 import {LessonNavigation, LearningMindMap, LessonQuickCheck, SubjectMindMap} from './InteractiveLearning.jsx';
+import MathsStudio from './MathsStudio.jsx';
 import AccountAccessPanel from './AccountAccessPanel.jsx';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
 
@@ -391,6 +392,7 @@ function App(){
   onRetry={(id,questionId)=>openLesson(id,{questionId})}/>}
  {page==='discovery'&&<DiscoveryLibrary availableLessons={boot?.lessons||[]} onOpen={openLesson}/>}
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<AccountAccessPanel request={authRequest}/>}
+ {page==='maths-studio'&&<MathsStudio lessons={LESSONS} initialYear={browseYear} school={browseSchool} onOpenLesson={openLesson}/>}
  {page==='arcade'&&<ActivityArcade/>}
  {page==='wordgame'&&<WordTilesGame/>}
  {page==='growth'&&<GrowthHub audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?id=>authRequest("getGrowthModule",id):null} checkAnswer={isLive?(lessonId,answerIndex)=>authRequest("checkGrowthAnswer",lessonId,answerIndex):null}/>}
@@ -402,7 +404,7 @@ function App(){
 
  {!isLive&&<ContinueLearning lastLesson={lastLesson} activities={currentProgress.activities.length} quizzes={currentProgress.quizzes.length}
   missed={missed.length} onOpen={openLesson} onReview={()=>setPage('review')} onPaths={()=>setPage('paths')}/>}
- <div className="study-shortcuts" aria-label="Learning shortcuts">
+ <div className="study-shortcuts" aria-label="Learning shortcuts"><button type="button" onClick={()=>setPage('maths-studio')}>🧮 Open Maths Studio</button>
   <a href="#study-library">📚 Browse the study library</a>
   <button type="button" onClick={()=>setPage('discovery')}>🧩 {say(uiLanguage,'discovery')}</button>
   {isLive&&<button type="button" onClick={()=>setPage('paths')}>Explore learning paths</button>}
