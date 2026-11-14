@@ -29,7 +29,8 @@ test('28 Arabic Hijaiyah letters each have unambiguous recognition options',()=>
 test('activity playground is directly navigable and uses touch-tracing module',()=>{
  const app=fs.readFileSync('src/main.jsx','utf8');
  const arcade=fs.readFileSync('src/ActivityArcade.jsx','utf8');
- assert.match(app,/aria-label="Activity Playground"/);
+ assert.match(app,/label=\{say\(uiLanguage,'arcade'\)\}/);
+ assert.match(fs.readFileSync('src/shellCopy.js','utf8'),/arcade:'Activity Playground'/);
  assert.match(app,/page==='arcade'&&<ActivityArcade/);
  assert.match(arcade,/DrawingPad/);
  assert.match(arcade,/aria-live="polite"/);

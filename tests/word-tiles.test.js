@@ -31,7 +31,8 @@ test('bot selects a valid unused word and difficulty influences strength',()=>{
 test('Word Tiles is accessible on home screen and navigation and no external AI key is needed',()=>{
  const code=fs.readFileSync('src/main.jsx','utf8'),game=fs.readFileSync('src/WordTilesGame.jsx','utf8');
  assert.match(code,/WordTilesGame/);
- assert.match(code,/Word Tiles vs Bot/);
+ assert.match(code,/label=\{say\(uiLanguage,'wordGame'\)\}/);
+ assert.match(fs.readFileSync('src/shellCopy.js','utf8'),/wordGame:'Word Tiles vs Bot'/);
  assert.match(game,/aria-label="Available letter tiles"/);
  assert.match(game,/word-bot-score/);
  assert.match(game,/checkTileWord/);

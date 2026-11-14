@@ -30,13 +30,15 @@ test('Junior hobby lessons include adult-supervised physical safety',()=>{
  assert.match(texts,/adult/);assert.match(texts,/safe/);
 });
 test('ProEase Studio trademark and both hubs are displayed, without registered-mark claim',()=>{
- const app=fs.readFileSync('src/main.jsx','utf8'),hub=fs.readFileSync('src/GrowthHub.jsx','utf8');
- assert.match(app,/ProEase Studio™/);
+ const app=fs.readFileSync('src/main.jsx','utf8'),copy=fs.readFileSync('src/shellCopy.js','utf8'),hub=fs.readFileSync('src/GrowthHub.jsx','utf8');
+ assert.match(copy,/ProEase Studio™/);
  assert.match(hub,/Junior Discovery Lab/);
  assert.match(hub,/Adult Learning Studio/);
- assert.match(app,/aria-label="Adults Page"/);
- assert.match(app,/aria-label="Learn AI"/);
- assert.match(app,/aria-label="Creative Hobbies"/);
+ // The navigation buttons are labelled by their visible, translated text.
+ assert.match(app,/label=\{say\(uiLanguage,'adults'\)\}/);
+ assert.match(app,/label=\{say\(uiLanguage,'learnAI'\)\}/);
+ assert.match(app,/label=\{say\(uiLanguage,'hobbies'\)\}/);
+ assert.match(copy,/adults:'Adults'/);assert.match(copy,/learnAI:'Learn AI'/);assert.match(copy,/hobbies:'Creative Hobbies'/);
  assert.ok(!app.includes('ProEase Studio®'));
 });
 test('PWA publishes immutable release metadata and checks foreground updates',()=>{

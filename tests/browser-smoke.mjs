@@ -28,7 +28,7 @@ try{
   await welcome.getByRole('button',{name:/English/i}).click();
   await welcome.getByRole('button',{name:/Continue/i}).click();
   if(width===375){
-    const motion=page.getByRole('button',{name:'Background animation',exact:true});
+    const motion=page.getByRole('button',{name:'Calm mode',exact:true});
     await motion.click();
     assert.equal(await motion.getAttribute('aria-pressed'),'false');
     assert.equal(await page.locator('.scene-cloud').first().evaluate(node=>getComputedStyle(node).animationName),'none');
@@ -46,8 +46,24 @@ try{
   }
 
   if(width===375){
-   await page.getByRole('button',{name:'🧮 Open Maths Studio',exact:true}).click();
+   await page.locator('nav.nav').getByRole('button',{name:'Maths Studio',exact:true}).click();
    const studio=page.locator('.maths-studio');
+   // The whiteboard is the default tab: draw, then let the guide check a wrong answer and a right one.
+   await studio.getByRole('button',{name:'Whiteboard'}).waitFor();
+   const board=studio.locator('canvas.wb-canvas');await board.scrollIntoViewIfNeeded();const box=await board.boundingBox();
+   await page.mouse.move(box.x+40,box.y+40);await page.mouse.down();await page.mouse.move(box.x+160,box.y+90,{steps:8});await page.mouse.up();
+   assert.ok(await board.evaluate(c=>c.getContext('2d').getImageData(0,0,c.width,c.height).data.some((v,i)=>i%4===3&&v>0)),'Whiteboard stroke was not drawn');
+   await studio.getByRole('button',{name:'Undo'}).click();
+   assert.ok(!(await board.evaluate(c=>c.getContext('2d').getImageData(0,0,c.width,c.height).data.some((v,i)=>i%4===3&&v>0))),'Undo did not clear the stroke');
+   const sum=(await studio.locator('.math-expr').innerText()).match(/(\d+)\s*([+\-×÷])\s*(\d+)/);
+   const [x,y]=[Number(sum[1]),Number(sum[3])],solution=sum[2]==='+'?x+y:sum[2]==='-'?x-y:sum[2]==='×'?x*y:x/y;
+   await studio.getByLabel('My answer').fill(String(solution+1));
+   await studio.getByRole('button',{name:'Check my work'}).click();
+   await studio.locator('.guide-bubble.oops').waitFor();
+   await studio.getByLabel('My answer').fill(String(solution));
+   await studio.getByRole('button',{name:'Check my work'}).click();
+   await studio.locator('.guide-bubble.good').waitFor();
+   await studio.getByRole('button',{name:'Practice quiz'}).click();
    const set=selectPractice(questionBank(LESSONS,1,'SK','Matematik'),5,'maths-studio-1-all-0');
    await studio.getByRole('button',{name:'Start maths practice',exact:true}).click();
    for(let i=0;i<set.length;i++){
@@ -66,25 +82,23 @@ try{
    await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
   }
   if(width===375){
-   await page.getByRole('button',{name:'🔬 Open Science Lab',exact:true}).click();
-   const lab=page.getByRole('region',{name:'Virtual Science Lab'});
-   await lab.getByRole('button',{name:'Run experiment',exact:true}).click();
-   await lab.getByRole('status').filter({hasText:'stays healthy'}).waitFor();
-   await lab.getByLabel('Enough water', {exact:true}).uncheck();
-   await lab.getByRole('button',{name:'Run experiment',exact:true}).click();
-   await lab.getByRole('status').filter({hasText:'wilts'}).waitFor();
-   await lab.getByLabel('Choose an experiment').selectOption('float');
-   await lab.getByLabel('Test object').selectOption('steel');
-   await lab.getByRole('button',{name:'Run experiment',exact:true}).click();
+   await page.locator('nav.nav').getByRole('button',{name:'Science Lab',exact:true}).click();
+   const lab=page.getByRole('region',{name:'Science Lab'});
+   // Plant sandbox: no water for two weeks, then a balanced setting.
+   await lab.locator('#water').fill('0');
+   await lab.locator('#time-machine').fill('12');
+   await lab.getByRole('status').filter({hasText:/drooping|died/}).waitFor();
+   await lab.getByRole('button',{name:'Sunny window'}).click();
+   await lab.locator('#time-machine').fill('12');
+   await lab.getByRole('status').filter({hasText:'strong, green'}).waitFor();
+   await lab.getByRole('button',{name:'Float or sink'}).click();
+   await lab.getByRole('button',{name:/Steel ball/}).click();
+   await lab.getByRole('button',{name:/Drop it in/}).click();
    await lab.getByRole('status').filter({hasText:'sinks'}).waitFor();
-   await lab.getByLabel('Choose an experiment').selectOption('circuit');
-   await lab.getByRole('button',{name:'Run experiment',exact:true}).click();
-   await lab.getByRole('status').filter({hasText:'stays off'}).waitFor();
-   await lab.getByLabel('Switch closed', {exact:true}).check();
-   await lab.getByRole('button',{name:'Run experiment',exact:true}).click();
-   await lab.getByRole('status').filter({hasText:'bulb lights'}).waitFor();
-   await lab.getByRole('button',{name:'Reset experiment',exact:true}).click();
-   assert.equal(await lab.getByLabel('Switch closed',{exact:true}).isChecked(),false);
+   await lab.getByRole('button',{name:'Light the bulb'}).click();
+   await lab.getByRole('status').filter({hasText:'bulb is off'}).waitFor();
+   await lab.getByRole('button',{name:/Switch closed/}).click();
+   await lab.getByRole('status').filter({hasText:'bulb is on'}).waitFor();
    await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
   }
   await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
