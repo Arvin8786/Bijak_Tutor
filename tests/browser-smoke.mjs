@@ -45,6 +45,26 @@ try{
     assert.equal(await page.locator('.playful-scene').getAttribute('aria-hidden'),'true');
   }
 
+  if(width===375){
+   await page.getByRole('button',{name:'🧮 Open Maths Studio',exact:true}).click();
+   const studio=page.locator('.maths-studio');
+   const set=selectPractice(questionBank(LESSONS,1,'SK','Matematik'),5,'maths-studio-1-all-0');
+   await studio.getByRole('button',{name:'Start maths practice',exact:true}).click();
+   for(let i=0;i<set.length;i++){
+    const question=set[i];
+    await studio.getByRole('heading',{name:question.text,exact:true}).waitFor();
+    if(question.options?.length)await studio.getByRole('button',{name:String(question.answer),exact:true}).click();
+    else await studio.getByLabel('Your maths answer').fill(String(question.answer));
+    await studio.getByRole('button',{name:'Check maths answer',exact:true}).click();
+    await studio.getByRole('status').filter({hasText:'Correct'}).waitFor();
+    await studio.getByRole('button',{name:i===set.length-1?'Finish maths session':'Next maths question',exact:true}).click();
+   }
+   await studio.getByRole('heading',{name:'Session complete 🎉',exact:true}).waitFor();
+   await studio.getByRole('button',{name:'Choose another topic',exact:true}).click();
+   await studio.getByRole('button',{name:'Session history (1)',exact:true}).click();
+   await studio.getByText(/5\/5/).waitFor();
+   await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
+  }
   await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   assert.equal(await page.getByRole('button',{name:/Explore local demo/i}).count(),0,'Public showcase must not show demo gate');
   const pair=page.locator('.home-mascot-band');
