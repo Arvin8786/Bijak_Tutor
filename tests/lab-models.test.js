@@ -70,3 +70,61 @@ test('every discovery goal can be reached',()=>{
  for(const g of DISCOVERY_GOALS.filter(g=>g.startsWith('plant:')))assert.ok(reachable.has(g),g);
  for(const g of DISCOVERY_GOALS.filter(g=>g.startsWith('float:'))){const [,o,l]=g.split(':');assert.ok(floatResult(o,l))}
 });
+
+import {sunElevation,shadowLength,shadowKind,magnetResult,MAGNET_ITEMS,simulatePuddle,puddleKind,rampResult,SURFACES,SHADOW_OBJECTS} from '../src/labModels.js';
+
+test('shadows are longest early and late, shortest at midday, and taller objects cast longer shadows',()=>{
+ assert.ok(sunElevation(12)>sunElevation(9)&&sunElevation(9)>sunElevation(7));
+ assert.ok(sunElevation(9)===sunElevation(15));
+ assert.ok(shadowLength(100,sunElevation(8))>shadowLength(100,sunElevation(10)));
+ assert.ok(shadowLength(100,sunElevation(10))>shadowLength(100,sunElevation(12)));
+ assert.ok(shadowLength(120,30)>shadowLength(60,30));
+ assert.equal(shadowLength(100,45),100);
+ assert.equal(shadowKind(7),'long');assert.equal(shadowKind(12),'short');assert.equal(shadowKind(9),'medium');
+ assert.ok(Object.values(SHADOW_OBJECTS).every(o=>o.height>0));
+});
+test('magnets pull only magnetic things, only when close, and pass through paper or glass',()=>{
+ for(const id of Object.keys(MAGNET_ITEMS)){
+  const near=magnetResult(id,10);
+  assert.equal(near.code,MAGNET_ITEMS[id].magnetic?'attract':'ignore',id);
+ }
+ assert.equal(magnetResult('nail',90).code,'far');
+ assert.ok(magnetResult('nail',10).pull>magnetResult('nail',50).pull);
+ assert.equal(magnetResult('nail',20,'paper').through,true);
+ assert.equal(magnetResult('nail',20,'paper').code,'attract');
+ assert.equal(magnetResult('nail',20).through,false);
+ assert.equal(magnetResult('foil',5,'glass').code,'ignore');
+ assert.equal(magnetResult('nope',5),null);assert.equal(magnetResult('nail',5,'lead'),null);
+});
+test('puddles dry faster when hot and windy, and barely at all under a lid',()=>{
+ const left=(o)=>simulatePuddle(o).at(-1);
+ assert.ok(left({temp:35,wind:60,covered:false})<left({temp:20,wind:20,covered:false}));
+ assert.ok(left({temp:20,wind:20,covered:false})<left({temp:10,wind:0,covered:false}));
+ assert.equal(left({temp:35,wind:60,covered:false}),0);
+ assert.ok(left({temp:35,wind:60,covered:true})>=70);
+ const line=simulatePuddle({temp:30,wind:30,covered:false});
+ assert.ok(line.every((v,i)=>i===0||v<=line[i-1])&&line.every(v=>v>=0&&v<=100));
+ assert.equal(puddleKind(100,false,0),'start');assert.equal(puddleKind(0,false,9),'dry');assert.equal(puddleKind(80,true,12),'covered');
+ assert.equal(puddleKind(30,false,8),'most');assert.equal(puddleKind(70,false,4),'slow');
+});
+test('a car on a ramp gets stuck on rough surfaces and slides far on ice',()=>{
+ assert.equal(rampResult(10,'wood').kind,'stuck');
+ assert.equal(rampResult(10,'wood').moves,false);
+ assert.equal(rampResult(30,'ice').kind,'far');
+ assert.ok(rampResult(30,'wood').distance>0&&rampResult(30,'wood').distance<rampResult(30,'ice').distance);
+ assert.ok(rampResult(45,'carpet').distance<rampResult(45,'ice').distance);
+ assert.ok(rampResult(40,'wood').distance>rampResult(25,'wood').distance);
+ assert.ok(rampResult(80,'ice').distance<=10);
+ assert.equal(rampResult(30,'lava'),null);
+ assert.ok(Object.values(SURFACES).every(s=>s.mu>0));
+});
+test('every new discovery goal is reachable',()=>{
+ const reach=new Set();
+ for(let h=7;h<=17;h++){const k=shadowKind(h);if(k!=='medium')reach.add('shadow:'+k)}
+ for(const id of Object.keys(MAGNET_ITEMS)){const r=magnetResult(id,10,'paper');if(r.code==='attract'){reach.add('magnet:attract');if(r.through)reach.add('magnet:through')}else reach.add('magnet:ignore')}
+ if(simulatePuddle({temp:35,wind:60,covered:false}).at(-1)===0)reach.add('puddle:dry');
+ if(puddleKind(simulatePuddle({temp:35,wind:60,covered:true}).at(-1),true,12)==='covered')reach.add('puddle:covered');
+ if(rampResult(10,'wood').kind==='stuck')reach.add('ramp:stuck');
+ if(rampResult(30,'ice').kind==='far')reach.add('ramp:far');
+ for(const g of DISCOVERY_GOALS.filter(g=>/^(shadow|magnet|puddle|ramp):/.test(g)))assert.ok(reach.has(g),g);
+});

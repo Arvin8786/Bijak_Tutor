@@ -96,9 +96,79 @@ export function circuitResult({battery,wire,closed}){
  return {lit:true,reason:'ok'};
 }
 
+/* ---------- Shadows ---------- */
+export const SHADOW_OBJECTS={tree:{height:120,icon:'🌳'},child:{height:60,icon:'🧒'},pole:{height:100,icon:'🚩'}};
+// Sun height above the horizon (degrees) for an hour of the day, 7 to 17. Highest at midday.
+export function sunElevation(hour){
+ const h=Math.min(17,Math.max(7,hour));
+ return Math.max(8,Math.round(90*Math.sin(Math.PI*(h-7)/10)*10)/10);
+}
+// Shadow length is height / tan(elevation): a low Sun gives a long shadow.
+export function shadowLength(height,elevation){
+ const e=Math.min(90,Math.max(5,elevation));
+ return Math.round(height/Math.tan(e*Math.PI/180)*10)/10;
+}
+export function shadowKind(hour){
+ const e=sunElevation(hour);
+ return e<30?'long':e>65?'short':'medium';
+}
+
+/* ---------- Magnets ---------- */
+export const MAGNET_ITEMS={
+ nail:{magnetic:true,icon:'📍'},clip:{magnetic:true,icon:'📎'},cap:{magnetic:true,icon:'🍾'},
+ foil:{magnetic:false,icon:'🥫'},ruler:{magnetic:false,icon:'📏'},wood:{magnetic:false,icon:'🪵'},wire:{magnetic:false,icon:'➰'}
+};
+export const MAGNET_BARRIERS=['none','paper','glass'];
+export const MAGNET_RANGE=60; // closer than this (units) and a magnetic object feels the pull
+// Non-magnetic barriers do not block the pull: only distance matters.
+export function magnetResult(itemId,distance,barrier='none'){
+ const item=MAGNET_ITEMS[itemId];
+ if(!item||!MAGNET_BARRIERS.includes(barrier))return null;
+ const d=Math.min(100,Math.max(0,distance));
+ if(!item.magnetic)return {code:'ignore',pull:0};
+ if(d>MAGNET_RANGE)return {code:'far',pull:0};
+ return {code:'attract',pull:Math.round((1-d/MAGNET_RANGE)*100)/100,through:barrier!=='none'};
+}
+
+/* ---------- Drying puddle (evaporation) ---------- */
+export const PUDDLE_HOURS=12;
+export function puddleStep(left,{temp,wind,covered}){
+ const rate=(1.5+(temp-10)*0.25+wind*0.04)*(covered?0.08:1);
+ return Math.max(0,left-rate);
+}
+export function simulatePuddle({temp,wind,covered},hours=PUDDLE_HOURS){
+ const line=[100];
+ for(let i=0;i<hours;i++)line.push(puddleStep(line[i],{temp,wind,covered}));
+ return line;
+}
+export function puddleKind(left,covered,hour){
+ if(hour===0)return 'start';
+ if(covered&&left>=70)return 'covered';
+ if(left<=0)return 'dry';
+ if(left<=40)return 'most';
+ return 'slow';
+}
+
+/* ---------- Ramp and friction ---------- */
+export const SURFACES={carpet:{mu:0.6,color:'#b5654a'},wood:{mu:0.3,color:'#c8a165'},ice:{mu:0.04,color:'#cdeeff'}};
+export const MAX_RAMP_DISTANCE=10;
+// A car released from the top of a 1 m ramp: it moves only if the slope beats friction, then rolls on the flat until friction stops it.
+export function rampResult(slopeDeg,surfaceId){
+ const surface=SURFACES[surfaceId];
+ if(!surface)return null;
+ const a=slopeDeg*Math.PI/180,mu=surface.mu,drive=Math.sin(a)-mu*Math.cos(a);
+ if(drive<=0)return {moves:false,distance:0,kind:'stuck'};
+ const distance=Math.min(MAX_RAMP_DISTANCE,Math.round(drive/mu*10)/10);
+ return {moves:true,distance,kind:distance>=5?'far':'near'};
+}
+
 /* ---------- Discoveries (collect them all) ---------- */
 export const DISCOVERY_GOALS=[
  'plant:thriving','plant:wilting','plant:pale_leggy','plant:rotting','plant:scorched',
  'float:ice:fresh','float:egg:fresh','float:egg:salty','float:steel:syrup',
- 'circuit:ok','circuit:switch_open','circuit:no_battery'
+ 'circuit:ok','circuit:switch_open','circuit:no_battery',
+ 'shadow:long','shadow:short',
+ 'magnet:attract','magnet:ignore','magnet:through',
+ 'puddle:dry','puddle:covered',
+ 'ramp:stuck','ramp:far'
 ];

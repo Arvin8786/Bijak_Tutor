@@ -156,3 +156,74 @@ export function workedSteps(problem){
 }
 
 export function starsFor(hintsUsed){return hintsUsed<=0?3:hintsUsed===1?2:1}
+
+/* ---------- Challenge rounds, blocks and facts ---------- */
+// Every third right answer in a row (earned with few hints) unlocks a one-year-harder bonus problem.
+export const isBonusRound=combo=>combo>0&&combo%3===0;
+export const bonusYear=year=>Math.min(6,year+1);
+export function blocksFor(n){
+ const v=Math.max(0,Math.floor(n));
+ if(v>999)return null;
+ return {hundreds:Math.floor(v/100),tens:Math.floor(v/10)%10,ones:v%10};
+}
+export const canShowBlocks=problem=>(problem.op==='+'||problem.op==='-')&&problem.a<=999&&problem.b<=999&&(problem.op==='+'?problem.a+problem.b<=999:true);
+export const FACT_KEYS=['fact1','fact2','fact3','fact4','fact5','fact6','fact7','fact8'];
+export const factFor=seed=>FACT_KEYS[Math.abs(Math.floor(seed))%FACT_KEYS.length];
+
+/* ---------- Number detective: riddles with exactly one answer ---------- */
+const digitSum=n=>String(n).split('').reduce((t,d)=>t+Number(d),0);
+export function clueHolds(clue,n){
+ const {code,params:p}=clue;
+ switch(code){
+  case 'even':return n%2===0;
+  case 'odd':return n%2===1;
+  case 'digitSum':return digitSum(n)===p.n;
+  case 'hundredsDigit':return Math.floor(n/100)%10===p.n;
+  case 'tensDigit':return Math.floor(n/10)%10===p.n;
+  case 'onesDigit':return n%10===p.n;
+  case 'multipleOf':return n%p.n===0;
+  case 'greaterThan':return n>p.n;
+  case 'lessThan':return n<p.n;
+  default:return false;
+ }
+}
+export const riddleRange=year=>year<=1?[1,20]:year<=3?[10,99]:[100,999];
+export function makeRiddle(year,seed){
+ const y=Math.min(6,Math.max(1,Math.round(year)||1)),[lo,hi]=riddleRange(y);
+ const random=seededRandom(Math.imul(seed|0,2654435761)+y*7919);
+ const secret=between(random,lo,hi);
+ const all=[];for(let n=lo;n<=hi;n++)all.push(n);
+ const pool=[
+  {code:secret%2===0?'even':'odd',params:{}},
+  ...(secret>=10?[{code:'digitSum',params:{n:digitSum(secret)}}]:[]),
+  ...[2,3,5,7,9].filter(k=>secret%k===0&&k<secret).map(k=>({code:'multipleOf',params:{n:k}})),
+  {code:'greaterThan',params:{n:Math.max(lo-1,secret-between(random,2,Math.max(3,Math.floor((hi-lo)/4))))}},
+  {code:'lessThan',params:{n:secret+between(random,2,Math.max(3,Math.floor((hi-lo)/4)))}},
+ ];
+ // shuffle, then keep each clue that narrows the field
+ for(let i=pool.length-1;i>0;i--){const j=between(random,0,i);[pool[i],pool[j]]=[pool[j],pool[i]]}
+ let left=all,clues=[];
+ for(const clue of pool){
+  const next=left.filter(n=>clueHolds(clue,n));
+  if(next.length<left.length){clues.push(clue);left=next}
+  if(left.length===1)break;
+ }
+ // Finish with exact digits if the field is still open, so there is always exactly one answer.
+ const exact=[
+  ...(hi>=100?[{code:'hundredsDigit',params:{n:Math.floor(secret/100)%10}}]:[]),
+  ...(hi>=10?[{code:'tensDigit',params:{n:Math.floor(secret/10)%10}}]:[]),
+  {code:'onesDigit',params:{n:secret%10}}
+ ];
+ for(const clue of exact){
+  if(left.length===1)break;
+  const next=left.filter(n=>clueHolds(clue,n));
+  if(next.length<left.length){clues.push(clue);left=next}
+ }
+ // Drop any clue that is not needed, so the puzzle stays short.
+ for(let i=clues.length-1;i>=0;i--){
+  const rest=clues.filter((_,k)=>k!==i);
+  if(rest.length&&all.filter(n=>rest.every(c=>clueHolds(c,n))).length===1)clues=rest;
+ }
+ return {id:y+'-'+seed,year:y,secret,clues};
+}
+export const riddleStars=cluesShown=>cluesShown<=2?3:cluesShown<=3?2:1;
