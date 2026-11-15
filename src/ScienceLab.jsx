@@ -1,6 +1,7 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {say} from './localization.js';
 import {recordActivity} from './dailyStreak.js';
+import {ShadowLab,MagnetLab,PuddleLab,RampLab} from './LabExtras.jsx';
 import {MAX_DAYS,simulatePlant,blendPlants,diagnosePlant,OBJECTS,LIQUIDS,floatResult,circuitResult,DISCOVERY_GOALS} from './labModels.js';
 
 const STORE='bijaklearn:lab-discoveries:v1';
@@ -220,7 +221,7 @@ export default function ScienceLab({language='ms'}){
   setFound(next);saveFound(next);recordActivity(1);setFlash(key);
  };
  useEffect(()=>{if(!flash)return;const id=setTimeout(()=>setFlash(''),3500);return()=>clearTimeout(id)},[flash]);
- const tabs=[['plant','🌱','expPlant'],['float','🛟','expFloat'],['circuit','💡','expCircuit']];
+ const tabs=[['plant','🌱','expPlant'],['float','🛟','expFloat'],['circuit','💡','expCircuit'],['shadow','🌳','expShadow'],['magnet','🧲','expMagnet'],['puddle','💧','expPuddle'],['ramp','🚗','expRamp']];
  return <section className="panel science-lab" aria-label={t('science')}>
   <div className="studio-head"><div><h1><span aria-hidden="true">🔬</span> {t('sciTitle')}</h1><p>{t('sciIntro')}</p></div>
    <div className="discovery-count" aria-live="polite"><strong>🏅 {t('discoveryCount',{n:found.length,total:DISCOVERY_GOALS.length})}</strong>{flash&&<span className="discovery-new">✨ {t('discoveryNew')} {t('dn_'+flash)}</span>}</div>
@@ -229,6 +230,10 @@ export default function ScienceLab({language='ms'}){
   {kind==='plant'&&<PlantLab language={language} found={found} discover={discover}/>}
   {kind==='float'&&<FloatLab language={language} discover={discover}/>}
   {kind==='circuit'&&<CircuitLab language={language} discover={discover}/>}
+  {kind==='shadow'&&<ShadowLab language={language} discover={discover}/>}
+  {kind==='magnet'&&<MagnetLab language={language} discover={discover}/>}
+  {kind==='puddle'&&<PuddleLab language={language} discover={discover}/>}
+  {kind==='ramp'&&<RampLab language={language} discover={discover}/>}
   <details className="discovery-list"><summary>{t('discoveries')} · {t('discoveryCount',{n:found.length,total:DISCOVERY_GOALS.length})}</summary>
    <ul>{DISCOVERY_GOALS.map(k=><li key={k} className={found.includes(k)?'got':''}><span aria-hidden="true">{found.includes(k)?'✅':'🔒'}</span> {found.includes(k)?t('dn_'+k):'???'}</li>)}</ul>
   </details>

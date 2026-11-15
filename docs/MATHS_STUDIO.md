@@ -11,3 +11,11 @@ Correct answers earn 1–3 stars (fewer hints, more stars) that feed the daily s
 No code, questions, branding or assets were copied from BijakMath; its public site informed feature selection only. Topic filters are discovery aids, not official syllabus mappings.
 
 Open-ended AI help would need a server-side proxy so no API key is shipped in the public site. Until that exists, the guide above is the safe default.
+
+## Curiosity features
+
+- **Whiteboard tools**: pen, eraser, Type (the guide reads typed lines and checks the arithmetic as you go), line, box, circle, star/tick/question/idea stamps, plain, grid, lined and place-value paper.
+- **Number detective**: riddles that always have exactly one answer; fewer clues earn more stars.
+- **Show with blocks**: hundreds, tens and ones blocks for additions and subtractions up to 999.
+- **Combo and challenge rounds**: three clean answers in a row unlock a one-year-harder round with double stars.
+- **Did you know?**: a maths fact appears after each solved problem.

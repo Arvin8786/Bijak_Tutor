@@ -102,3 +102,46 @@ html[data-motion=off] .sun-rays,html[data-motion=off] .drip,html[data-motion=off
 .wb-canvas.erasing{cursor:cell}
 
 @media (max-width:900px){.lab-grid,.math-layout{grid-template-columns:minmax(0,1fr)}.discovery-count{align-items:flex-start}.wb-paper{margin-left:0}}
+
+/* ---- Whiteboard extras ---- */
+.wb-stage.paper-columns{background-image:linear-gradient(90deg,transparent 24.8%,#9db4ee 25%,transparent 25.2%,transparent 49.8%,#9db4ee 50%,transparent 50.2%,transparent 74.8%,#9db4ee 75%,transparent 75.2%),linear-gradient(#e6ebf7 1px,transparent 1px);background-size:100% 100%,100% 11.5%}
+.wb-columns{position:absolute;inset:0 0 auto 0;display:grid;grid-template-columns:repeat(4,1fr);pointer-events:none;z-index:1;text-align:center;font-weight:800;color:#5b6fb5;background:linear-gradient(#eef2ff,rgba(238,242,255,0));padding:6px 0 14px}
+.wb-stamp{font-size:1.15rem;min-width:40px}
+/* ---- Maths extras ---- */
+.combo-chip,.bonus-tag{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .7rem;border-radius:999px;font-weight:800;font-size:.9rem}
+.combo-chip{background:#fff1d6;color:#9a4d00}
+.bonus-tag{background:linear-gradient(90deg,#7c3aed,#2563eb);color:#fff;animation:pop .5s ease}
+.blocks-toggle{margin-top:.6rem}
+.blocks{background:#f4f7ff;border:2px dashed #b8c6f0;border-radius:16px;padding:.7rem;margin-top:.6rem}
+.blk-row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:flex-end;min-height:44px;margin:.3rem 0}
+.blk-group{display:inline-flex;flex-wrap:wrap;gap:3px;align-items:flex-end}
+.blk-group i{display:block;border-radius:4px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18),0 1px 2px rgba(0,0,0,.2)}
+.blk-h i{width:40px;height:40px;background:linear-gradient(135deg,#7c9cff,#3b5bdb)}
+.blk-t i{width:12px;height:40px;background:linear-gradient(135deg,#7ee0a1,#2f9e5b)}
+.blk-o i{width:12px;height:12px;background:linear-gradient(135deg,#ffd166,#f08c00)}
+.fact-card{background:linear-gradient(135deg,#fff8e1,#ffe9b8);border-radius:14px;padding:.6rem .9rem;margin-top:.6rem;color:#4a3300}
+.fact-card p{margin:.2rem 0 0}
+.detective{display:grid;gap:.7rem;max-width:720px}
+.clue-list{list-style:none;padding:0;display:grid;gap:.5rem}
+.clue-list li{background:#fff;border:2px solid #d7def5;border-left:8px solid #7c3aed;border-radius:12px;padding:.6rem .8rem;font-size:1.1rem;animation:pop .4s ease}
+.clue-n{font-weight:800;color:#7c3aed;margin-right:.4rem}
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:60}
+.confetti i{position:absolute;top:-12px;width:10px;height:16px;border-radius:2px;animation:confetti-fall 1.6s ease-in forwards}
+@keyframes confetti-fall{to{transform:translate(var(--dx),105vh) rotate(720deg);opacity:.9}}
+html[data-motion=off] .confetti{display:none}
+/* ---- Lab scene animations ---- */
+.cloud-drift{animation:drift 18s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translateX(26px)}}
+.wind-line{stroke-dasharray:120;animation:wind 2.2s linear infinite}
+@keyframes wind{from{stroke-dashoffset:120}to{stroke-dashoffset:-120}}
+.vapour{animation:rise 2s ease-in infinite}
+@keyframes rise{from{transform:translateY(0);opacity:.7}to{transform:translateY(-70px);opacity:0}}
+.jiggle{animation:jig .3s ease 3}
+@keyframes jig{50%{transform:translateX(3px)}}
+.lab-observation.bad{border-color:#e8a0a0}
+.toggle-list{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
+.lab-time{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap}
+.lab-time .lab-slider{flex:1;min-width:200px}
+html[data-motion=off] .cloud-drift,html[data-motion=off] .wind-line,html[data-motion=off] .vapour,html[data-motion=off] .jiggle{animation:none}
+@media (prefers-reduced-motion:reduce){.cloud-drift,.wind-line,.vapour,.jiggle,.confetti i{animation:none}}
+.wb-typing{position:absolute;z-index:3;transform:translateY(-50%);min-width:220px;font:700 22px system-ui,sans-serif;padding:4px 8px;border:2px solid #2563eb;border-radius:8px;background:#fff}

@@ -61,3 +61,37 @@ test('worked steps agree with the answer',()=>{
  assert.equal(workedSteps({a:84,b:4,op:'÷',answer:21}).length,2);
 });
 test('fewer hints earn more stars',()=>{assert.deepEqual([0,1,2,3].map(starsFor),[3,2,1,1])});
+
+import {makeRiddle,clueHolds,riddleRange,riddleStars,isBonusRound,bonusYear,blocksFor,canShowBlocks,factFor,FACT_KEYS} from '../src/mathGuide.js';
+
+test('every number-detective riddle has exactly one answer and stays inside the year range',()=>{
+ for(let year=1;year<=6;year++)for(let seed=1;seed<=120;seed++){
+  const r=makeRiddle(year,seed),[lo,hi]=riddleRange(year);
+  assert.deepEqual(r,makeRiddle(year,seed));
+  assert.ok(r.secret>=lo&&r.secret<=hi);
+  assert.ok(r.clues.length>=1&&r.clues.length<=5,year+':'+seed+' clues '+r.clues.length);
+  const matches=[];for(let n=lo;n<=hi;n++)if(r.clues.every(c=>clueHolds(c,n)))matches.push(n);
+  assert.deepEqual(matches,[r.secret],year+':'+seed);
+ }
+});
+test('riddles vary and fewer clues earn more stars',()=>{
+ assert.ok(new Set(Array.from({length:40},(_,i)=>makeRiddle(3,i+1).secret)).size>=25);
+ assert.deepEqual([1,2,3,4,6].map(riddleStars),[3,3,2,1,1]);
+});
+test('challenge rounds come every third correct answer and are one year harder, up to Year 6',()=>{
+ assert.deepEqual([0,1,2,3,4,5,6].map(isBonusRound),[false,false,false,true,false,false,true]);
+ assert.equal(bonusYear(3),4);assert.equal(bonusYear(6),6);
+});
+test('base-ten blocks match the number and are offered only where they make sense',()=>{
+ assert.deepEqual(blocksFor(347),{hundreds:3,tens:4,ones:7});
+ assert.deepEqual(blocksFor(5),{hundreds:0,tens:0,ones:5});
+ assert.equal(blocksFor(1200),null);
+ assert.equal(canShowBlocks({op:'+',a:47,b:38}),true);
+ assert.equal(canShowBlocks({op:'+',a:600,b:500}),false);
+ assert.equal(canShowBlocks({op:'×',a:4,b:5}),false);
+ assert.equal(canShowBlocks({op:'-',a:520,b:270}),true);
+});
+test('"Did you know?" facts rotate through all eight',()=>{
+ assert.equal(new Set(Array.from({length:8},(_,i)=>factFor(i))).size,8);
+ assert.ok(FACT_KEYS.includes(factFor(-3)));
+});

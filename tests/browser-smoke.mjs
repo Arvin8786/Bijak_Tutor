@@ -63,6 +63,10 @@ try{
    await studio.getByLabel('My answer').fill(String(solution));
    await studio.getByRole('button',{name:'Check my work'}).click();
    await studio.locator('.guide-bubble.good').waitFor();
+   await studio.getByRole('button',{name:'Number detective'}).click();
+   await studio.getByRole('button',{name:'Another clue'}).click();
+   await studio.locator('.clue-list li').nth(1).waitFor();
+   await studio.getByRole('button',{name:'Whiteboard'}).click();
    await studio.getByRole('button',{name:'Practice quiz'}).click();
    const set=selectPractice(questionBank(LESSONS,1,'SK','Matematik'),5,'maths-studio-1-all-0');
    await studio.getByRole('button',{name:'Start maths practice',exact:true}).click();
@@ -99,6 +103,11 @@ try{
    await lab.getByRole('status').filter({hasText:'bulb is off'}).waitFor();
    await lab.getByRole('button',{name:/Switch closed/}).click();
    await lab.getByRole('status').filter({hasText:'bulb is on'}).waitFor();
+   await lab.getByRole('button',{name:'Magnets'}).click();
+   await lab.getByRole('status').filter({hasText:'too far away'}).waitFor();
+   await lab.getByRole('button',{name:'Ramp race'}).click();
+   await lab.getByRole('button',{name:/Let it go/}).click();
+   await lab.getByRole('status').filter({hasText:'The car'}).waitFor({timeout:6000});
    await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
   }
   await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
@@ -469,7 +478,7 @@ try{
     for(const piece of [1,2,2,4,3,4]) await arcade.getByRole('button',{name:`Piece ${piece}`,exact:true}).click();
     await arcade.locator('.extra-note').filter({hasText:'Picture complete'}).waitFor();
     assert.match(await arcade.locator('.arcade-meta').textContent(),/stars earned/);
-    await page.locator('nav.nav').getByRole('button',{name:'Word Tiles vs Bot'}).click();
+    await page.locator('nav.nav').getByRole('button',{name:'Word Tiles vs Bot',exact:true}).click();
     await page.locator('.word-bot-game').waitFor();
     const rack=page.locator('.word-bot-rack button');
     assert.equal(await rack.count(),6,'Word tile rack missing');
@@ -479,7 +488,7 @@ try{
     await page.getByRole('button',{name:/Play word/i}).click();
     await page.locator('.word-bot-plays').waitFor();
     assert.ok(await page.locator('.word-bot-plays>div').count()>=1);
-    await page.locator('nav.nav').getByRole('button',{name:'Adults'}).click();
+    await page.locator('nav.nav').getByRole('button',{name:'Adults',exact:true}).click();
     await page.getByRole('heading',{name:'Adult Learning Studio'}).waitFor();
     assert.equal(await page.locator('.growth-lessons button').count(),6,'Adult Learn AI topics missing');
     await page.locator('.growth-answers button').first().click();
