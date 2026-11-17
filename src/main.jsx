@@ -1,3 +1,5 @@
+import {ACCOUNT_URL,GOOGLE_CLIENT_ID,remoteAccountCall} from './accountTransport.js';
+import {RolePortals,StudentUsage} from './RolePortals.jsx';
 import OAuthLogin from './OAuthLogin.jsx';
 import React,{useCallback,useEffect,useRef,useState} from 'react';
 import {TRACK_CONSENT,trackingEnabled,setTrackingEnabled,readUsage,wipeUsage,recordUsage,summariseUsage,IDLE_LIMIT_MS,MAX_TICK_MS} from './learningTime.js';
@@ -61,8 +63,10 @@ function LessonSearch({query, onChange, count}) {
   <span role="status">{count} {count===1?'lesson':'lessons'} shown</span>
  </div>;
 }
-const isLive=!!window.google?.script?.run;
+const nativeAccountService=!!window.google?.script?.run;
+const portalV2=!nativeAccountService||window.BIJAKLEARN_PORTAL_VERSION===2;
 const demoEnabled=import.meta.env.DEV||import.meta.env.VITE_ENABLE_DEMO==='true';
+const isLive=nativeAccountService||(!demoEnabled&&/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(ACCOUNT_URL));
 const langLabels={ms:'Bahasa Melayu',en:'English',ta:'தமிழ்',zh:'中文'};
 const DEMO_SAVE_CONSENT='bijaklearn:demo-save-consent';
 const savedDemo=()=>{try{return localStorage.getItem(DEMO_SAVE_CONSENT)==='yes'}catch{return false}};
@@ -80,7 +84,7 @@ async function localCall(method,args){
  if(method==='getParentReport'){if(args[2]!==mockPin)throw Error('Incorrect parent PIN');const childId=args[1];const skills=Object.entries(mockAttempts).filter(([k])=>k.startsWith(childId+'/'));const attempts=skills.flatMap(([,s])=>s.attempts);return {attempts:attempts.length,errors:attempts.filter(a=>!a.correct).length,independent:attempts.filter(a=>a.correct&&!a.hints&&a.mode!=='choice').length,mastered:skills.filter(([,s])=>evaluateSkill(s).mastered).length,topics:skills.map(([k,s])=>({lessonId:k.split('/')[1],...evaluateSkill(s)})),recent:attempts.slice(-20)};}
  throw Error('Unsupported demo operation: '+method)
 }
-function api(method,...args){if(!isLive)return localCall(method,args);return new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));}
+function api(method,...args){if(!isLive)return localCall(method,args);if(!nativeAccountService)return remoteAccountCall(method,...args);return new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));}
 function accountNotice(error) {
  if(error.message.includes('[STUDENT_NOT_LINKED]'))return 'Your Google account is not linked to a learner profile. Ask your parent or administrator to enable student sign-in.';
  if(error.message.includes('[STUDENT_REVOKED]'))return 'Student sign-in is unavailable. Ask your parent or administrator to check your profile link.';
@@ -96,14 +100,14 @@ function GoogleLogin({onToken,notice}){
  const modeRef=useRef(initialRole);
  const chooseRole=role=>{modeRef.current=role;setLoginRole(role)};
  const admin=loginRole==='admin',student=loginRole==='student';
- const accountUrl=import.meta.env.VITE_ACCOUNT_APP_URL||'';
+ const accountUrl=import.meta.env.VITE_ACCOUNT_APP_URL||ACCOUNT_URL;
  const validAccountUrl=/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(accountUrl);
  useEffect(()=>{
   if(!isLive||window.location.hostname.endsWith('-script.googleusercontent.com'))return;
-  if(!window.BIJAKLEARN_GOOGLE_CLIENT_ID){setIssue('Google sign-in is not configured. Ask the administrator to set the OAuth Web client ID in Apps Script.');return;}
+  if(!(window.BIJAKLEARN_GOOGLE_CLIENT_ID||GOOGLE_CLIENT_ID)){setIssue('Google sign-in is not configured. Ask the administrator to set the OAuth Web client ID in Apps Script.');return;}
   let tries=0;
   const timer=setInterval(()=>{
-   const id=window.BIJAKLEARN_GOOGLE_CLIENT_ID;
+   const id=window.BIJAKLEARN_GOOGLE_CLIENT_ID||GOOGLE_CLIENT_ID;
    if(window.google?.accounts?.id&&id){
     clearInterval(timer);
     try{
@@ -129,7 +133,7 @@ function GoogleLogin({onToken,notice}){
    </div>
    <h2>{admin?'Administrator sign-in':student?'Student sign-in':'Welcome back'}</h2>
    <p>{admin?'Sign in with the administrator Google account to review requests and manage access.':student?'Use your own Google account linked by your administrator to your learner profile.':'Sign in with Google to request access or continue learning with an approved account.'}</p>
-   {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin"/>}</>:validAccountUrl?<a className="primary account-signin-link" href={accountUrl+'?role='+loginRole}>Continue with Google →</a>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your administrator for the private learning app link.</p>}
+   {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin"/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your administrator for the private learning app link.</p>}
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
    <p className="signin-note">{admin?'Administrator permissions are verified by the server after sign-in.':student?'Your parent or administrator must enable your student account first. Use a separate account from your parent.':'New accounts require administrator approval. If access is pending, return after your administrator approves your request.'}</p>
@@ -153,7 +157,7 @@ function PwaControls({language='ms'}){
   const release=__BIJAK_RELEASE__;
   let alive=true;
   async function checkRelease(){
-   if(isLive||!navigator.onLine)return;
+   if(nativeAccountService||!navigator.onLine)return;
    try{
     const url=`${import.meta.env.BASE_URL}release.json?check=${Date.now()}`;
     const response=await fetch(url,{cache:'no-store'});
@@ -190,7 +194,7 @@ function PwaControls({language='ms'}){
   navigator.serviceWorker?.addEventListener('controllerchange',onControllerChange);
   navigator.serviceWorker?.addEventListener('message',onWorkerMessage);
   let tick;
-  if(!isLive){
+  if(!nativeAccountService){
    checkRelease();
    tick=window.setInterval(checkRelease,60000);
    if(window.isSecureContext&&'serviceWorker' in navigator){
@@ -213,7 +217,7 @@ function PwaControls({language='ms'}){
  };
  return <div className="pwa-controls" aria-label={say(language,'install')}>
   <span className={'connection '+(online?'connected':'disconnected')} role="status">{online?'● '+say(language,'online'):'● '+say(language,'offline')}</span>
-  {!isLive&&!standalone&&<button type="button" className="install-button" onClick={install}>📲 {say(language,'install')}</button>}
+  {!nativeAccountService&&!standalone&&<button type="button" className="install-button" onClick={install}>📲 {say(language,'install')}</button>}
   {updateReady&&<span className="pwa-update" role="status">✨ {say(language,'newVersion')} <button type="button" onClick={()=>window.location.reload()}>{say(language,'updateNow')}</button></span>}
   {showHelp&&<p className="install-help">{say(language,'installHelp')}</p>}
   {!online&&<p className="install-help">{say(language,'offlineHelp')}</p>}
@@ -391,7 +395,7 @@ function App(){
   activeToken.current=credential;
   setLoginNotice('');
   try{
-   const data=await api(role==='student'?'getStudentBootstrap':'getBootstrap',credential);
+   const data=await api(portalV2?'getPortalBootstrap':role==='student'?'getStudentBootstrap':'getBootstrap',credential,...(portalV2?[role]:[]));
    if(attempt!==loginAttempt.current||activeToken.current!==credential)return;
    if(data.role==='STUDENT'){setGrowthAudience('junior');setGrowthKind('ai');}
    setBoot(data);
@@ -402,7 +406,7 @@ function App(){
    if(attempt===loginAttempt.current&&activeToken.current===credential)endSession(accountNotice(error)||'Sign-in could not be completed. Please try again.');
   }
  },[authRequest,endSession]);
- async function refresh(){const b=await call(boot?.role==='STUDENT'?'getStudentBootstrap':'getBootstrap');setBoot(b);if(!b.children.some(x=>x.id===childId))setChildId(b.children[0]?.id||'');}
+ async function refresh(){const b=await call(portalV2?'getPortalBootstrap':boot?.role==='STUDENT'?'getStudentBootstrap':'getBootstrap',...(portalV2?[boot?.role?.toLowerCase()]:[]));setBoot(b);if(!b.children.some(x=>x.id===childId))setChildId(b.children[0]?.id||'');}
  function toggleDemoSave(enabled){
   setRememberDemo(enabled);
   try{if(enabled){localStorage.setItem(DEMO_SAVE_CONSENT,'yes');persistDemo()}else{localStorage.removeItem(DEMO_SAVE_CONSENT);clearDemo()}}
@@ -446,8 +450,10 @@ function App(){
 
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
  if(!token)return <><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} notice={loginNotice}/></>;
+ if(portalV2&&['ADMIN','PARENT'].includes(boot?.role))return <RolePortals boot={boot} request={authRequest} onSignOut={()=>endSession()} language={uiLanguage}/>;
  return <div className="app"><header><button className="logo" onClick={()=>setPage('home')}><img src="./icons/app-icon.svg" width="44" height="44" alt=""/> <span>BijakLearn <b>Junior</b></span></button><div className="topactions"><StreakChip language={uiLanguage}/><button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
+ {portalV2&&isLive&&boot?.role==='STUDENT'&&<StudentUsage request={authRequest} page={page}/>}
  <nav className="nav" aria-label={say(uiLanguage,'navLabel')}>
   <div className="nav-group" role="group" aria-label={say(uiLanguage,'navLearn')}><span className="nav-title">{say(uiLanguage,'navLearn')}</span>
    <NavButton icon="🏠" label={say(uiLanguage,'home')} active={page==='home'} onClick={()=>setPage('home')}/>
@@ -587,3 +593,4 @@ function App(){
  </main><footer><div>{say(uiLanguage,'footerLine',{mode:say(uiLanguage,isLive?'modeLive':'modePreview')})}</div><div className="proease-footer">{say(uiLanguage,'footerRights',{year:new Date().getFullYear()})}</div></footer></div>
 }
 createRoot(document.getElementById('root')).render(<AppBoundary><PlayfulScene/><App/></AppBoundary>);
+

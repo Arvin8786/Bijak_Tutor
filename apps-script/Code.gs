@@ -3,6 +3,9 @@
  * In Script Properties set GOOGLE_CLIENT_ID and SPREADSHEET_ID. Never publish the sheet.
  */
 const TABLES = {
+ UsageEvents:['eventId','childId','googleSub','moduleId','seconds','createdAt'],
+ Enrolments:['requestId','parentSub','parentEmail','studentEmail','nickname','year','school','language','consentAt','status','childId','createdAt','reviewedAt','reviewedBy'],
+ ParentFeedback:['feedbackId','parentSub','parentEmail','category','message','createdAt','status','reply','repliedAt'],
  Subjects:['subjectId','subjectName','stream','stage','group','contentStatus','sourceUrl'],
  Parents:['googleSub','email','displayName','createdAt','parentPinHash','pinSalt'],
  StudentAccounts:['studentKey','email','googleSub','childId','parentSub','status','linkedAt','linkedBy'],
@@ -35,7 +38,7 @@ function initializeDatabase_(){const ss=SpreadsheetApp.openById(props_().getProp
   if(keys.slice(0,headers.length).some((k,i)=>k!==headers[i]))throw Error('Unexpected schema for '+name+'; restore or migrate headers before importing');
   if(missing.length){if(s.getMaxColumns()<keys.length)s.insertColumnsAfter(s.getMaxColumns(),keys.length-s.getMaxColumns());s.getRange(1,headers.length+1,1,missing.length).setValues([missing]);}
  }});if(rows_('Lessons').length===0){SEED_LESSONS.forEach(l=>{append_('Lessons',{lessonId:l.id,year:l.year,subject:l.subject,title:l.title,summary:l.summary,icon:l.icon,mindJson:JSON.stringify(l.mind),stepsJson:JSON.stringify(l.steps),premium:l.id==='y1-math-subtract'?'FALSE':'TRUE'});(l.check||[]).forEach(q=>append_('Questions',{questionId:q.id,lessonId:l.id,mode:q.mode,text:q.text,optionsJson:JSON.stringify(q.options||[]),correctAnswer:q.answer,why:q.why,transfer:q.transfer?'TRUE':'FALSE',misconceptionsJson:JSON.stringify(l.misconceptions||{})}));});}seedSkillMap_();return 'Sheets initialized';}
-function doGet(e){const t=HtmlService.createTemplateFromFile('App');t.clientId=props_().getProperty('GOOGLE_CLIENT_ID')||'';t.loginRole=['parent','student','admin'].includes(e?.parameter?.role)?e.parameter.role:'parent';return t.evaluate().setTitle('BijakLearn Junior').addMetaTag('viewport','width=device-width, initial-scale=1')}
+function doGet(e){if(e?.parameter?.transport==='1'){const bridge=HtmlService.createTemplateFromFile('Transport');bridge.channel=/^[a-f0-9-]{36}$/.test(e.parameter.channel||'')?e.parameter.channel:'';return bridge.evaluate().setTitle('BijakLearn account service').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);}const t=HtmlService.createTemplateFromFile('App');t.clientId=props_().getProperty('GOOGLE_CLIENT_ID')||'';t.loginRole=['parent','student','admin'].includes(e?.parameter?.role)?e.parameter.role:'parent';return t.evaluate().setTitle('BijakLearn Junior').addMetaTag('viewport','width=device-width, initial-scale=1')}
 function verify_(idToken){if(typeof idToken!=='string'||idToken.length>5000||idToken.length<50)throw Error('Sign in with your Google account');const clientId=props_().getProperty('GOOGLE_CLIENT_ID');if(!clientId)throw Error('Google Sign-In not configured');const response=UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token='+encodeURIComponent(idToken),{muteHttpExceptions:true});if(response.getResponseCode()!==200)throw Error('Google identity verification failed');const payload=JSON.parse(response.getContentText());if(payload.aud!==clientId||!['accounts.google.com','https://accounts.google.com'].includes(payload.iss)||String(payload.email_verified)!=='true'||!Number.isFinite(Number(payload.exp))||Number(payload.exp)*1000<=Date.now()||!payload.sub)throw Error('Invalid Google identity');return {sub:String(payload.sub),email:String(payload.email||''),name:String(payload.name||'Parent').slice(0,80)};}
 function upsertParent_(u){if(!rows_('Parents').some(p=>p.googleSub===u.sub))append_('Parents',{googleSub:u.sub,email:u.email,displayName:u.name,createdAt:new Date().toISOString()});}
 function withAuth_(token,fn,requestOnSignIn=false){
@@ -121,3 +124,4 @@ function importCurriculumV6_(){
  try {write('Lessons',lRows);write('Questions',qRows);write('SkillMap',sRows);}finally{lock.releaseLock();}
  return {lessons:lRows.length,questions:qRows.length,skills:sRows.length,status:'DRAFT_TEACHER_REVIEW'};
 }
+

@@ -13,7 +13,7 @@ const js=fs.readFileSync(path.join(dir,jsPath),'utf8')
  .replace(/<\/script/gi,'<\\/script');
 const encodedJs=Buffer.from(js,'utf8').toString('base64');
 const css=cssPath?fs.readFileSync(path.join(dir,cssPath),'utf8'):'';
-const out=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>BijakLearn Junior</title><style>${css}</style></head><body><div id="root"><p role="status">Opening BijakLearn…</p></div><script src="https://accounts.google.com/gsi/client" async defer></script><script>window.BIJAKLEARN_GOOGLE_CLIENT_ID=<?!= JSON.stringify(clientId) ?>;window.BIJAKLEARN_LOGIN_ROLE=<?!= JSON.stringify(loginRole) ?>;</script><script type="module">const bytes=Uint8Array.from(atob("${encodedJs}"),c=>c.charCodeAt(0));const bundleUrl=URL.createObjectURL(new Blob([bytes],{type:'text/javascript'}));import(bundleUrl).catch(error=>{console.error('BijakLearn startup failed',error);document.getElementById('root').textContent='BijakLearn could not start. Please reload the page.';}).finally(()=>URL.revokeObjectURL(bundleUrl));</script></body></html>`;
+const out=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>BijakLearn Junior</title><style>${css}</style></head><body><div id="root"><p role="status">Opening BijakLearn…</p></div><script src="https://accounts.google.com/gsi/client" async defer></script><script>window.BIJAKLEARN_GOOGLE_CLIENT_ID=<?!= JSON.stringify(clientId) ?>;window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_LOGIN_ROLE=<?!= JSON.stringify(loginRole) ?>;</script><script type="module">const bytes=Uint8Array.from(atob("${encodedJs}"),c=>c.charCodeAt(0));const bundleUrl=URL.createObjectURL(new Blob([bytes],{type:'text/javascript'}));import(bundleUrl).catch(error=>{console.error('BijakLearn startup failed',error);document.getElementById('root').textContent='BijakLearn could not start. Please reload the page.';}).finally(()=>URL.revokeObjectURL(bundleUrl));</script></body></html>`;
 fs.mkdirSync('release',{recursive:true});fs.writeFileSync('release/App.html',out);fs.copyFileSync('apps-script/Code.gs','release/Code.gs');
 fs.copyFileSync('apps-script/CurriculumImport.gs','release/CurriculumImport.gs');
 fs.copyFileSync('apps-script/AdminOperations.gs','release/AdminOperations.gs');
@@ -29,3 +29,5 @@ for(const name of ['TierAccess','PremiumKasih','StudentAccess'])fs.copyFileSync(
 fs.writeFileSync('release/ModuleData.gs','const BIJAK_APP_MODULES = '+JSON.stringify(APP_MODULES)+';\nconst BIJAK_GROWTH_TRACKS = '+JSON.stringify(GROWTH_TRACKS)+';\n');
 fs.writeFileSync('release/ModuleAccess.csv',Object.keys(APP_MODULES[0]).join(',')+'\n'+APP_MODULES.map(m=>Object.values(m).map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n')+'\n');
 
+
+for(const name of ['RolePortals.gs','Transport.html'])fs.copyFileSync('apps-script/'+name,'release/'+name);
