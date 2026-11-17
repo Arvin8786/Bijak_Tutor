@@ -9,7 +9,7 @@ function moduleDecision_(user,moduleId,rules,currentPlan){
  const rule=moduleRule_(moduleId,rules),plan=currentPlan||access_(user).plan;
  const column={FREE:'free',PREMIUM:'premium',PREMIUM_KASIH:'premiumKasih'}[plan];
  return {moduleId,plan,title:rule?String(rule.title):moduleId,
-  allowed:!!rule&&trueCell_(rule.enabled)&&!!column&&trueCell_(rule[column]),
+  allowed:!(user.role==='STUDENT'&&['parent-reports','adult-ai','adult-hobby'].includes(moduleId))&&!!rule&&trueCell_(rule.enabled)&&!!column&&trueCell_(rule[column]),
   freeLessonLimit:rule&&Number.isInteger(Number(rule.freeLessonLimit))&&Number(rule.freeLessonLimit)>=0?Number(rule.freeLessonLimit):0};
 }
 function requireModule_(user,moduleId){

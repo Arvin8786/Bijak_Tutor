@@ -21,8 +21,8 @@ function SpeakButton({text,lang='en-US'}){
  };
  return <span className="growth-speech"><button type="button" onClick={read}>🔊 Listen</button>{status&&<span role="status">{status}</span>}</span>
 }
-export default function GrowthHub({audience='junior',onAudience,initialKind='ai',onKind,loadTrack=null,checkAnswer=null}){
- const current=audience==='adult'?'adult':'junior';
+export default function GrowthHub({studentOnly=false,audience='junior',onAudience,initialKind='ai',onKind,loadTrack=null,checkAnswer=null}){
+ const current=!studentOnly&&audience==='adult'?'adult':'junior';
  const kind=initialKind==='hobby'?'hobby':'ai';
  const [serverTrack,setServerTrack]=useState(null);
  const [sourceNote,setSourceNote]=useState('');
@@ -82,7 +82,7 @@ export default function GrowthHub({audience='junior',onAudience,initialKind='ai'
   <header className="growth-hero"><div><span className="growth-kicker">PROEASE STUDIO™ · BIJAKLEARN LEARNING LAB</span><h1>{current==='adult'?'Adult Learning Studio':'Junior Discovery Lab'}</h1><p>{current==='adult'?'Learn practical AI skills and build creative routines that fit adult life.':'Discover AI safely, explore new hobbies and complete playful challenges.'}</p></div><span className="growth-hero-emoji" aria-hidden="true">{current==='adult'?'🧑‍💻':'🎒'}</span></header>
   <div className="growth-audience" role="group" aria-label="Select learning audience">
    <button type="button" className={current==='junior'?'selected':''} aria-pressed={current==='junior'} onClick={()=>onAudience('junior')}>🎒 Junior (Tahun 1–6)</button>
-   <button type="button" className={current==='adult'?'selected':''} aria-pressed={current==='adult'} onClick={()=>onAudience('adult')}>🧑‍🎓 Adults (18+)</button>
+   {!studentOnly&&<button type="button" className={current==='adult'?'selected':''} aria-pressed={current==='adult'} onClick={()=>onAudience('adult')}>🧑‍🎓 Adults (18+)</button>}
   </div>
   <div className="growth-modules">
    {['ai','hobby'].map(mode=>{const t=findGrowthTrack(current,mode);return <button type="button" key={mode} aria-pressed={kind===mode} className={'growth-module growth-'+mode+' '+(kind===mode?'selected':'')} onClick={()=>onKind(mode)}><span className="growth-module-icon" aria-hidden="true">{t.icon}</span><strong>{mode==='ai'?'Learn AI':'Creative Hobbies'}</strong><small>{t.tagline}</small><span className="growth-module-info">{t.lessons.length} starter lessons · Explore →</span></button>})}

@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import fs from 'node:fs';
 import {APP_MODULES,moduleForPage} from '../src/moduleRegistry.js';
 import {GROWTH_TRACKS} from '../src/growthCurriculum.js';
-const source=['Code','AccountAccess','TierAccess','PremiumKasih','ModuleService','AdminOperations','TutorAI'].map(name=>fs.readFileSync(`apps-script/${name}.gs`,'utf8')).join('\n');
+const source=['Code','AccountAccess','TierAccess','PremiumKasih','StudentAccess','ModuleService','AdminOperations','TutorAI'].map(name=>fs.readFileSync(`apps-script/${name}.gs`,'utf8')).join('\n');
 function backend(){
  const properties={GOOGLE_CLIENT_ID:'client',ACCOUNT_ADMIN_GOOGLE_SUB:'admin',KASIH_DOCUMENTS_FOLDER_ID:'folder'};
  const tables={Parents:[{googleSub:'family',email:'family@example.test'},{googleSub:'other',email:'other@example.test'}],AccountAccess:[],ModuleAccess:APP_MODULES.map(m=>({...m})),Subscriptions:[],Scholarships:[],Audit:[],Lessons:[],Children:[{childId:'child',parentSub:'family'}],ModuleCatalog:[],ModuleLessons:[]};
@@ -161,4 +161,79 @@ test('retention trashes only reviewed evidence after the retention period',()=>{
  assert.equal(api.purgeKasihEvidence_().removed,1);assert.ok([...files.values()][0].trashed);
  assert.equal(tables.Scholarships[0].reason,'');assert.equal(tables.Scholarships[0].documentIdsJson,'[]');
  assert.equal(api.purgeKasihEvidence_().removed,0);
+});
+
+
+function studentFixture(){
+ const state=backend();
+ state.tables.Children[0]={...state.tables.Children[0],nickname:'Test Fox',year:2,school:'SK'};
+ state.tables.Children.push({childId:'sibling',parentSub:'family',nickname:'Sibling'},{childId:'other-child',parentSub:'other',nickname:'Other family'});
+ const credential='student'+'-'.repeat(60);
+ state.tokens.set(credential,{sub:'student',aud:'client',iss:'accounts.google.com',exp:Date.now()/1000+3600,email_verified:true,email:'student@example.test'});
+ return {...state,credential};
+}
+test('unlinked student sign-in does not create a parent account or enrol a learner',()=>{
+ const {api,tables,credential}=studentFixture();
+ assert.throws(()=>api.getStudentBootstrap(credential),/STUDENT_NOT_LINKED/);
+ assert.equal(tables.Parents.length,2);assert.equal(tables.AccountAccess.length,0);
+});
+test('student identities bind only to administrator-linked emails and inherit the family tier',()=>{
+ const {api,tables,credential,token}=studentFixture();
+ assert.throws(()=>api.setStudentAccount(token('family'),'student@example.test','child','ACTIVE'),/administrator/);
+ assert.throws(()=>api.setStudentAccount(token('admin'),'family@example.test','child','ACTIVE'),/separate student/);
+ api.setStudentAccount(token('admin'),'student@example.test','child','ACTIVE');
+ assert.throws(()=>api.getBootstrap(credential),/STUDENT_ONLY/);
+ tables.Subscriptions.push(subscription('PREMIUM'));
+ const boot=api.getStudentBootstrap(credential);
+ assert.equal(boot.role,'STUDENT');assert.equal(boot.children.length,1);assert.equal(boot.children[0].id,'child');assert.equal(boot.parent,null);assert.equal(boot.canManageAccounts,false);assert.equal(boot.access.plan,'PREMIUM');
+ assert.equal(tables.Parents.length,2);assert.equal(api.listStudentAccounts(token('admin'))[0].bound,true);
+ assert.throws(()=>api.getBootstrap(credential),/STUDENT_ONLY/);
+});
+test('student Google tokens cannot perform parent operations or access sibling profiles',()=>{
+ const {api,tables,credential,token}=studentFixture();api.setStudentAccount(token('admin'),'student@example.test','child','ACTIVE');api.getStudentBootstrap(credential);
+ tables.Subscriptions.push(subscription('PREMIUM'));
+ for(const method of ['addChild','getParentReport','setParentPin','submitKasihApplication','getKasihApplication'])assert.throws(()=>api[method](credential),/PARENT_ONLY/,method);
+ for(const childId of ['sibling','other-child'])assert.throws(()=>api.getLesson(credential,childId,'a'),/Child not linked/);
+ assert.equal(api.authorizeModule(credential,'parent-reports').allowed,false);
+ assert.equal(api.authorizeModule(credential,'adult-ai').allowed,false);
+ assert.equal(api.authorizeModule(credential,'science-lab').allowed,true);
+ assert.throws(()=>api.listAccountAccess(credential),/administrator/);
+ assert.throws(()=>api.setMembership(credential,'google:student','PREMIUM',12,'Test'),/administrator/);
+});
+test('revoking a student link or blocking its parent takes effect on the next protected request',()=>{
+ const {api,credential,token}=studentFixture();api.setStudentAccount(token('admin'),'student@example.test','child','ACTIVE');api.getStudentBootstrap(credential);
+ api.setStudentAccount(token('admin'),'student@example.test','child','REVOKED');
+ assert.throws(()=>api.authorizeModule(credential,'maths-studio'),/STUDENT_REVOKED/);
+ api.setStudentAccount(token('admin'),'student@example.test','child','ACTIVE');
+ assert.equal(api.authorizeModule(credential,'maths-studio').allowed,true);
+ api.setAccountAccess(token('admin'),'google:family','REVOKED','Test parent block');
+ assert.throws(()=>api.authorizeModule(credential,'maths-studio'),/ACCOUNT_REVOKED/);
+});
+test('student identity cannot be taken over by a new Google subject reusing its email',()=>{
+ const {api,credential,tokens,token}=studentFixture();api.setStudentAccount(token('admin'),'student@example.test','child','ACTIVE');api.getStudentBootstrap(credential);
+ tokens.get(credential).sub='impostor';
+ assert.throws(()=>api.getStudentBootstrap(credential),/does not match/);
+});
+test('moving an active student to another learner requires prior revocation',()=>{
+ const {api,token}=studentFixture();api.setStudentAccount(token('admin'),'student@example.test','child','ACTIVE');
+ assert.throws(()=>api.setStudentAccount(token('admin'),'student@example.test','other-child','ACTIVE'),/Revoke/);
+ api.setStudentAccount(token('admin'),'student@example.test','child','REVOKED');
+ api.setStudentAccount(token('admin'),'student@example.test','other-child','ACTIVE');
+ assert.equal(api.listStudentAccounts(token('admin'))[0].childId,'other-child');
+});
+test('owner OAuth configuration accepts a Web client ID and rejects secrets or missing IDs',()=>{
+ const {api,properties}=backend();
+ assert.throws(()=>api.configureGoogleOAuth_('not-a-client'),/Web application OAuth client/);
+ assert.equal(api.configureGoogleOAuth_('123456789-testclient.apps.googleusercontent.com').clientIdConfigured,true);
+ assert.equal(properties.GOOGLE_CLIENT_ID,'123456789-testclient.apps.googleusercontent.com');
+});
+
+
+test('administrator student linking approves an accidental pending parent sign-in, but never overrides blocking',()=>{
+ const {api,tables,credential,token}=studentFixture();
+ tables.AccountAccess.push({accountKey:'google:student',status:'PENDING'});
+ api.setStudentAccount(token('admin'),'student@example.test','child','ACTIVE');
+ assert.equal(api.getStudentBootstrap(credential).role,'STUDENT');
+ tables.AccountAccess.push({accountKey:'google:student',status:'REVOKED'});
+ assert.throws(()=>api.getStudentBootstrap(credential),/STUDENT_REVOKED/);
 });

@@ -21,6 +21,8 @@ Deploy `dist/` to GitHub Pages via the existing workflow. The optional *Remember
 
 See [Google Sheets, tier rules and OAuth setup](docs/TIERS_AND_GOOGLE_SETUP.md). The generated Apps Script package imports the app’s 18 modules into `ModuleAccess`, enforces Free/Premium/Premium Kasih permissions, and provides private sponsorship applications with document review. Run `setupBijakLearn_` in your bound Apps Script project to populate the existing workbook; setup preserves existing module rules. Real OAuth credentials and deployment still require the Google account owner.
 
+Student Google sign-in is available through an administrator-linked learner profile. Students inherit their family’s tier and cannot access parent reports, account administration or sponsorship documents. See [student setup](docs/TIERS_AND_GOOGLE_SETUP.md#6-student-google-sign-in).
+
 ## Backend deployment and teacher-review requirements
 
 See [Operational release guide](docs/OPERATIONAL_RELEASE.md) for the separate Google Apps Script deployment, full curriculum import, owner-only membership/scholarship administration and security requirements. Build generates `release/CurriculumData.gs`, `release/CurriculumImport.gs`, `release/AdminOperations.gs` and `release/CURRICULUM_COVERAGE.json`.

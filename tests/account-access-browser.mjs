@@ -14,6 +14,7 @@ export async function checkAccountAccessBrowser(browser, base) {
      return {moduleId:id,allowed:true,plan:'FREE'};
     }
     if (method === 'listKasihApplications' && operator) return [];
+    if(method==='listStudentProfiles'||method==='listStudentAccounts')return [];
     if (method === 'listAccountAccess' && operator) {
      return [{id: 'google:test-family', name: 'Test Family', email: 'family@example.test', status: window.testAccountStatus}];
     }

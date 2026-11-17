@@ -12,7 +12,7 @@ const js=fs.readFileSync(path.join(dir,jsPath),'utf8')
  .replaceAll('./icons/icon.svg',inlineIcon('icon.svg'))
  .replace(/<\/script/gi,'<\\/script');
 const css=cssPath?fs.readFileSync(path.join(dir,cssPath),'utf8'):'';
-const out=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>BijakLearn Junior</title><style>${css}</style></head><body><div id="root"></div><script src="https://accounts.google.com/gsi/client" async defer></script><script>window.BIJAKLEARN_GOOGLE_CLIENT_ID=<?!= JSON.stringify(clientId) ?>;</script><script type="module">${js}</script></body></html>`;
+const out=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>BijakLearn Junior</title><style>${css}</style></head><body><div id="root"></div><script src="https://accounts.google.com/gsi/client" async defer></script><script>window.BIJAKLEARN_GOOGLE_CLIENT_ID=<?!= JSON.stringify(clientId) ?>;window.BIJAKLEARN_LOGIN_ROLE=<?!= JSON.stringify(loginRole) ?>;</script><script type="module">${js}</script></body></html>`;
 fs.mkdirSync('release',{recursive:true});fs.writeFileSync('release/App.html',out);fs.copyFileSync('apps-script/Code.gs','release/Code.gs');
 fs.copyFileSync('apps-script/CurriculumImport.gs','release/CurriculumImport.gs');
 fs.copyFileSync('apps-script/AdminOperations.gs','release/AdminOperations.gs');
@@ -24,6 +24,6 @@ fs.writeFileSync('release/CurriculumData.gs',`const BIJAK_CURRICULUM_BUNDLE = ${
 
 fs.writeFileSync('release/AnswerMarking.gs',fs.readFileSync('src/answerMarking.js','utf8').replaceAll('export ','').replace(/\b(markPractice|normalizedAnswer|numericValue)\b/g,'$1_'));
 
-for(const name of ['TierAccess','PremiumKasih'])fs.copyFileSync('apps-script/'+name+'.gs','release/'+name+'.gs');
+for(const name of ['TierAccess','PremiumKasih','StudentAccess'])fs.copyFileSync('apps-script/'+name+'.gs','release/'+name+'.gs');
 fs.writeFileSync('release/ModuleData.gs','const BIJAK_APP_MODULES = '+JSON.stringify(APP_MODULES)+';\nconst BIJAK_GROWTH_TRACKS = '+JSON.stringify(GROWTH_TRACKS)+';\n');
 fs.writeFileSync('release/ModuleAccess.csv',Object.keys(APP_MODULES[0]).join(',')+'\n'+APP_MODULES.map(m=>Object.values(m).map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n')+'\n');

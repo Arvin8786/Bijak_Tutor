@@ -4,7 +4,7 @@ async function encodeDocument(file){
  const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(Error('Unable to read document'));reader.readAsDataURL(file)});
  return {mimeType:file.type,data};
 }
-export default function PremiumKasihApplication({request,live,onSubmitted}){
+export default function PremiumKasihApplication({request,live,onSubmitted,student=false}){
  const [details,setDetails]=useState({guardianName:'',studentNickname:'',schoolYear:'1',reason:'',guardianConsent:false});
  const [files,setFiles]=useState([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[result,setResult]=useState(null);
  const change=(key,value)=>setDetails(current=>({...current,[key]:value}));
@@ -22,7 +22,7 @@ export default function PremiumKasihApplication({request,live,onSubmitted}){
  return <section className="panel narrow kasih-application">
   <span className="mini-label">Giving back to our community</span><h1>Apply for Premium Kasih</h1>
   <p>Learning opportunities should be within reach of every family. Tell us how sponsored access would help. Applications are reviewed privately by an administrator; submission does not automatically grant access.</p>
-  {!live?<p role="status">Applications and document uploads are available only after signing in to the private learning app. Please do not enter personal information in this demo.</p>:result?<div role="status"><h2>Application received</h2><p>Reference: {result.requestId}</p><p>Your application is awaiting review. You can check its status under Membership.</p></div>:<form className="kasih-form" onSubmit={submit}>
+  {student?<p role="status">Applications and supporting documents must be submitted by your parent or guardian from their parent account.</p>:!live?<p role="status">Applications and document uploads are available only after signing in to the private learning app. Please do not enter personal information in this demo.</p>:result?<div role="status"><h2>Application received</h2><p>Reference: {result.requestId}</p><p>Your application is awaiting review. You can check its status under Membership.</p></div>:<form className="kasih-form" onSubmit={submit}>
    <label>Parent or guardian name<input autoComplete="name" required minLength={2} maxLength={100} value={details.guardianName} disabled={busy} onChange={e=>change('guardianName',e.target.value)}/></label>
    <label>Student nickname<input required maxLength={40} value={details.studentNickname} disabled={busy} onChange={e=>change('studentNickname',e.target.value)}/></label>
    <label>School year<select aria-label="School year" value={details.schoolYear} disabled={busy} onChange={e=>change('schoolYear',e.target.value)}><option value="0">Preschool</option>{[1,2,3,4,5,6].map(year=><option key={year} value={year}>Tahun {year}</option>)}</select></label>

@@ -38,6 +38,7 @@ function kasihDocument_(document){
 }
 function requestScholarship(token,details,documents){return submitKasihApplication(token,details,documents)}
 function submitKasihApplication(token,details,documents){return withAuth_(token,user=>{
+ requireParent_(user);
  const values=kasihDetails_(details);
  if(!Array.isArray(documents)||documents.length<1||documents.length>2)throw Error('Attach one or two redacted supporting documents');
  const uploads=documents.map(kasihDocument_);
@@ -61,6 +62,7 @@ function submitKasihApplication(token,details,documents){return withAuth_(token,
  finally{lock.releaseLock()}
 })}
 function getKasihApplication(token){return withAuth_(token,user=>{
+ requireParent_(user);
  const row=rows_('Scholarships').filter(item=>String(item.googleSub)===user.sub).slice(-1)[0];
  return row?{requestId:String(row.requestId),status:String(row.status),submittedAt:String(row.submittedAt),reviewedAt:String(row.reviewedAt||'')}:null;
 })}

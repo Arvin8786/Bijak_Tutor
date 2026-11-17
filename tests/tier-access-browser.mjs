@@ -16,6 +16,7 @@ export async function checkTierAccessBrowser(browser,base){
     }
     if(method==='listAccountAccess'&&admin)return [{id:'google:family',email:'family@example.test',name:'Family',status:'ACTIVE'}];
     if(method==='listKasihApplications'&&admin)return window.testKasih?[window.testKasih]:[];
+    if(method==='listStudentProfiles'||method==='listStudentAccounts')return [];
     if(method==='reviewKasihApplication'&&admin){window.testKasih.status=args[1];window.testMembership='PREMIUM_KASIH';return {requestId:args[0],status:args[1]}}
     if(method==='setMembership'&&admin){window.testMembership=args[1];return {plan:args[1]}}
     if(method==='getKasihDocument'&&admin)return {mimeType:'application/pdf',data:btoa('%PDF-1.7\nFictional test evidence')};
