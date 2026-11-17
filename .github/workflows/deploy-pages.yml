@@ -13,7 +13,7 @@ concurrency:
 jobs:
   deploy:
     env:
-      VITE_ACCOUNT_APP_URL: ${{ vars.VITE_ACCOUNT_APP_URL }}
+      VITE_ACCOUNT_APP_URL: ${{ vars.VITE_ACCOUNT_APP_URL || 'https://script.google.com/macros/s/AKfycbyPJHxkj9PSkvs1-KYLZoTaF7DXCjt_vKzFJwyWwwBBNcrtjEkYQg5rhzlwrqqDyC1u/exec' }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
