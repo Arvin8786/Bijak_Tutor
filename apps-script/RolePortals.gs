@@ -1,0 +1,115 @@
+/** Role-specific data contracts. Roles and family ownership come from verified Google identity. */
+function portalIdentity_(token){
+ const verified=verify_(token);
+ if(isAccountAdmin_(verified))return {...verified,role:'ADMIN'};
+ const link=studentLink_(verified);
+ if(link)return bindStudentIdentity_(verified);
+ requireActiveAccount_(verified,true);upsertParent_(verified);return {...verified,role:'PARENT'};
+}
+function getPortalBootstrap(token,requestedRole){
+ const user=portalIdentity_(token);
+ if(requestedRole==='admin'&&user.role!=='ADMIN')throw Error('Administrator access required');
+ if(user.role==='ADMIN')return {role:'ADMIN',user:{name:user.name,email:user.email},canManageAccounts:true,children:[],lessons:[],modules:[],access:{plan:'ADMIN',active:true}};
+ if(user.role==='STUDENT')return getStudentBootstrap(token);
+ if(requestedRole==='student')throw Error('[STUDENT_NOT_LINKED] Ask your parent to enrol your separate student account.');
+ return {role:'PARENT',parent:{name:user.name,email:user.email},canManageAccounts:false,children:familyChildren_(user),lessons:[],modules:[],access:access_(user)};
+}
+function familyChildren_(user){return rows_('Children').filter(c=>String(c.parentSub)===user.sub).map(c=>({id:String(c.childId),name:String(c.nickname),year:Number(c.year),school:String(c.school),language:String(c.language)}))}
+function requirePortalParent_(token){const user=portalIdentity_(token);if(user.role!=='PARENT')throw Error('Parent account required');return user}
+function getParentDashboard(token){
+ const user=requirePortalParent_(token),attempts=rows_('Attempts'),mastery=rows_('Mastery'),usage=rows_('UsageEvents');
+ return {parent:{name:user.name,email:user.email},access:access_(user),children:familyChildren_(user).map(child=>{
+  const checks=attempts.filter(a=>String(a.childId)===child.id),progress=mastery.filter(m=>String(m.childId)===child.id),time=usage.filter(e=>String(e.childId)===child.id),correct=checks.filter(a=>String(a.correct)==='true').length;
+  const dates=Array.from(new Set(time.map(e=>String(e.createdAt).slice(0,10)))).sort().slice(-14);
+  return {...child,attempts:checks.length,correct,accuracy:checks.length?Math.round(100*correct/checks.length):null,mastered:progress.filter(m=>String(m.mastered)==='true').length,reportedSeconds:time.reduce((n,e)=>n+(Number(e.seconds)||0),0),dailyUsage:dates.map(date=>({date,seconds:time.filter(e=>String(e.createdAt).startsWith(date)).reduce((n,e)=>n+(Number(e.seconds)||0),0)})),recent:checks.slice(-20).reverse().map(a=>({lessonId:String(a.lessonId),correct:String(a.correct)==='true',hints:Number(a.hints),createdAt:String(a.createdAt)}))};
+ }),enrolments:rows_('Enrolments').filter(r=>String(r.parentSub)===user.sub).map(r=>({id:r.requestId,studentEmail:r.studentEmail,name:r.nickname,status:r.status})),feedback:rows_('ParentFeedback').filter(r=>String(r.parentSub)===user.sub).slice(-50).reverse().map(r=>({id:r.feedbackId,category:r.category,message:r.message,status:r.status,reply:r.reply,createdAt:r.createdAt}))};
+}
+function submitParentEnrolment(token,details){
+ const user=requirePortalParent_(token);details=details||{};
+ const email=String(details.studentEmail||'').trim().toLowerCase(),name=String(details.name||'').trim(),year=Number(details.year);
+ if(!/^\S+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254||email===user.email.toLowerCase()||!name||name.length>40||!Number.isInteger(year)||year<1||year>6||details.consent!==true)throw Error('Provide a separate student email, nickname, school year and guardian consent');
+ const lock=LockService.getScriptLock();lock.waitLock(10000);
+ try{
+  if(rows_('Parents').some(p=>String(p.email).toLowerCase()===email))throw Error('Use a separate student Google account');
+  if(rows_('Enrolments').some(r=>String(r.studentEmail).toLowerCase()===email&&['PENDING','APPROVED'].includes(String(r.status))))throw Error('This student already has an enrolment request');
+  if(rows_('Enrolments').filter(r=>String(r.parentSub)===user.sub&&r.status==='PENDING').length>=5)throw Error('Maximum five pending enrolments');
+  const now=new Date().toISOString(),requestId=Utilities.getUuid();
+  append_('Enrolments',{requestId,parentSub:user.sub,parentEmail:user.email,studentEmail:email,nickname:name,year,school:['SK','SJKC','SJKT'].includes(details.school)?details.school:'SK',language:['ms','en','zh','ta'].includes(details.language)?details.language:'ms',consentAt:now,status:'PENDING',childId:Utilities.getUuid(),createdAt:now});
+  append_('Audit',{timestamp:now,actor:accountKey_(user.sub),action:'ENROLMENT_REQUESTED',reference:requestId});return {id:requestId,status:'PENDING'};
+ }finally{lock.releaseLock()}
+}
+function listEnrolments(token){requireAccountAdmin_(token);return rows_('Enrolments').slice(-200).reverse()}
+function reviewEnrolment(token,requestId,approve){
+ const admin=requireAccountAdmin_(token);if(typeof approve!=='boolean')throw Error('Choose approve or decline');
+ const lock=LockService.getScriptLock();lock.waitLock(10000);
+ try{
+  const request=rows_('Enrolments').find(r=>String(r.requestId)===requestId);if(!request)throw Error('Enrolment not found');
+  if(request.status!=='PENDING')return {status:request.status};
+  if(approve){
+   const parent=rows_('Parents').find(p=>String(p.googleSub)===String(request.parentSub));if(!parent)throw Error('Verified parent account unavailable');
+   requireActiveAccount_({sub:String(parent.googleSub),email:String(parent.email)},false);
+   const email=String(request.studentEmail).toLowerCase();
+   if(rows_('Parents').some(p=>String(p.email).toLowerCase()===email)||email===admin.email.toLowerCase())throw Error('Student account must be separate from parent and administrator');
+   const prior=latestStudentLinks_().find(r=>String(r.email).toLowerCase()===email);
+   if(prior&&prior.status==='ACTIVE'&&String(prior.childId)!==String(request.childId))throw Error('Student is already linked to a different profile');
+   const existing=rows_('Children').find(c=>String(c.childId)===String(request.childId));
+   if(existing&&String(existing.parentSub)!==String(parent.googleSub))throw Error('Profile ownership conflict');
+   if(!existing&&rows_('Children').filter(c=>String(c.parentSub)===String(parent.googleSub)).length>=5)throw Error('Maximum five children per parent');
+   if(!existing)append_('Children',{childId:request.childId,parentSub:String(parent.googleSub),nickname:request.nickname,year:request.year,school:request.school,language:request.language,createdAt:new Date().toISOString()});
+   append_('StudentAccounts',{studentKey:'email:'+email,email,googleSub:prior?.googleSub||'',childId:request.childId,parentSub:String(parent.googleSub),status:'ACTIVE',linkedAt:new Date().toISOString(),linkedBy:accountKey_(admin.sub)});
+  }
+  const status=approve?'APPROVED':'DECLINED';update_('Enrolments','requestId',requestId,{status,reviewedAt:new Date().toISOString(),reviewedBy:accountKey_(admin.sub)});
+  append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'ENROLMENT_'+status,reference:requestId});return {status};
+ }finally{lock.releaseLock()}
+}
+function submitParentFeedback(token,category,message){
+ const parent=requirePortalParent_(token),text=String(message||'').trim();
+ if(!['SUGGESTION','COMMENT','ISSUE'].includes(category)||text.length<5||text.length>2000)throw Error('Choose a category and write 5–2000 characters');
+ const lock=LockService.getScriptLock();lock.waitLock(10000);
+ try{const last=rows_('ParentFeedback').filter(r=>String(r.parentSub)===parent.sub).slice(-1)[0];if(last&&Date.now()-Date.parse(String(last.createdAt))<30000)throw Error('Please wait 30 seconds before sending another message');
+ const feedbackId=Utilities.getUuid();append_('ParentFeedback',{feedbackId,parentSub:parent.sub,parentEmail:parent.email,category,message:text,createdAt:new Date().toISOString(),status:'NEW'});return {id:feedbackId};
+ }finally{lock.releaseLock()}
+}
+function listParentFeedback(token){requireAccountAdmin_(token);return rows_('ParentFeedback').slice(-200).reverse()}
+function replyParentFeedback(token,id,reply){const admin=requireAccountAdmin_(token),text=String(reply||'').trim();if(!text||text.length>1500)throw Error('Write a reply of up to 1500 characters');if(!update_('ParentFeedback','feedbackId',id,{reply:text,status:'ANSWERED',repliedAt:new Date().toISOString()}))throw Error('Feedback not found');append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'PARENT_FEEDBACK_REPLIED',reference:id});return {ok:true}}
+function recordStudentUsage(token,eventId,moduleId,seconds){
+ return withAuth_(token,user=>{
+  if(user.role!=='STUDENT')throw Error('Student account required');requireChild_(user,user.studentChildId);
+  if(!/^[a-f0-9-]{36}$/.test(String(eventId))||!/^[-a-z0-9]{1,50}$/.test(String(moduleId))||!Number.isFinite(seconds)||seconds<0||seconds>60)throw Error('Invalid usage event');
+  const lock=LockService.getScriptLock();lock.waitLock(10000);
+  try{
+   const events=rows_('UsageEvents');if(events.some(e=>String(e.eventId)===eventId))return {recorded:false};
+   const last=events.filter(e=>String(e.childId)===user.studentChildId).slice(-1)[0],now=Date.now();
+   // The first event establishes a baseline; duplicate tabs cannot report more than elapsed wall time.
+   const elapsed=last?Math.max(0,Math.floor((now-Date.parse(String(last.createdAt)))/1000)):0;
+   const accepted=Math.min(60,Math.floor(seconds),elapsed);
+   append_('UsageEvents',{eventId,childId:user.studentChildId,googleSub:user.sub,moduleId,seconds:accepted,createdAt:new Date(now).toISOString()});return {recorded:true,seconds:accepted};
+  }finally{lock.releaseLock()}
+ });
+}
+function getAdministrationOverview(token){
+ requireAccountAdmin_(token);const events=rows_('UsageEvents'),since=Date.now()-7*86400000;
+ return {settings:oauthSetupStatus_(),modules:rows_('ModuleAccess'),parents:rows_('Parents').map(p=>({id:accountKey_(String(p.googleSub)),email:p.email})),children:rows_('Children').length,payments:rows_('Payments').slice(-100).reverse(),reportedSeconds7Days:events.filter(e=>Date.parse(String(e.createdAt))>=since).reduce((n,e)=>n+(Number(e.seconds)||0),0),activityEvents:events.length};
+}
+function setModulePolicy(token,moduleId,policy){
+ const admin=requireAccountAdmin_(token),current=rows_('ModuleAccess').find(m=>String(m.moduleId)===moduleId);if(!current)throw Error('Unknown module');
+ const patch={};for(const key of ['enabled','free','premium','premiumKasih']){if(typeof policy?.[key]!=='boolean')throw Error('Choose a valid tier policy');patch[key]=policy[key]?'TRUE':'FALSE';}
+ const limit=Number(policy.freeLessonLimit);if(!Number.isInteger(limit)||limit<0||limit>1000)throw Error('Free lesson limit must be 0–1000');
+ patch.freeLessonLimit=limit;patch.updatedAt=new Date().toISOString();update_('ModuleAccess','moduleId',moduleId,patch);
+ append_('Audit',{timestamp:patch.updatedAt,actor:accountKey_(admin.sub),action:'MODULE_POLICY_UPDATED',reference:moduleId});return {ok:true};
+}
+function recordPaymentReview(token,details){
+ const admin=requireAccountAdmin_(token),accountKey=String(details?.accountKey||''),reference=String(details?.reference||'').trim(),amount=Number(details?.amountRM),note=String(details?.note||'').trim(),status=details?.status;
+ if(!accountKey.startsWith('google:')||!rows_('Parents').some(p=>accountKey_(String(p.googleSub))===accountKey)||reference.length<3||reference.length>100||!Number.isFinite(amount)||amount<=0||amount>100000||Math.abs(amount*100-Math.round(amount*100))>0.00001||!['VERIFIED','REJECTED'].includes(status)||!note||note.length>250)throw Error('Provide a verified family, payment reference, positive RM amount and review note');
+ const lock=LockService.getScriptLock();lock.waitLock(10000);
+ try{if(rows_('Payments').some(p=>String(p.reference)===reference))throw Error('Payment reference already recorded');
+ const paymentId=Utilities.getUuid();append_('Payments',{paymentId,googleSub:accountKey.slice(7),reference,amountRM:amount,status,verifiedAt:new Date().toISOString(),adminNote:note});append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'PAYMENT_REVIEW_'+status,reference:paymentId});return {ok:true};
+ }finally{lock.releaseLock()}
+}
+/** Explicit RPC allowlist: never dispatch a client-supplied global function name. */
+function portalRequest(method,args){
+ if(typeof method!=='string'||!Array.isArray(args)||args.length>8||JSON.stringify(args).length>1500000)throw Error('Invalid account request');
+ const operations={getPortalBootstrap,getParentDashboard,submitParentEnrolment,listEnrolments,reviewEnrolment,submitParentFeedback,listParentFeedback,replyParentFeedback,recordStudentUsage,getAdministrationOverview,setModulePolicy,recordPaymentReview,listAccountAccess,setAccountAccess,listStudentAccounts,listStudentProfiles,setStudentAccount,setMembership,listKasihApplications,getKasihDocument,reviewKasihApplication,submitKasihApplication,getKasihApplication,addChild,getLesson,submitAttempt,getParentReport,setParentPin,getGrowthModule,checkGrowthAnswer,authorizeModule,askTutor};
+ if(!Object.prototype.hasOwnProperty.call(operations,method))throw Error('Unsupported account request');
+ return operations[method].apply(null,args);
+}

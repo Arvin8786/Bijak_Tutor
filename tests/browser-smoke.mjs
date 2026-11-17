@@ -7,6 +7,7 @@ import {buildWordSearch, LIFE_CYCLES} from '../src/extendedPracticeData.js';
 import {checkAccountAccessBrowser} from './account-access-browser.mjs';
 import {checkTierAccessBrowser} from './tier-access-browser.mjs';
 import {checkStudentAccessBrowser} from './student-access-browser.mjs';
+import {checkRolePortalsBrowser} from './role-portals-browser.mjs';
 
 // Serve the unchanged production bundle at a project URL, as GitHub Pages does.
 const projectPath='/Bijak_Tutor/';
@@ -564,6 +565,8 @@ try{
  await checkAccountAccessBrowser(browser, base);
  await checkTierAccessBrowser(browser, base);
  await checkStudentAccessBrowser(browser, base);
+ await checkRolePortalsBrowser(browser, base);
  console.log('Passed pending, approval, blocking, restoration and revoked-session browser flows.');
  console.log('Browser smoke tests passed for the selected production or demo build, offline reload and account access flows.');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}
+

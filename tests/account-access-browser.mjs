@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 export async function checkAccountAccessBrowser(browser, base) {
  const page = await browser.newPage({viewport: {width: 768, height: 850}});
  try {
-  await page.addInitScript(() => {
+  await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({status:200,contentType:'application/javascript',body:'// Google identity is mocked in this test.'}));
+await page.addInitScript(() => {
    window.testAccountStatus = 'PENDING';
    window.BIJAKLEARN_GOOGLE_CLIENT_ID = 'test-client';
    let signIn;
@@ -89,3 +90,4 @@ export async function checkAccountAccessBrowser(browser, base) {
   await page.close();
  }
 }
+

@@ -1,0 +1,18 @@
+<!doctype html><html><head><meta name="referrer" content="no-referrer"></head><body><script>
+'use strict';
+const PAGES_ORIGIN='https://arvin8786.github.io';
+const channel=<?!= JSON.stringify(channel) ?>;
+// No visual controls or secrets. Only the approved site can invoke this bridge.
+if(window.top!==window&&/^[a-f0-9-]{36}$/.test(channel)){
+ const source=window.top,seen=new Set();let active=0;
+ window.addEventListener('message',event=>{
+  const m=event.data;
+  if(event.origin!==PAGES_ORIGIN||event.source!==source||m?.channel!==channel||m.type!=='bijak-rpc'||typeof m.id!=='string'||!/^[a-f0-9-]{36}$/.test(m.id)||seen.has(m.id))return;
+  if(seen.size>=2000||active>=8||!Array.isArray(m.args))return;
+  seen.add(m.id);active++;
+  const send=(ok,value)=>{active--;source.postMessage({type:'bijak-rpc-result',channel,id:m.id,ok,...(ok?{value}:{error:String(value).slice(0,300)})},PAGES_ORIGIN)};
+  google.script.run.withSuccessHandler(value=>send(true,value)).withFailureHandler(error=>send(false,error.message||'Account request failed')).portalRequest(m.method,m.args);
+ });
+ source.postMessage({type:'bijak-rpc-ready',channel},PAGES_ORIGIN);
+}
+</script></body></html>
