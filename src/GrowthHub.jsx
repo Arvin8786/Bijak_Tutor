@@ -45,8 +45,8 @@ export default function GrowthHub({audience='junior',onAudience,initialKind='ai'
    if(!active)return;
    if(result&&Array.isArray(result.lessons)&&result.lessons.length&&result.lessons.every(l=>l?.quiz&&Array.isArray(l.quiz.options))){
     setServerTrack(result);setSourceNote('Content loaded from the authorised learning library.');
-   }
-  }).catch(()=>{if(active)setSourceNote('Showing locally available starter lessons.')});
+   }else setSourceNote('No reviewed learning activities are currently available for this module.');
+  }).catch(()=>{if(active)setSourceNote('This learning module could not be loaded. Please return to Membership or ask your administrator for access.')});
   return()=>{active=false};
  },[current,kind,loadTrack]);
  const lesson=track?.lessons?.[lessonIndex];
@@ -77,6 +77,7 @@ export default function GrowthHub({audience='junior',onAudience,initialKind='ai'
  const dayKey=key+'-day-'+(lesson?.id||'');
  const days=Array.isArray(progress[dayKey])?progress[dayKey]:[];
  const toggleDay=day=>setProgress(prev=>{const before=Array.isArray(prev[dayKey])?prev[dayKey]:[];const updated=before.includes(day)?before.filter(x=>x!==day):[...before,day];const next={...prev,[dayKey]:updated};saveProgress(next);return next});
+ if(loadTrack&&serverTrack?.id!==key)return <section className="panel" role={sourceNote?'alert':'status'}>{sourceNote||'Loading authorised learning content…'}</section>;
  return <section className="growth-hub" aria-label="Learn AI and Creative Hobbies">
   <header className="growth-hero"><div><span className="growth-kicker">PROEASE STUDIO™ · BIJAKLEARN LEARNING LAB</span><h1>{current==='adult'?'Adult Learning Studio':'Junior Discovery Lab'}</h1><p>{current==='adult'?'Learn practical AI skills and build creative routines that fit adult life.':'Discover AI safely, explore new hobbies and complete playful challenges.'}</p></div><span className="growth-hero-emoji" aria-hidden="true">{current==='adult'?'🧑‍💻':'🎒'}</span></header>
   <div className="growth-audience" role="group" aria-label="Select learning audience">

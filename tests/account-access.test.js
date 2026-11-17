@@ -8,7 +8,7 @@ const newcomer = '100000000000000000002';
 const existing = '100000000000000000003';
 const lookalike = '100000000000000000004';
 const token = sub => 'test-id-token-' + sub.padStart(60, '0');
-const code = ['Code', 'AccountAccess', 'ModuleService', 'TutorAI']
+const code = ['Code', 'AccountAccess', 'ModuleService', 'TutorAI', 'TierAccess', 'PremiumKasih']
  .map(file => fs.readFileSync(new URL('../apps-script/' + file + '.gs', import.meta.url), 'utf8')).join('\n');
 
 function backend() {

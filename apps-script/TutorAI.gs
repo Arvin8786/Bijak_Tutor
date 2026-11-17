@@ -5,6 +5,7 @@
  */
 function askTutor(token,question,context){
  return withAuth_(token,function(user){
+   requireModule_(user,'study-buddy');
    const q=String(question||'').trim();
    if(!q||q.length>500)throw Error('Please ask a question of 1–500 characters');
    const info=context&&typeof context==='object'?context:{};
@@ -27,6 +28,7 @@ function askTutor(token,question,context){
    }
    // Restrict lesson context to published content, never private student data.
    const row=lessonId?rows_('Lessons').find(l=>String(l.lessonId)===lessonId):null;
+   if(row)requireLessonAccess_(user,row);
    const contextText=row?('Study topic: '+String(row.title).slice(0,110)+'\nLesson summary: '+String(row.summary).slice(0,600)):'';
    const model=settings.getProperty('GEMINI_MODEL')||'gemini-3.5-flash-lite';
    if(!/^gemini-[\w.-]{3,60}$/.test(model))throw Error('Invalid tutor model configuration');

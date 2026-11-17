@@ -45,6 +45,12 @@ import ScienceLab from './ScienceLab.jsx';
 import AppBoundary from './AppBoundary.jsx';
 import MathsStudio from './MathsStudio.jsx';
 import AccountAccessPanel from './AccountAccessPanel.jsx';
+import ModuleGate from './ModuleGate.jsx';
+import {moduleForPage} from './moduleRegistry.js';
+import MembershipPage from './MembershipPage.jsx';
+import PremiumKasihApplication from './PremiumKasihApplication.jsx';
+import KasihReviewPanel from './KasihReviewPanel.jsx';
+import './professional.css';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
 
 function LessonSearch({query, onChange, count}) {
@@ -54,6 +60,7 @@ function LessonSearch({query, onChange, count}) {
  </div>;
 }
 const isLive=!!window.google?.script?.run;
+const demoEnabled=import.meta.env.DEV||import.meta.env.VITE_ENABLE_DEMO==='true';
 const langLabels={ms:'Bahasa Melayu',en:'English',ta:'தமிழ்',zh:'中文'};
 const DEMO_SAVE_CONSENT='bijaklearn:demo-save-consent';
 const savedDemo=()=>{try{return localStorage.getItem(DEMO_SAVE_CONSENT)==='yes'}catch{return false}};
@@ -69,7 +76,6 @@ async function localCall(method,args){
  if(method==='submitAttempt'){const [_,childId,lessonId,questionId,answer,hints]=args;const l=LESSONS.find(x=>x.id===lessonId),q=l.check.find(x=>x.id===questionId);const correct=markPractice(q, answer);const key=childId+'/'+lessonId;mockAttempts[key]=recordAttempt(mockAttempts[key]||initialSkill(),{questionId:q.id,mode:q.mode,correct,hints,transfer:!!q.transfer});persistDemo();return {correct,feedback:correct?q.why:(l.misconceptions?.[answer]||q.why),suggestedAnswer:correct?undefined:q.answer,mastery:evaluateSkill(mockAttempts[key])};}
  if(method==='setParentPin'){mockPin=args[1];return {ok:true}}
  if(method==='getParentReport'){if(args[2]!==mockPin)throw Error('Incorrect parent PIN');const childId=args[1];const skills=Object.entries(mockAttempts).filter(([k])=>k.startsWith(childId+'/'));const attempts=skills.flatMap(([,s])=>s.attempts);return {attempts:attempts.length,errors:attempts.filter(a=>!a.correct).length,independent:attempts.filter(a=>a.correct&&!a.hints&&a.mode!=='choice').length,mastered:skills.filter(([,s])=>evaluateSkill(s).mastered).length,topics:skills.map(([k,s])=>({lessonId:k.split('/')[1],...evaluateSkill(s)})),recent:attempts.slice(-20)};}
- if(method==='requestScholarship')return {status:'PENDING'};
  throw Error('Unsupported demo operation: '+method)
 }
 function api(method,...args){if(!isLive)return localCall(method,args);return new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));}
@@ -78,7 +84,49 @@ function accountNotice(error) {
  if (error.message.includes('[ACCOUNT_REVOKED]')) return 'Your account access has been blocked. Contact your BijakLearn administrator.';
  return '';
 }
-function GoogleLogin({onToken,notice}){const [issue,setIssue]=useState('');useEffect(()=>{if(!isLive)return;let tries=0;const timer=setInterval(()=>{const id=window.BIJAKLEARN_GOOGLE_CLIENT_ID;if(window.google?.accounts?.id&&id){clearInterval(timer);try{window.google.accounts.id.initialize({client_id:id,callback:res=>onToken(res.credential),ux_mode:'popup'});window.google.accounts.id.renderButton(document.getElementById('google-signin'),{theme:'outline',size:'large',shape:'pill',text:'signin_with',width:260});}catch(e){setIssue(e.message)}}else if(++tries>80){clearInterval(timer);setIssue('Google sign-in could not load on this browser.')}} ,250);return()=>clearInterval(timer)},[onToken]);return <section className="signin"><div className="mascot">🦁</div><h1>Welcome to BijakLearn Junior</h1><p>Parents sign in securely before managing their children’s learning.</p>{isLive?<div id="google-signin"/>:<button className="primary" onClick={()=>onToken('DEMO')}>Explore learning</button>}{notice&&<p className="error" role="alert">{notice}</p>}{issue&&<p className="error">{issue}</p>}<small>{isLive?'Google account required for parent access.':'Use a fictional nickname for optional practice on this device.'}</small></section>}
+function GoogleLogin({onToken,notice}){
+ const [issue,setIssue]=useState('');
+ const [admin,setAdmin]=useState(false);
+ const accountUrl=import.meta.env.VITE_ACCOUNT_APP_URL||'';
+ const validAccountUrl=/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(accountUrl);
+ useEffect(()=>{
+  if(!isLive)return;
+  let tries=0;
+  const timer=setInterval(()=>{
+   const id=window.BIJAKLEARN_GOOGLE_CLIENT_ID;
+   if(window.google?.accounts?.id&&id){
+    clearInterval(timer);
+    try{
+     window.google.accounts.id.initialize({client_id:id,callback:res=>onToken(res.credential),ux_mode:'popup'});
+     window.google.accounts.id.renderButton(document.getElementById('google-signin'),{theme:'outline',size:'large',shape:'rectangular',text:'signin_with',width:260});
+    }catch{setIssue('Google sign-in could not be initialized. Please try again.')}
+   }else if(++tries>80){clearInterval(timer);setIssue('Google sign-in could not load on this browser. Please reload to try again.')}
+  },250);
+  return()=>clearInterval(timer);
+ },[onToken]);
+ return <main className="signin">
+  <section className="signin-intro">
+   <span className="signin-kicker">BijakLearn Junior</span>
+   <h1>A focused space for growing minds.</h1>
+   <p>Thoughtful lessons, guided practice and a clear view of your family’s learning journey.</p>
+   <span className="signin-kicker">Preschool · Primary years 1–6</span>
+  </section>
+  <section className="signin-form">
+   <div className="signin-tabs" role="group" aria-label="Sign-in type">
+    <button type="button" aria-pressed={!admin} onClick={()=>setAdmin(false)}>Parent sign-in</button>
+    <button type="button" aria-pressed={admin} onClick={()=>setAdmin(true)}>Administrator</button>
+   </div>
+   <h2>{admin?'Administrator sign-in':'Welcome back'}</h2>
+   <p>{admin?'Sign in with the administrator Google account to review requests and manage access.':'Sign in with Google to request access or continue learning with an approved account.'}</p>
+   {isLive?<div id="google-signin"/>:validAccountUrl?<a className="primary account-signin-link" href={accountUrl}>Continue with Google →</a>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your administrator for the private learning app link.</p>}
+   {notice&&<p className="error" role="alert">{notice}</p>}
+   {issue&&<p className="error" role="alert">{issue}</p>}
+   <p className="signin-note">{admin?'Administrator permissions are verified by the server after sign-in.':'New accounts require administrator approval. If access is pending, return after your administrator approves your request.'}</p>
+   {!isLive&&demoEnabled&&<button type="button" onClick={()=>onToken('DEMO')}>Explore learning demo</button>}
+   <small>Use fictional profiles while this service is in its pilot phase.</small>
+  </section>
+ </main>;
+}
 function PwaControls({language='ms'}){
  const [online,setOnline]=useState(navigator.onLine);
  const [installEvent,setInstallEvent]=useState(null);
@@ -271,7 +319,7 @@ function App(){
  const clearTracking=()=>{
   wipeUsage();setUsageReport(summariseUsage(childId));
  };
- useEffect(()=>{if(!isLive){api('getBootstrap','PUBLIC_SHOWCASE').then(b=>{setToken('PUBLIC_SHOWCASE');setBoot(b);setChildId(b.children[0]?.id||'')}).catch(e=>setError(e.message))}},[]);
+
  const child=boot?.children.find(x=>x.id===childId),q=lesson?.questions[qIndex];
  const browseYear=child?.year||year,browseSchool=child?.school||school;
  const [showOptional,setShowOptional]=useState(false);
@@ -379,10 +427,10 @@ function App(){
  }
  async function viewReport(){try{const r=await call('getParentReport',childId,pin);setReport(r);setUsageReport(summariseUsage(childId));setPage('parent')}catch{}}
  async function savePin(){try{await call('setParentPin',pin,oldPin);alert('Parent PIN saved. Keep it private.')}catch{}}
- async function scholarship(){try{await call('requestScholarship');await refresh();alert('Scholarship request submitted for private manual review.')}catch{}}
+
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
- if(!token)return isLive?<><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} notice={loginNotice}/></>:<><PwaControls language={uiLanguage}/><main className="showcase-loading" role="status"><span aria-hidden="true">🦁</span><h1>Welcome to BijakLearn Junior</h1><p>Opening your learning adventure…</p></main></>;
- return <div className="app"><header><button className="logo" onClick={()=>setPage('home')}><img src="./icons/app-icon.svg" width="44" height="44" alt=""/> <span>BijakLearn <b>Junior</b></span></button><div className="topactions"><StreakChip language={uiLanguage}/><button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/>{isLive&&<><span>{boot?.parent?.name}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></>}</div></header>
+ if(!token)return <><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} notice={loginNotice}/></>;
+ return <div className="app"><header><button className="logo" onClick={()=>setPage('home')}><img src="./icons/app-icon.svg" width="44" height="44" alt=""/> <span>BijakLearn <b>Junior</b></span></button><div className="topactions"><StreakChip language={uiLanguage}/><button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?boot?.parent?.name:'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
  <nav className="nav" aria-label={say(uiLanguage,'navLabel')}>
   <div className="nav-group" role="group" aria-label={say(uiLanguage,'navLearn')}><span className="nav-title">{say(uiLanguage,'navLearn')}</span>
@@ -415,13 +463,14 @@ function App(){
   <button type="button" onClick={()=>setPage('home')}><span aria-hidden="true">🏠</span> {say(uiLanguage,'goHome')}</button>
  </nav>}
  {timeConsent&&<p className="time-child-notice" role="status">⏱️ {say(uiLanguage,'timeNotice')}</p>}
+ <ModuleGate moduleId={isLive?moduleForPage(page,growthAudience,growthKind):null} request={authRequest} onMembership={()=>setPage('membership')}>
  {page==='paths'&&<LearningPaths lessons={boot?.lessons||[]} onOpen={openLesson} finished={currentProgress.activities}
   onLab={pathId=>setPage('lab',{pathId})} onReview={isLive?undefined:pathId=>setPage('review',{pathId})}/>}
  {page==='lab'&&selectedPath&&<PracticeLab key={selectedPath.id} path={selectedPath} onComplete={()=>updateProgress('activities',selectedPath.id)}/>}
  {page==='review'&&!isLive&&<ReviewQuestions items={selectedPath?missed.filter(item=>selectedPath.lessons.includes(item.lesson.id)):missed}
   onRetry={(id,questionId)=>openLesson(id,{questionId})}/>}
  {page==='discovery'&&<DiscoveryLibrary availableLessons={boot?.lessons||[]} onOpen={openLesson}/>}
- {isLive&&boot?.canManageAccounts&&page==='account-access'&&<AccountAccessPanel request={authRequest}/>}
+ {isLive&&boot?.canManageAccounts&&page==='account-access'&&<><AccountAccessPanel request={authRequest}/><KasihReviewPanel request={authRequest}/></>}
  {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={LESSONS} initialYear={browseYear} school={browseSchool} onOpenLesson={openLesson}/>}
  {page==='science-lab'&&<ScienceLab language={uiLanguage}/>}
  {page==='arcade'&&<ActivityArcade/>}
@@ -516,7 +565,9 @@ function App(){
  <p className="time-small">Device-local preview: this report may be cleared or altered through browser settings. Reliable multi-device parent reporting requires separate parent/child accounts, consent controls and a private backend; no remote tracking is active on the public site.</p>
  </section>}
 {page==='parent'&&report&&<><h1>👨‍👩‍👧 Parent Learning Intelligence</h1><p>Practice overview for {child?.name} — formative and not independently certified</p><div className="statgrid">{[['Practice milestones',report.mastered],['Practice attempts',report.attempts],['Independent attempts',report.independent],['Learning opportunities',report.errors]].map(([name,n])=><div className="stat" key={name}><strong>{n}</strong><span>{name}</span></div>)}</div><div className="panel"><h2>🕵️ Learning Detective</h2>{report.topics.length?report.topics.map(x=><p key={x.lessonId}><strong>{boot.lessons.find(l=>l.id===x.lessonId)?.title||x.lessonId}</strong> — {x.mastered?'Practice milestone reached (not certified)':'Needs more independent practice'} · {x.independent} independent answers</p>):<p>Complete a few lessons to begin building the learning profile.</p>}<p className="hint">We report observed evidence, not a diagnosis of intelligence or a fixed learning style.</p></div><div className="panel"><h2>💡 Suggested home activity</h2><p>Ask your child to explain a maths problem using household objects, then try a similar example with different quantities.</p></div></>}
- {page==='membership'&&<section className="membership-journey"><div className="adventure-intro"><div><span className="adventure-eyebrow">💚 SUPPORT EVERY LEARNER</span><h1>Learning access & family packages</h1><p>Explore our learning experience and understand the available access options. Family account enrolment and paid memberships are not active on this website.</p></div><div className="adventure-illustration" aria-hidden="true"><span>🎒</span><span>💚</span><span>✨</span></div></div><div className="membership-tiers"><article className="tier-card"><span className="tier-icon">🌱</span><h2>Free Explorer</h2><p>Discover learning activities and find your favourite subjects.</p><ul><li>Browse available study lessons</li><li>Try interactive preschool games</li><li>Explore themed learning packs</li></ul><button type="button" onClick={()=>setPage('packs')}>Explore learning packs →</button></article><article className="tier-card premium-tier"><span className="tier-icon">🚀</span><h2>Premium</h2><p>Planned full learning access for subscribing families, subject to manual verification.</p><ul><li>Premium lesson access in the separately hosted account pilot</li><li>Parent learning progress insights</li><li>Family-managed child profiles</li></ul><div className="tier-status">Enrolment opening later</div></article><article className="tier-card"><span className="tier-icon">💚</span><h2>Premium Kasih</h2><p>A planned full-Premium sponsorship path for eligible families, following private administrator approval.</p><ul><li>Same planned learning access as Premium</li><li>Manual, private eligibility review</li><li>No fee for approved families</li></ul><div className="tier-status">Private application process</div></article></div><div className="panel"><h2>Account status</h2><p>Plan: <strong>{boot?.access.plan}</strong> · {boot?.access.active?'Active test entitlement':'Free access'}</p>{isLive?<><button type="button" onClick={()=>refresh()}>Refresh account status</button><p>Scholarship review status: {boot?.scholarship||'Not requested'}</p><button type="button" className="primary" onClick={scholarship} disabled={busy}>Request private scholarship review</button></>:<p>The website currently offers open access to its available learning activities. Online payments and private document submissions are not enabled.</p>}</div></section>}
+ {page==='membership'&&<MembershipPage boot={boot} live={isLive} onApply={()=>setPage('premium-kasih')} onRefresh={()=>refresh().catch(()=>{})} onExplore={()=>setPage('map')}/>}
+ {page==='premium-kasih'&&<PremiumKasihApplication request={authRequest} live={isLive} onSubmitted={()=>refresh().catch(()=>{})}/>}
+ </ModuleGate>
  </main><footer><div>{say(uiLanguage,'footerLine',{mode:say(uiLanguage,isLive?'modeLive':'modePreview')})}</div><div className="proease-footer">{say(uiLanguage,'footerRights',{year:new Date().getFullYear()})}</div></footer></div>
 }
 createRoot(document.getElementById('root')).render(<AppBoundary><PlayfulScene/><App/></AppBoundary>);

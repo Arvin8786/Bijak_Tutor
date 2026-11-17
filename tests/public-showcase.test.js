@@ -2,11 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 
-test('public showcase opens learning dashboard without a sign-in gate',()=>{
+test('public site requires the login gate and limits demo access to explicit builds',()=>{
  const src=fs.readFileSync('src/main.jsx','utf8');
- assert.match(src,/api\('getBootstrap','PUBLIC_SHOWCASE'\)/);
- assert.match(src,/if\(!token\)return isLive\?/);
- assert.match(src,/Opening your learning adventure/);
+ assert.ok(!src.includes("api('getBootstrap','PUBLIC_SHOWCASE')"));
+ assert.match(src,/if\(!token\)return <>/);
+ assert.match(src,/VITE_ENABLE_DEMO==='true'/);
+ assert.match(src,/!isLive&&demoEnabled/);
+ assert.match(src,/VITE_ACCOUNT_APP_URL/);
  assert.match(src,/say\(uiLanguage,'personaliseTitle'\)/);
  assert.match(fs.readFileSync('src/shellCopy.js','utf8'),/personaliseTitle:'Personalise your learning space'/);
  assert.ok(!src.includes('Explore local demo'));
@@ -18,7 +20,7 @@ test('guest visitors are not represented as authenticated parents or premium mem
  assert.match(src,/name:'Guest',email:''/);
  assert.match(src,/access:\{active:false,plan:'FREE'\}/);
  assert.match(src,/isLive&&<NavButton[^>]*onClick=\{\(\)=>setPage\('pin'\)\}/);
- assert.match(src,/Family account enrolment and paid memberships are not active/);
+ assert.match(fs.readFileSync('src/MembershipPage.jsx','utf8'),/Family account enrolment and paid memberships are not active/);
 });
 
 test('showcase clearly identifies supplementary learning and does not claim certified assessment',()=>{

@@ -5,6 +5,7 @@ import {LESSONS} from '../src/lessons.js';
 import {questionBank, selectPractice} from '../src/practiceBank.js';
 import {buildWordSearch, LIFE_CYCLES} from '../src/extendedPracticeData.js';
 import {checkAccountAccessBrowser} from './account-access-browser.mjs';
+import {checkTierAccessBrowser} from './tier-access-browser.mjs';
 
 // Serve the unchanged production bundle at a project URL, as GitHub Pages does.
 const projectPath='/Bijak_Tutor/';
@@ -27,12 +28,26 @@ try{
   const welcome=page.locator('.welcome-gate');
   await welcome.getByRole('button',{name:/English/i}).click();
   await welcome.getByRole('button',{name:/Continue/i}).click();
+  await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
+  if(!await page.getByRole('button',{name:'Explore learning demo',exact:true}).count()){
+   assert.equal(await page.locator('nav.nav').count(),0,'Learning must stay behind the gate');
+   await page.getByRole('button',{name:'Administrator',exact:true}).click();
+   await page.getByRole('heading',{name:'Administrator sign-in',exact:true}).waitFor();
+   assert.equal(await page.getByRole('button',{name:'Manage account access',exact:true}).count(),0);
+   assert.ok(await page.locator('.signin').evaluate(el=>el.scrollWidth<=window.innerWidth),'Login gate must fit viewport');
+   assert.deepEqual(exceptions,[]);
+   await page.close();
+   console.log(`Passed production login gate at ${width}px`);
+   continue;
+  }
+  await page.getByRole('button',{name:'Explore learning demo',exact:true}).click();
   if(width===375){
     const motion=page.getByRole('button',{name:'Calm mode',exact:true});
     await motion.click();
     assert.equal(await motion.getAttribute('aria-pressed'),'false');
     assert.equal(await page.locator('.scene-cloud').first().evaluate(node=>getComputedStyle(node).animationName),'none');
     await page.reload({waitUntil:'networkidle'});
+    await page.getByRole('button',{name:'Explore learning demo',exact:true}).click();
     assert.equal(await motion.getAttribute('aria-pressed'),'false','Calm mode should persist across reopening');
     await motion.click();
     assert.equal(await motion.getAttribute('aria-pressed'),'true');
@@ -189,6 +204,7 @@ try{
     await page.getByRole('button',{name:'Add practice profile'}).click();
     await page.getByRole('button',{name:/Test Fox/}).waitFor();
     await page.reload({waitUntil:'networkidle'});
+    await page.getByRole('button',{name:'Explore learning demo',exact:true}).click();
     await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
     await page.getByRole('button',{name:/Test Fox/}).waitFor();
     await page.getByRole('button',{name:/Clear saved practice/i}).click();
@@ -205,7 +221,13 @@ try{
     await page.locator('.lesson-reader').waitFor();
     await page.getByRole('button',{name:/Membership/i}).click();
     assert.equal(await page.locator('.tier-card').count(),3,'Family access package comparison missing');
-    await page.locator('.tier-card').first().getByRole('button',{name:/Explore learning packs/i}).click();
+    await page.getByRole('button',{name:'Apply for Premium Kasih',exact:true}).click();
+    await page.getByRole('heading',{name:'Apply for Premium Kasih',exact:true}).waitFor();
+    assert.equal(await page.locator('.kasih-application input').count(),0,'Demo must not collect personal details or documents');
+    await page.locator('nav.nav').getByRole('button',{name:/Membership/i}).click();
+    await page.locator('.tier-card').first().getByRole('button',{name:'Explore available learning',exact:true}).click();
+    await page.locator('.curriculum-map').waitFor();
+    await page.locator('nav.nav').getByRole('button',{name:/Learning Packs/i}).click();
     await page.locator('.adventure-quest .quest-go').click();
     await page.locator('.lesson-reader').waitFor();
   }
@@ -513,6 +535,9 @@ try{
   assert.equal(exceptions.length,0,'JS runtime error: '+exceptions.join('; '));
   const over=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);
   assert.equal(over,false,'Horizontal overflow at '+width+'px');
+  await page.getByRole('button',{name:'Sign out',exact:true}).click();
+  await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
+  assert.equal(await page.locator('nav.nav').count(),0,'Sign-out must return to the gate');
   await page.close();
   console.log('Passed browser flows at '+width+'px');
  }
@@ -524,12 +549,19 @@ try{
  await offlinePage.waitForFunction(()=>Boolean(navigator.serviceWorker.controller));
  await offlineContext.setOffline(true);
  await offlinePage.reload();
+ if(await offlinePage.getByRole('button',{name:'Explore learning demo',exact:true}).count()){
+ await offlinePage.getByRole('button',{name:'Explore learning demo',exact:true}).click();
  await offlinePage.getByRole('button',{name:/Matematik.*Buka buku/i}).click();
  await offlinePage.locator('.subject-page').getByRole('heading',{name:'Matematik',exact:true}).waitFor();
  await offlinePage.getByRole('button',{name:'Kembali',exact:true}).click();
  await offlinePage.getByRole('heading',{name:/Pilih mata pelajaran/i}).waitFor();
+ }else{
+  await offlinePage.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
+  assert.equal(await offlinePage.locator('nav.nav').count(),0,'Offline navigation must preserve the login gate');
+ }
  await offlineContext.close();
  await checkAccountAccessBrowser(browser, base);
+ await checkTierAccessBrowser(browser, base);
  console.log('Passed pending, approval, blocking, restoration and revoked-session browser flows.');
- console.log('Browser smoke tests passed: existing Junior features, Adult Learn AI, Junior/Adult Creative Hobbies, ProEase attribution and mobile widths.');
+ console.log('Browser smoke tests passed for the selected production or demo build, offline reload and account access flows.');
 }finally{if(browser)await browser.close();server.kill('SIGTERM')}

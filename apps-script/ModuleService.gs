@@ -6,17 +6,18 @@
 function getGrowthModule(token,moduleId){
  return withAuth_(token,user=>{
   const id=String(moduleId||'').trim().slice(0,70);
+  requireModule_(user,id);
   if(!/^(junior|adult)-(ai|hobby)$/.test(id))throw Error('Unknown learning module');
   const module=rows_('ModuleCatalog').find(row=>String(row.moduleId)===id);
   if(!module)throw Error('This learning module is not available yet');
   if(String(module.visibility)==='HIDDEN')throw Error('Module is not published');
   const tier=String(module.accessTier||'FREE').toUpperCase();
-  if(tier!=='FREE'&&!access_(user).active)throw Error('An active membership is required for this module');
+  const paid=access_(user).active;
   const approvedOnly=tier!=='FREE'||String(module.visibility)==='PRIVATE';
   const lessons=rows_('ModuleLessons')
    .filter(row=>String(row.moduleId)===id)
-   .filter(row=>String(row.visibility)==='PUBLIC_PREVIEW'||(tier!=='FREE'&&access_(user).active))
-   .filter(row=>!approvedOnly||(String(row.contentStatus)==='TEACHER_APPROVED'&&String(row.reviewStatus)==='APPROVED'))
+   .filter(row=>String(row.visibility)==='PUBLIC_PREVIEW'||(String(row.visibility)==='PRIVATE'&&paid))
+   .filter(row=>!(approvedOnly||String(row.visibility)==='PRIVATE')||(String(row.contentStatus)==='TEACHER_APPROVED'&&String(row.reviewStatus)==='APPROVED'))
    .sort((a,b)=>Number(a.sequence)-Number(b.sequence))
    .slice(0,120).map(row=>{
     let steps=[],quiz=null;
@@ -44,8 +45,9 @@ function checkGrowthAnswer(token,lessonId,answerIndex){
   if(!lesson||String(lesson.visibility)==='HIDDEN')throw Error('Activity unavailable');
   const module=rows_('ModuleCatalog').find(row=>String(row.moduleId)===String(lesson.moduleId));
   if(!module||String(module.visibility)==='HIDDEN')throw Error('Module unavailable');
+  requireModule_(user,String(module.moduleId));
   const tier=String(module.accessTier||'FREE').toUpperCase();
-  if(tier!=='FREE'&&!access_(user).active)throw Error('Membership required');
+  if(!['PUBLIC_PREVIEW','PRIVATE'].includes(String(lesson.visibility))||(String(lesson.visibility)==='PRIVATE'&&!access_(user).active))throw Error('Activity unavailable');
   if((tier!=='FREE'||String(lesson.visibility)==='PRIVATE')&&
      (String(lesson.contentStatus)!=='TEACHER_APPROVED'||String(lesson.reviewStatus)!=='APPROVED'))throw Error('Activity is awaiting educational review');
   const quiz=JSON.parse(String(lesson.questionJson||'null'));

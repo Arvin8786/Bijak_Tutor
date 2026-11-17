@@ -4,34 +4,8 @@
  * Run manually in the Apps Script editor, after verifying identity and payment.
  * Never expose these as web-app functions without separate strong admin auth.
  */
-function approveScholarship_(requestId,months){
- if(!requestId)throw Error('Enter an application ID');
- const duration=Math.max(1,Math.min(12,Math.floor(Number(months)||12)));
- const lock=LockService.getScriptLock();lock.waitLock(30000);
- try{
-  const req=rows_('Scholarships').find(x=>String(x.requestId)===String(requestId));
-  if(!req)throw Error('Scholarship application not found');
-  if(String(req.status)==='APPROVED')return {ok:true,alreadyApproved:true};
-  if(!rows_('Parents').some(p=>String(p.googleSub)===String(req.googleSub)))throw Error('Unknown parent');
-  update_('Scholarships','requestId',requestId,{status:'APPROVED',reviewedAt:new Date().toISOString(),adminNote:'Verified manually by administrator'});
-  const expires=new Date();expires.setMonth(expires.getMonth()+duration);
-  append_('Subscriptions',{googleSub:req.googleSub,plan:'PREMIUM_KASIH',status:'ACTIVE',expiresAt:expires.toISOString(),updatedAt:new Date().toISOString(),adminNote:'Approved scholarship '+requestId});
-  append_('Audit',{timestamp:new Date().toISOString(),actor:'OWNER',action:'SCHOLARSHIP_APPROVED',reference:String(requestId)});
-  return {ok:true,plan:'PREMIUM_KASIH',expiresAt:expires.toISOString()};
- }finally{lock.releaseLock()}
-}
-function declineScholarship_(requestId,reason){
- if(!requestId||!String(reason||'').trim())throw Error('Application ID and review reason required');
- const lock=LockService.getScriptLock();lock.waitLock(30000);
- try{
-  const req=rows_('Scholarships').find(x=>String(x.requestId)===String(requestId));
-  if(!req)throw Error('Application not found');
-  if(req.status==='APPROVED')throw Error('Approved scholarship must be handled separately');
-  update_('Scholarships','requestId',requestId,{status:'DECLINED',reviewedAt:new Date().toISOString(),adminNote:String(reason).slice(0,250)});
-  append_('Audit',{timestamp:new Date().toISOString(),actor:'OWNER',action:'SCHOLARSHIP_DECLINED',reference:String(requestId)});
-  return {ok:true};
- }finally{lock.releaseLock()}
-}
+function approveScholarship_(requestId,months){return reviewKasih_(String(requestId),'APPROVED',Number(months)||12,'Verified by spreadsheet owner','OWNER')}
+function declineScholarship_(requestId,reason){return reviewKasih_(String(requestId),'DECLINED',0,String(reason||''),'OWNER')}
 function verifyManualPayment_(parentGoogleSub,reference,amountRM,months){
  // Only use after checking the payment independently in a bank statement.
  const ref=String(reference||'').trim().slice(0,80),amount=Number(amountRM);

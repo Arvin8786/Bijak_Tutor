@@ -12,6 +12,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
+    env:
+      VITE_ACCOUNT_APP_URL: ${{ vars.VITE_ACCOUNT_APP_URL }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -35,6 +37,12 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Check production browser flows before publishing
         run: node tests/browser-smoke.mjs
+      - name: Compile explicit demo build for learning regression checks
+        run: VITE_ENABLE_DEMO=true npm run build
+      - name: Check learning regression flows
+        run: node tests/browser-smoke.mjs
+      - name: Restore production login-gated bundle
+        run: npm run build
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload compiled site

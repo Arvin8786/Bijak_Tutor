@@ -17,3 +17,5 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run build
       - run: node tests/browser-smoke.mjs
+      - run: VITE_ENABLE_DEMO=true npm run build
+      - run: node tests/browser-smoke.mjs

@@ -6,6 +6,8 @@ The repository contains the interactive preschool module, responsive primary-sch
 
 ## Run the learning app
 
+The production site now opens a parent/administrator login gate. Real sign-in and administrator approval run in the separately deployed Google Apps Script app. Configure its public URL as `VITE_ACCOUNT_APP_URL`; see the [operational release guide](docs/OPERATIONAL_RELEASE.md). If no app has been deployed, sign-in stays unavailable. Local development includes an explicit demo entry for testing.
+
 ```bash
 npm install
 npm test
@@ -14,6 +16,10 @@ npm run dev
 ```
 
 Deploy `dist/` to GitHub Pages via the existing workflow. The optional *Remember demo progress* toggle saves fictional demo profiles and scoring history only in the current browser. The **Clear demo progress** button deletes the local copy.
+
+## Tier access and Premium Kasih
+
+See [Google Sheets, tier rules and OAuth setup](docs/TIERS_AND_GOOGLE_SETUP.md). The generated Apps Script package imports the app’s 18 modules into `ModuleAccess`, enforces Free/Premium/Premium Kasih permissions, and provides private sponsorship applications with document review. Run `setupBijakLearn_` in your bound Apps Script project to populate the existing workbook; setup preserves existing module rules. Real OAuth credentials and deployment still require the Google account owner.
 
 ## Backend deployment and teacher-review requirements
 

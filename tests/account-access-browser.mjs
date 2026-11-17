@@ -9,6 +9,11 @@ export async function checkAccountAccessBrowser(browser, base) {
    let signIn;
    function invoke(method, credential, id, status) {
     const operator = credential === 'test-operator';
+    if (method === 'authorizeModule') {
+     if(!operator && window.testAccountStatus !== 'ACTIVE') throw Error('[ACCOUNT_' + window.testAccountStatus + ']');
+     return {moduleId:id,allowed:true,plan:'FREE'};
+    }
+    if (method === 'listKasihApplications' && operator) return [];
     if (method === 'listAccountAccess' && operator) {
      return [{id: 'google:test-family', name: 'Test Family', email: 'family@example.test', status: window.testAccountStatus}];
     }
@@ -56,9 +61,13 @@ export async function checkAccountAccessBrowser(browser, base) {
   await page.getByRole('alert').filter({hasText: 'waiting for administrator approval'}).waitFor();
   await page.getByRole('button', {name: 'Test operator sign-in'}).click();
   await page.getByRole('button', {name: 'Manage account access'}).click();
+  await page.getByLabel('Access status', {exact: true}).selectOption('ACTIVE');
+  await page.getByText('No matching accounts.', {exact: true}).waitFor();
+  await page.getByLabel('Access status', {exact: true}).selectOption('PENDING');
   await page.getByRole('button', {name: 'Approve'}).click();
   await page.getByRole('button', {name: 'Grant access'}).click();
   await page.getByRole('status').filter({hasText: 'Active: family@example.test'}).waitFor();
+  await page.getByLabel('Access status', {exact: true}).selectOption('ALL');
   await page.getByRole('button', {name: 'Block', exact: true}).click();
   assert.equal(await page.getByRole('button', {name: 'Block access'}).isEnabled(), false);
   await page.getByLabel('Reason for blocking').fill('Test block');
@@ -73,8 +82,6 @@ export async function checkAccountAccessBrowser(browser, base) {
   assert.equal(await page.getByRole('button', {name: 'Manage account access'}).count(), 0);
   await page.evaluate(() => { window.testAccountStatus = 'REVOKED'; });
   await page.getByRole('button', {name: 'Parent insights'}).click();
-  await page.getByLabel('Parent PIN', {exact: true}).fill('123456');
-  await page.getByRole('button', {name: 'View child report'}).click();
   await page.getByRole('alert').filter({hasText: 'Your account access has been blocked'}).waitFor();
   assert.equal(await page.getByRole('button', {name: 'Sign out'}).count(), 0);
  } finally {

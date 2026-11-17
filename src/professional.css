@@ -1,0 +1,94 @@
+/* Shared visual system for the learning workspace and account screens. */
+:root{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#1e293b;background:#f4f6fa;font-synthesis:none;--ink:#172b4d;--muted:#61718a;--line:#dce3ed;--accent:#2459a9;--surface:#fff}
+body{background:#f4f6fa;line-height:1.55;cursor:auto}
+body button,body a,body summary,body select{cursor:pointer!important}
+body input,body textarea{cursor:text!important}
+button,input,textarea,select{font:inherit}
+button{border-radius:8px;transition:background .15s,border-color .15s;min-height:42px}
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #528be1;outline-offset:3px}
+button:disabled{cursor:not-allowed!important}
+h1,h2,h3{color:var(--ink);letter-spacing:-.025em;line-height:1.25}
+p{line-height:1.65}
+.app{background:#f4f6fa}
+.app>header{background:#fff;border-bottom:1px solid var(--line);box-shadow:none;padding:18px 32px;gap:24px;position:relative;z-index:10}
+.app .logo{font-size:21px;letter-spacing:-.6px;background:transparent;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.app .logo b{color:var(--accent)}
+.app .topactions{gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.app .topactions button{font-size:12px;padding:7px 11px;border-color:var(--line);background:#fff;color:var(--ink)}
+.app .pwa-controls{padding:0;background:transparent;min-height:0;gap:8px}
+.app .nav{max-width:1200px;margin:0 auto;padding:16px 24px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none;gap:16px;position:relative;top:auto}
+.app .nav-group{padding:0;background:transparent;border:0;box-shadow:none;gap:5px;flex-wrap:wrap}
+.app .nav-title{color:var(--muted);font-size:10px;letter-spacing:.12em;font-weight:700}
+.app .nav button{background:transparent;border:1px solid transparent;color:#53637c;border-radius:7px;box-shadow:none;padding:8px 10px;font-weight:500;font-size:12px;transform:none}
+.app .nav button.active,.app .nav button[aria-current="page"]{background:#e7effb;border-color:#d4e2f7;color:#194b96;font-weight:650}
+.app .nav button:hover{background:#eaf0f8;transform:none}
+.app main{max-width:1200px;margin:28px auto;padding:0 24px 48px}
+.app .panel,.app .stat,.app .lesson,.app .subject,.app .studio-card,.app .tier-card,.app .library-section,.app .home-packs-teaser,.app .tutor-teaser,.app .continue-learning,.app .learning-path-card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 2px 4px #20365704;color:var(--ink)}
+.app .panel{padding:24px;margin:20px 0}
+.app .hero{background:#eaf0fa;border:1px solid #dbe5f4;border-radius:14px;padding:32px;box-shadow:none;color:var(--ink);position:relative;overflow:hidden}
+.app .hero h1{color:var(--ink);font-size:clamp(26px,3.4vw,40px);max-width:650px}
+.app .hero p{color:#536781;max-width:620px}
+.app .eyebrow,.app .mini-label,.app .adventure-eyebrow{color:#3565a3;font-size:11px;letter-spacing:.12em;font-weight:700}
+.app .primary,.app .preschool-launch{background:var(--accent);border:1px solid var(--accent);color:#fff;border-radius:8px;box-shadow:none}
+.app .subject,.app .lesson{padding:20px;text-align:left}
+.app .subject:hover,.app .lesson:hover,.app .studio-card:hover{border-color:#a9bfdc;box-shadow:0 4px 14px #2036570a;transform:none}
+.app .subject:nth-child(n){background:#fff}
+.app input,.app select,.app textarea{border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:var(--ink);min-height:43px;padding:10px 12px;max-width:100%}
+.app label{color:#526078;font-size:13px;font-weight:550}
+.app .chips button,.app .study-shortcuts button,.app .study-shortcuts a,.app .page-controls button{border:1px solid var(--line);border-radius:7px;background:#fff;color:#435570;box-shadow:none}
+.app .chips button.selected,.app .choices button.selected{background:#eaf1fc;border-color:#638ac0;color:#194b96}
+.app .studio-card.science,.app .studio-card.maths{background:#fff;border-color:var(--line)}
+.app .studio-card-icon{background:#edf3fb;border-radius:10px}
+.app .library-filters,.app .demo-save-settings,.app .page-controls,.app .time-consent{background:#f7f9fc;border:1px solid #e3e9f1;border-radius:9px}
+.app .home-mascot-band{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:none}
+.app .hero-mascots{max-width:150px;opacity:.9}
+.app .mascot-picture{box-shadow:none;border-radius:16px}
+.app .home-packs-teaser,.app .tutor-teaser{padding:24px;margin-top:20px}
+.app .visual-example{background:#eef4fb;border:1px solid #d8e5f5;border-radius:10px}
+.app .stat strong{color:var(--accent)}
+.app footer{border-top:1px solid var(--line);background:#fff;color:var(--muted);padding:24px}
+.playful-scene{opacity:.08;pointer-events:none}
+.scene-tools button{background:#fff;border:1px solid var(--line);color:#526078;border-radius:6px;box-shadow:none}
+.welcome-gate{background:#eef2f8;color:var(--ink);padding:48px 20px}
+.welcome-main{border:1px solid var(--line);border-radius:16px;box-shadow:0 16px 48px #1a33500b;padding:40px;width:min(100%,560px)}
+.welcome-brand{font-size:25px;color:var(--ink);letter-spacing:-.7px}
+.welcome-brand em{color:var(--accent)}
+.welcome-star{display:none}
+.welcome-main>.mascot-friends{max-width:145px;margin:24px auto}
+.welcome-main .mascot-picture{border-radius:18px;box-shadow:none}
+.welcome-main .mascot-hint{font-size:12px;color:var(--muted)}
+.welcome-choice{border:1px solid var(--line);border-radius:8px;background:#fff;box-shadow:none}
+.welcome-choice.chosen{background:#edf3fc;border-color:#6086bd;color:#204d8c;box-shadow:none}
+.welcome-continue{background:var(--accent);border-radius:8px;box-shadow:none;color:#fff}
+.welcome-small{color:#66758b}
+.signin{max-width:980px;min-height:560px;margin:48px auto;padding:0;border:1px solid var(--line);border-radius:16px;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;box-shadow:0 12px 36px #20365708;text-align:left;gap:0}
+.signin::before,.signin::after{display:none!important;content:none!important}
+.signin-intro{background:#19365b;color:#fff;padding:48px;align-self:stretch;display:flex;flex-direction:column;justify-content:center}
+.signin-intro h1{color:#fff;font-size:36px;margin:20px 0}
+.signin-intro p{color:#c8d7e9}
+.signin-kicker{font-size:11px;text-transform:uppercase;letter-spacing:.16em;font-weight:700}
+.signin-form{padding:40px;display:flex;flex-direction:column;align-items:flex-start;gap:16px}
+.signin-form h2{margin:0;font-size:25px}
+.signin-form p{margin:0}
+.signin-form small{color:#61718a}
+.signin .error{display:block;width:100%;font-size:13px;margin:0}
+.signin-note{border-top:1px solid var(--line);padding-top:18px;font-size:12px}
+.account-signin-link{display:inline-flex;align-items:center;min-height:44px;padding:10px 18px;text-decoration:none}
+@media(min-width:1100px){
+ .app>header{position:sticky;top:0;min-height:84px}
+ .app nav.nav{position:fixed!important;inset:84px auto 0 0!important;width:232px;max-width:none!important;margin:0!important;padding:24px 14px!important;display:flex;flex-direction:column;flex-wrap:nowrap;justify-content:flex-start;align-items:stretch;gap:26px;background:#fff!important;border:0!important;border-right:1px solid var(--line)!important;border-radius:0!important;box-shadow:none!important;overflow-y:auto;z-index:8}
+ .app nav.nav .nav-group{display:flex;flex-direction:column;align-items:stretch;gap:3px}
+ .app nav.nav .nav-title{padding:0 12px 8px;font-size:10px}
+ .app nav.nav button{display:flex;align-items:center;justify-content:flex-start;text-align:left;padding:10px 12px!important;font-weight:550!important;min-height:40px;background:transparent!important;border:0!important;box-shadow:none!important;color:#526078!important}
+ .app nav.nav button.active,.app nav.nav button[aria-current="page"]{background:#eaf1fc!important;color:#204f96!important}
+ .app main{margin:28px auto 0 232px;width:calc(100% - 232px);max-width:none;padding:0 36px 48px}
+ .app footer{margin-left:232px}
+}
+.app .hero::before,.app .hero::after{display:none}
+.app .hero .preschool-launch{border-radius:8px;background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:none}
+.signin-tabs{display:flex;gap:4px;background:#f0f3f8;padding:4px;border-radius:8px;width:100%}
+.signin-tabs button{flex:1;border:0;background:transparent;font-size:13px;padding:8px}
+.signin-tabs button[aria-pressed="true"]{background:#fff;box-shadow:0 1px 4px #20365712;color:var(--accent);font-weight:650}
+@media(min-width:1500px){.app .nav{max-width:1280px}.app main{max-width:1280px}}
+@media(max-width:760px){.app>header{padding:16px;flex-wrap:wrap;gap:12px}.app .topactions{justify-content:flex-start}.app .nav{padding:12px 16px;gap:10px}.app .nav button{min-width:0;flex:initial}.app main{padding:0 16px 36px;margin:20px auto}.app .hero{padding:24px;flex-wrap:wrap;gap:20px}.app .hero-mascots{display:none}.app .panel{padding:18px}.signin{margin:24px 16px;grid-template-columns:1fr;min-height:0}.signin-intro{padding:28px}.signin-intro h1{font-size:28px;margin:12px 0}.signin-form{padding:28px}.welcome-main{padding:28px 20px}.app .logo{font-size:19px}}
+.kasih-form{display:flex;flex-direction:column;gap:18px}.kasih-form textarea{width:100%;font:inherit}.kasih-form .consent-check{display:flex;flex-direction:row;align-items:flex-start;gap:10px;font-weight:400}.kasih-form .consent-check input{min-height:20px;flex:0 0 20px;margin-top:2px}.application-reason{white-space:pre-wrap;overflow-wrap:anywhere}.app .kasih-application{max-width:720px}

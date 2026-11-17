@@ -1,5 +1,7 @@
 import fs from 'node:fs';import path from 'node:path';
 import {LESSONS} from '../src/lessons.js';
+import {APP_MODULES} from '../src/moduleRegistry.js';
+import {GROWTH_TRACKS} from '../src/growthCurriculum.js';
 const dir='dist';const html=fs.readFileSync(path.join(dir,'index.html'),'utf8');
 const jsPath=html.match(/src="(?:\.\/|\/)?(assets\/[^"]+\.js)"/)?.[1];const cssPath=html.match(/href="(?:\.\/|\/)?(assets\/[^"]+\.css)"/)?.[1];
 if(!jsPath) throw new Error('JS asset not found');
@@ -21,3 +23,7 @@ const exportable=LESSONS.map(l=>({id:l.id,year:l.year,school:l.school||'ALL',sub
 fs.writeFileSync('release/CurriculumData.gs',`const BIJAK_CURRICULUM_BUNDLE = ${JSON.stringify(exportable)};\n`);fs.copyFileSync('apps-script/appsscript.json','release/appsscript.json');console.log(`Ready: release/App.html, Code.gs, CurriculumImport.gs, AdminOperations.gs, AccountAccess.gs, AnswerMarking.gs, TutorAI.gs, ModuleService.gs, CurriculumData.gs, appsscript.json (${LESSONS.length} lessons)`);
 
 fs.writeFileSync('release/AnswerMarking.gs',fs.readFileSync('src/answerMarking.js','utf8').replaceAll('export ','').replace(/\b(markPractice|normalizedAnswer|numericValue)\b/g,'$1_'));
+
+for(const name of ['TierAccess','PremiumKasih'])fs.copyFileSync('apps-script/'+name+'.gs','release/'+name+'.gs');
+fs.writeFileSync('release/ModuleData.gs','const BIJAK_APP_MODULES = '+JSON.stringify(APP_MODULES)+';\nconst BIJAK_GROWTH_TRACKS = '+JSON.stringify(GROWTH_TRACKS)+';\n');
+fs.writeFileSync('release/ModuleAccess.csv',Object.keys(APP_MODULES[0]).join(',')+'\n'+APP_MODULES.map(m=>Object.values(m).map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n')+'\n');
