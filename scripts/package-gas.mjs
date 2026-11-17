@@ -31,3 +31,5 @@ fs.writeFileSync('release/ModuleAccess.csv',Object.keys(APP_MODULES[0]).join(','
 
 
 for(const name of ['RolePortals.gs','Transport.html'])fs.copyFileSync('apps-script/'+name,'release/'+name);
+
+fs.copyFileSync('apps-script/Commerce.gs','release/Commerce.gs');

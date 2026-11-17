@@ -76,13 +76,13 @@ function setMembership(token,accountKey,plan,months,reason){
  if(!MEMBERSHIP_TIERS_.includes(plan)||plan==='PREMIUM_KASIH')throw Error('Premium Kasih must be granted by reviewing an application');
  const sub=accountKey.slice(7),note=String(reason||'').trim();
  if(!note||note.length>250)throw Error('Enter a reason of 1–250 characters');
- const duration=Number(months);
- if(plan!=='FREE'&&(!Number.isInteger(duration)||duration<1||duration>12))throw Error('Duration must be 1–12 months');
+ const lifetime=months==='LIFETIME',duration=Number(months);
+ if(plan!=='FREE'&&!lifetime&&(!Number.isInteger(duration)||duration<1||duration>12))throw Error('Duration must be 1–12 months');
  const lock=LockService.getScriptLock();lock.waitLock(30000);
  try{
   if(!rows_('Parents').some(row=>String(row.googleSub)===sub)&&!rows_('AccountAccess').some(row=>row.accountKey===accountKey))throw Error('Account not found');
-  const expiry=plan==='FREE'?'':new Date(Date.now()+duration*30*86400000).toISOString();
-  append_('Subscriptions',{googleSub:sub,plan,status:'ACTIVE',expiresAt:expiry,updatedAt:new Date().toISOString(),adminNote:note});
+  const expiry=plan==='FREE'||lifetime?'':new Date(Date.now()+duration*30*86400000).toISOString();
+  append_('Subscriptions',{googleSub:sub,plan,status:'ACTIVE',expiresAt:expiry,updatedAt:new Date().toISOString(),adminNote:note,lifetime:lifetime?'TRUE':'FALSE'});
   append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'MEMBERSHIP_'+plan,reference:accountKey});
   return {plan,expiresAt:expiry||null};
  }finally{lock.releaseLock()}
@@ -112,3 +112,4 @@ function setupBijakFromSheet_(){
  const result=setupBijakLearn_();
  SpreadsheetApp.getUi().alert('Setup finished. Added '+result.modules.added+' app modules. Open ModuleAccess to adjust tier checkboxes. Configure Google OAuth before testing live sign-in.');
 }
+

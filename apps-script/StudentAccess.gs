@@ -1,4 +1,4 @@
-/** Separate Google identities for learners. Only an administrator creates or revokes links. */
+/** Parents link their own learners; only an administrator changes or revokes existing links. */
 function latestStudentLinks_(){
  const latest=new Map();
  rows_('StudentAccounts').forEach(row=>latest.set(String(row.studentKey),row));
@@ -17,7 +17,7 @@ function studentIdentity_(user,link){
  const event=latestAccountEvents_().get(accountKey_(user.sub));
  if(event&&!['ACTIVE','PENDING'].includes(event.status))throw Error('[STUDENT_REVOKED] Student account access is not active.');
  const child=rows_('Children').find(row=>String(row.childId)===String(link.childId)&&String(row.parentSub)===String(link.parentSub));
- if(!child)throw Error('[STUDENT_REVOKED] The linked learner profile is unavailable.');
+ if(!child||child.status==='REMOVED')throw Error('[STUDENT_REVOKED] The linked learner profile is unavailable.');
  const parent=rows_('Parents').find(row=>String(row.googleSub)===String(link.parentSub));
  if(!parent)throw Error('[STUDENT_REVOKED] The linked family account is unavailable.');
  requireActiveAccount_({sub:String(link.parentSub),email:String(parent.email||''),name:String(parent.displayName||'')},false);
@@ -58,13 +58,15 @@ function setStudentAccount(token,email,childId,status){
  const lock=LockService.getScriptLock();lock.waitLock(10000);
  try{
   const child=rows_('Children').find(row=>String(row.childId)===childId);
-  if(!child)throw Error('Choose an existing learner profile');
+  if(!child||child.status==='REMOVED')throw Error('Choose an existing learner profile');
   if(rows_('Parents').some(parent=>String(parent.email).toLowerCase()===address)||String(admin.email).toLowerCase()===address)throw Error('Use a separate student Google account, not a parent or administrator account');
   const studentKey='email:'+address,previous=latestStudentLinks_().find(row=>String(row.studentKey)===studentKey);
   if(previous&&String(previous.childId)!==childId&&previous.status==='ACTIVE')throw Error('Revoke the existing student link before changing the learner profile');
   if(status==='REVOKED'&&!previous)throw Error('Student link not found');
   const row={studentKey,email:address,googleSub:previous?.googleSub||'',childId:status==='REVOKED'?previous.childId:childId,parentSub:status==='REVOKED'?previous.parentSub:child.parentSub,status,linkedAt:new Date().toISOString(),linkedBy:accountKey_(admin.sub)};
   append_('StudentAccounts',row);
+  if(status==='ACTIVE'&&typeof commerceAccess_==='function')update_('Children','childId',childId,{status:'ACTIVE'});
+
   append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'STUDENT_'+status,reference:studentKey});
   return {id:studentKey,email:address,childId:String(row.childId),status};
  }finally{lock.releaseLock()}
@@ -76,3 +78,4 @@ function configureGoogleOAuth_(clientId){
  props_().setProperty('GOOGLE_CLIENT_ID',id);
  return {clientIdConfigured:true,roles:['PARENT','STUDENT','ADMIN'],googleConsoleSetupRequired:true};
 }
+

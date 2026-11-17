@@ -1,3 +1,6 @@
+// Capture a referral only in this tab; no tracking cookies, email addresses or child data in URLs.
+function getReferralCode(){try{const code=new URL(window.location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('bijaklearn:referral',code);return sessionStorage.getItem('bijaklearn:referral')||''}catch{return ''}}
+getReferralCode();
 import {ACCOUNT_URL,GOOGLE_CLIENT_ID,remoteAccountCall} from './accountTransport.js';
 import {RolePortals,StudentUsage} from './RolePortals.jsx';
 import OAuthLogin from './OAuthLogin.jsx';
@@ -395,7 +398,7 @@ function App(){
   activeToken.current=credential;
   setLoginNotice('');
   try{
-   const data=await api(portalV2?'getPortalBootstrap':role==='student'?'getStudentBootstrap':'getBootstrap',credential,...(portalV2?[role]:[]));
+   const data=await api(portalV2?'getPortalBootstrap':role==='student'?'getStudentBootstrap':'getBootstrap',credential,...(portalV2?[role,getReferralCode()]:[]));
    if(attempt!==loginAttempt.current||activeToken.current!==credential)return;
    if(data.role==='STUDENT'){setGrowthAudience('junior');setGrowthKind('ai');}
    setBoot(data);

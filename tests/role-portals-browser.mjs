@@ -9,6 +9,7 @@ await page.addInitScript(role=>{
    const child={id:'fictional-child',name:'Fictional learner',year:2,school:'SK',language:'en'};
    function invoke(method,...args){
     if(method==='getPortalBootstrap')return {role,user:{name:'Test account'},parent:{name:'Test parent',email:'parent@test.invalid'},canManageAccounts:role==='ADMIN',children:role==='STUDENT'?[child]:[],lessons:[],access:{active:false,plan:'FREE'},modules:[]};
+    if(method==='getCommerceAdministration')return {settings:{commissionBps:0,paymentInstructions:'Scan our administrator QR',qrUploadId:''},orders:[],discounts:[],commissions:[],payouts:[],uploadsConfigured:false};
     if(method==='getAdministrationOverview')return {settings:{clientIdConfigured:true},children:1,reportedSeconds7Days:300,activityEvents:3,parents:[],modules:[],payments:[]};
     if(method==='getParentDashboard')return {parent:{name:'Test parent',email:'parent@test.invalid'},access:{plan:'FREE'},children:[{...child,attempts:4,correct:3,accuracy:75,mastered:1,reportedSeconds:120,dailyUsage:[{date:'2026-11-17',seconds:120}],recent:[]}],enrolments:[],feedback:[]};
     if(['listAccountAccess','listStudentProfiles','listStudentAccounts','listEnrolments','listKasihApplications','listParentFeedback'].includes(method))return [];
@@ -23,7 +24,7 @@ await page.addInitScript(role=>{
   const welcome=page.locator('.welcome-gate');if(await welcome.count()){await welcome.getByRole('button',{name:'English',exact:true}).click();await welcome.getByRole('button',{name:'Continue',exact:true}).click()}
   await page.getByRole('button',{name:'Test Google account',exact:true}).click();
   if(role==='ADMIN'){
-   await page.getByRole('heading',{name:'Overview & usage',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Science Lab',exact:true}).count(),0);assert.equal(await page.locator('.portal-nav button').count(),7);
+   await page.getByRole('heading',{name:'Overview & usage',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Science Lab',exact:true}).count(),0);assert.equal(await page.locator('.portal-nav button').count(),8);
    await page.getByRole('button',{name:'Parent feedback',exact:true}).click();await page.getByText('No parent feedback yet.',{exact:true}).waitFor();
    await page.getByRole('button',{name:'Payment controls',exact:true}).click();await page.getByRole('heading',{name:'Payment controls',exact:true}).waitFor();
   }else if(role==='PARENT'){
