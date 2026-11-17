@@ -3,6 +3,14 @@
  * In Script Properties set GOOGLE_CLIENT_ID and SPREADSHEET_ID. Never publish the sheet.
  */
 const TABLES = {
+ CommerceSettings:['key','value','updatedAt','updatedBy'],
+ DiscountCampaigns:['campaignId','code','percent','startsAt','endsAt','maxUses','enabled','createdAt','createdBy'],
+ Orders:['orderId','parentSub','kind','slots','listCents','discountCents','totalCents','discountId','referrerSub','commissionBps','commissionCents','status','createdAt','expiresAt','submittedAt','reference','proofId','reviewedAt','reviewedBy','note'],
+ Uploads:['uploadId','parentSub','purpose','recordId','fileId','mimeType','createdAt','removedAt'],
+ Affiliates:['parentSub','code','name','email','createdAt'],
+ Referrals:['referredSub','referrerSub','referrerName','referrerEmail','code','createdAt'],
+ CommissionPayouts:['payoutId','referrerSub','throughMonth','amountCents','reference','recordedAt','recordedBy','orderIdsJson'],
+ PayoutItems:['orderId','payoutId'],
  UsageEvents:['eventId','childId','googleSub','moduleId','seconds','createdAt'],
  Enrolments:['requestId','parentSub','parentEmail','studentEmail','nickname','year','school','language','consentAt','status','childId','createdAt','reviewedAt','reviewedBy'],
  ParentFeedback:['feedbackId','parentSub','parentEmail','category','message','createdAt','status','reply','repliedAt'],
@@ -10,8 +18,8 @@ const TABLES = {
  Parents:['googleSub','email','displayName','createdAt','parentPinHash','pinSalt'],
  StudentAccounts:['studentKey','email','googleSub','childId','parentSub','status','linkedAt','linkedBy'],
  AccountAccess:['accountKey','email','displayName','status','changedAt','changedBy','reason'],
- Children:['childId','parentSub','nickname','year','school','language','createdAt'],
- Subscriptions:['googleSub','plan','status','expiresAt','updatedAt','adminNote'],
+ Children:['childId','parentSub','nickname','year','school','language','createdAt','status'],
+ Subscriptions:['googleSub','plan','status','expiresAt','updatedAt','adminNote','lifetime'],
  ModuleAccess:['moduleId','title','route','enabled','free','premium','premiumKasih','freeLessonLimit','notes','updatedAt'],
  ModuleCatalog:['moduleId','audience','title','tagline','icon','visibility','accessTier','contentStatus','reviewStatus','updatedAt'],
  ModuleLessons:['lessonId','moduleId','sequence','title','summary','stepsJson','questionJson','project','visibility','contentStatus','reviewStatus','updatedAt'],
@@ -50,18 +58,19 @@ function withAuth_(token,fn,requestOnSignIn=false){
  upsertParent_(user);
  return fn(user);
 }
-function requireChild_(u,childId){const family=u.role==='STUDENT'?u.familySub:u.sub;const child=rows_('Children').find(c=>String(c.childId)===childId&&String(c.parentSub)===family);if(!child||(u.role==='STUDENT'&&childId!==u.studentChildId))throw Error('Child not linked to this account');return child}
+function requireChild_(u,childId){const family=u.role==='STUDENT'?u.familySub:u.sub;const child=rows_('Children').find(c=>String(c.childId)===childId&&String(c.parentSub)===family);if(!child||child.status==='REMOVED'||(u.role==='STUDENT'&&childId!==u.studentChildId))throw Error('Child not linked to this account');return child}
 
 function access_(u){
  // The latest membership event is authoritative, including revocation or expiry.
  const r=rows_('Subscriptions').filter(row=>String(row.googleSub)===(u.role==='STUDENT'?u.familySub:u.sub)).slice(-1)[0];
  const pendingKasih=r&&r.plan==='PREMIUM_KASIH'&&String(r.adminNote).startsWith('Kasih application ')&&!rows_('Scholarships').some(row=>String(row.requestId)===String(r.adminNote).slice(18)&&row.status==='APPROVED');
  const valid=!pendingKasih&&r&&String(r.status).toUpperCase()==='ACTIVE'&&['PREMIUM','PREMIUM_KASIH'].includes(String(r.plan))&&Date.parse(String(r.expiresAt))>Date.now();
- return {active:!!valid,plan:valid?String(r.plan):'FREE',expiresAt:valid?r.expiresAt:null};
+ const legacy={active:!!valid,plan:valid?String(r.plan):'FREE',expiresAt:valid?r.expiresAt:null};
+ return typeof commerceAccess_==='function'?commerceAccess_(u,r,legacy):legacy;
 }
 function getBootstrap(token){return withAuth_(token,u=>{if(u.role==='STUDENT')throw Error('[STUDENT_ONLY] Use Student sign-in for your linked learner profile.');return {role:'PARENT',parent:{name:u.name,email:u.email},canManageAccounts:isAccountAdmin_(u),children:rows_('Children').filter(c=>String(c.parentSub)===u.sub).map(c=>({id:c.childId,name:c.nickname,year:Number(c.year),school:c.school,language:c.language})),access:access_(u),modules:moduleSummary_(u),lessons:lessonCatalogue_(),scholarship:rows_('Scholarships').filter(r=>String(r.googleSub)===u.sub).slice(-1)[0]?.status||null}},true);}
 
-function addChild(token,details){return withAuth_(token,u=>{requireParent_(u);const children=rows_('Children').filter(c=>c.parentSub===u.sub);if(children.length>=5)throw Error('Maximum five children per parent account');const name=String(details.name||'').trim().slice(0,40);const year=Number(details.year);if(!name||!Number.isInteger(year)||year<1||year>6)throw Error('Provide a child nickname and school year 1–6');const id=Utilities.getUuid();append_('Children',{childId:id,parentSub:u.sub,nickname:name,year,school:['SK','SJKC','SJKT'].includes(details.school)?details.school:'SK',language:['ms','en','ta','zh'].includes(details.language)?details.language:'ms',createdAt:new Date().toISOString()});return {id,name,year};});}
+function addChild(token,details){if(typeof linkParentChild==='function')return linkParentChild(token,details);return withAuth_(token,u=>{requireParent_(u);const children=rows_('Children').filter(c=>c.parentSub===u.sub);if(children.length>=5)throw Error('Maximum five children per parent account');const name=String(details.name||'').trim().slice(0,40);const year=Number(details.year);if(!name||!Number.isInteger(year)||year<1||year>6)throw Error('Provide a child nickname and school year 1–6');const id=Utilities.getUuid();append_('Children',{childId:id,parentSub:u.sub,nickname:name,year,school:['SK','SJKC','SJKT'].includes(details.school)?details.school:'SK',language:['ms','en','ta','zh'].includes(details.language)?details.language:'ms',createdAt:new Date().toISOString()});return {id,name,year};});}
 function getLesson(token,childId,lessonId){return withAuth_(token,u=>{requireChild_(u,childId);const l=rows_('Lessons').find(x=>x.lessonId===lessonId);if(!l)throw Error('Lesson not found');requireLessonAccess_(u,l);const questions=rows_('Questions').filter(q=>q.lessonId===lessonId).map(q=>({id:q.questionId,mode:q.mode,text:q.text,options:JSON.parse(q.optionsJson||'[]'),transfer:String(q.transfer).toUpperCase()==='TRUE'}));return {id:l.lessonId,title:l.title,year:Number(l.year),subject:l.subject,icon:l.icon,summary:l.summary,visual:l.visual||'',chapter:l.chapter||'',school:l.school||'ALL',status:l.contentStatus||'DRAFT_TEACHER_REVIEW',mind:JSON.parse(l.mindJson||'[]'),steps:JSON.parse(l.stepsJson||'[]'),questions};});}
 function computeMastery_(attempts){
   // Self-reported hints are not strong identity-proof, so this remains

@@ -6,7 +6,8 @@ function portalIdentity_(token){
  if(link)return bindStudentIdentity_(verified);
  requireActiveAccount_(verified,true);upsertParent_(verified);return {...verified,role:'PARENT'};
 }
-function getPortalBootstrap(token,requestedRole){
+function getPortalBootstrap(token,requestedRole,referralCode){
+ if(typeof registerReferralOnboarding_==='function')registerReferralOnboarding_(verify_(token),referralCode);
  const user=portalIdentity_(token);
  if(requestedRole==='admin'&&user.role!=='ADMIN')throw Error('Administrator access required');
  if(user.role==='ADMIN')return {role:'ADMIN',user:{name:user.name,email:user.email},canManageAccounts:true,children:[],lessons:[],modules:[],access:{plan:'ADMIN',active:true}};
@@ -14,7 +15,7 @@ function getPortalBootstrap(token,requestedRole){
  if(requestedRole==='student')throw Error('[STUDENT_NOT_LINKED] Ask your parent to enrol your separate student account.');
  return {role:'PARENT',parent:{name:user.name,email:user.email},canManageAccounts:false,children:familyChildren_(user),lessons:[],modules:[],access:access_(user)};
 }
-function familyChildren_(user){return rows_('Children').filter(c=>String(c.parentSub)===user.sub).map(c=>({id:String(c.childId),name:String(c.nickname),year:Number(c.year),school:String(c.school),language:String(c.language)}))}
+function familyChildren_(user){return rows_('Children').filter(c=>String(c.parentSub)===user.sub&&c.status!=='REMOVED').map(c=>({id:String(c.childId),name:String(c.nickname),year:Number(c.year),school:String(c.school),language:String(c.language)}))}
 function requirePortalParent_(token){const user=portalIdentity_(token);if(user.role!=='PARENT')throw Error('Parent account required');return user}
 function getParentDashboard(token){
  const user=requirePortalParent_(token),attempts=rows_('Attempts'),mastery=rows_('Mastery'),usage=rows_('UsageEvents');
@@ -24,7 +25,7 @@ function getParentDashboard(token){
   return {...child,attempts:checks.length,correct,accuracy:checks.length?Math.round(100*correct/checks.length):null,mastered:progress.filter(m=>String(m.mastered)==='true').length,reportedSeconds:time.reduce((n,e)=>n+(Number(e.seconds)||0),0),dailyUsage:dates.map(date=>({date,seconds:time.filter(e=>String(e.createdAt).startsWith(date)).reduce((n,e)=>n+(Number(e.seconds)||0),0)})),recent:checks.slice(-20).reverse().map(a=>({lessonId:String(a.lessonId),correct:String(a.correct)==='true',hints:Number(a.hints),createdAt:String(a.createdAt)}))};
  }),enrolments:rows_('Enrolments').filter(r=>String(r.parentSub)===user.sub).map(r=>({id:r.requestId,studentEmail:r.studentEmail,name:r.nickname,status:r.status})),feedback:rows_('ParentFeedback').filter(r=>String(r.parentSub)===user.sub).slice(-50).reverse().map(r=>({id:r.feedbackId,category:r.category,message:r.message,status:r.status,reply:r.reply,createdAt:r.createdAt}))};
 }
-function submitParentEnrolment(token,details){
+function submitParentEnrolment(token,details){if(typeof linkParentChild==='function')return linkParentChild(token,details);
  const user=requirePortalParent_(token);details=details||{};
  const email=String(details.studentEmail||'').trim().toLowerCase(),name=String(details.name||'').trim(),year=Number(details.year);
  if(!/^\S+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254||email===user.email.toLowerCase()||!name||name.length>40||!Number.isInteger(year)||year<1||year>6||details.consent!==true)throw Error('Provide a separate student email, nickname, school year and guardian consent');
@@ -108,8 +109,8 @@ function recordPaymentReview(token,details){
 }
 /** Explicit RPC allowlist: never dispatch a client-supplied global function name. */
 function portalRequest(method,args){
- if(typeof method!=='string'||!Array.isArray(args)||args.length>8||JSON.stringify(args).length>1500000)throw Error('Invalid account request');
- const operations={getPortalBootstrap,getParentDashboard,submitParentEnrolment,listEnrolments,reviewEnrolment,submitParentFeedback,listParentFeedback,replyParentFeedback,recordStudentUsage,getAdministrationOverview,setModulePolicy,recordPaymentReview,listAccountAccess,setAccountAccess,listStudentAccounts,listStudentProfiles,setStudentAccount,setMembership,listKasihApplications,getKasihDocument,reviewKasihApplication,submitKasihApplication,getKasihApplication,addChild,getLesson,submitAttempt,getParentReport,setParentPin,getGrowthModule,checkGrowthAnswer,authorizeModule,askTutor};
+ if(typeof method!=='string'||!Array.isArray(args)||args.length>8||JSON.stringify(args).length>3000000)throw Error('Invalid account request');
+ const operations={removeChildLink,setDiscountEnabled,uploadPaymentQr,getFamilyCommerce,linkParentChild,getCommerceAdministration,setCommerceSettings,saveDiscountCampaign,createFamilyOrder,submitOrderProof,listFamilyOrders,reviewFamilyOrder,getPrivateUpload,recordCommissionPayout,getPortalBootstrap,getParentDashboard,submitParentEnrolment,listEnrolments,reviewEnrolment,submitParentFeedback,listParentFeedback,replyParentFeedback,recordStudentUsage,getAdministrationOverview,setModulePolicy,recordPaymentReview,listAccountAccess,setAccountAccess,listStudentAccounts,listStudentProfiles,setStudentAccount,setMembership,listKasihApplications,getKasihDocument,reviewKasihApplication,submitKasihApplication,getKasihApplication,addChild,getLesson,submitAttempt,getParentReport,setParentPin,getGrowthModule,checkGrowthAnswer,authorizeModule,askTutor};
  if(!Object.prototype.hasOwnProperty.call(operations,method))throw Error('Unsupported account request');
  return operations[method].apply(null,args);
 }

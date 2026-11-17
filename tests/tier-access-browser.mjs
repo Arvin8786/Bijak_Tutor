@@ -46,9 +46,10 @@ await page.addInitScript(()=>{
   await page.getByRole('button',{name:'Test operator sign-in'}).click();
   await page.getByRole('button',{name:'Manage account access',exact:true}).click();
   await page.getByRole('button',{name:'Supporting document 1',exact:true}).waitFor();
-  const download=page.waitForEvent('download');
   await page.getByRole('button',{name:'Supporting document 1',exact:true}).click();
-  assert.equal((await download).suggestedFilename(),'supporting-document.pdf');
+  await page.getByRole('dialog',{name:'Private document viewer'}).waitFor();
+  await page.getByRole('link',{name:'Download a private copy'}).waitFor();
+  await page.getByRole('button',{name:'Close document',exact:true}).click();
   await page.getByRole('button',{name:'Approve Premium Kasih',exact:true}).click();
   await page.getByLabel('Review note',{exact:true}).fill('Fictional evidence reviewed for browser test.');
   await page.getByLabel('Duration in months',{exact:true}).fill('6');
@@ -61,7 +62,7 @@ await page.addInitScript(()=>{
   await page.getByLabel('Membership reason',{exact:true}).fill('Return to Free test');
   await page.getByRole('button',{name:'Save membership',exact:true}).click();
   await page.getByRole('status').filter({hasText:'Membership updated: FREE'}).waitFor();
-  console.log('Passed tier denial, private application upload, administrator evidence download, approval and Free assignment browser flows.');
+  console.log('Passed tier denial, private application upload, in-app private evidence preview, approval and Free assignment browser flows.');
  }finally{await page.close()}
 }
 

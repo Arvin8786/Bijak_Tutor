@@ -20,7 +20,7 @@ export default function AccountAccessPanel({request}) {
  async function saveMembership(event){
   event.preventDefault();setSaving(true);setError('');setNotice('');
   try{
-   const result=await request('setMembership',membershipAccount,membershipPlan,Number(membershipMonths),membershipReason);
+   const result=await request('setMembership',membershipAccount,membershipPlan,membershipMonths==='LIFETIME'?'LIFETIME':Number(membershipMonths),membershipReason);
    setNotice('Membership updated: '+result.plan.replaceAll('_',' '));setMembershipReason('');
   }catch(failure){setError(failure.message)}finally{setSaving(false)}
  }
@@ -74,7 +74,7 @@ export default function AccountAccessPanel({request}) {
   {accounts?.length>0&&<details><summary>Assign Free or Premium membership</summary><form className="kasih-form panel" onSubmit={saveMembership}>
    <label>Account<select aria-label="Membership account" required value={membershipAccount} disabled={saving} onChange={event=>setMembershipAccount(event.target.value)}><option value="">Choose an account</option>{accounts.map(account=><option key={account.id} value={account.id}>{account.email||account.id}</option>)}</select></label>
    <label>Membership plan<select aria-label="Membership plan" value={membershipPlan} disabled={saving} onChange={event=>setMembershipPlan(event.target.value)}><option value="FREE">Free (limited)</option><option value="PREMIUM">Premium</option></select></label>
-   {membershipPlan==='PREMIUM'&&<label>Membership months<input type="number" min="1" max="12" required value={membershipMonths} disabled={saving} onChange={event=>setMembershipMonths(event.target.value)}/></label>}
+   {membershipPlan==='PREMIUM'&&<label>Membership duration<select value={membershipMonths} disabled={saving} onChange={event=>setMembershipMonths(event.target.value)}><option value="LIFETIME">Lifetime</option>{[1,3,6,12].map(n=><option key={n} value={n}>{n} months</option>)}</select></label>}
    <label>Membership reason<textarea required maxLength={250} value={membershipReason} disabled={saving} onChange={event=>setMembershipReason(event.target.value)}/></label>
    <p>Verify payment independently before assigning Premium. Premium Kasih requires a reviewed application below. Changing membership does not approve or unblock an account.</p>
    <button className="primary" disabled={saving||!membershipAccount}>Save membership</button>
@@ -124,3 +124,4 @@ export default function AccountAccessPanel({request}) {
   </ul>}
  </section>;
 }
+
