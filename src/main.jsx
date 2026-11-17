@@ -64,9 +64,9 @@ function LessonSearch({query, onChange, count}) {
  </div>;
 }
 const nativeAccountService=!!window.google?.script?.run;
-const portalV2=!nativeAccountService||window.BIJAKLEARN_PORTAL_VERSION===2;
 const demoEnabled=import.meta.env.DEV||import.meta.env.VITE_ENABLE_DEMO==='true';
 const isLive=nativeAccountService||(!demoEnabled&&/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(ACCOUNT_URL));
+const portalV2=isLive&&(!nativeAccountService||window.BIJAKLEARN_PORTAL_VERSION===2);
 const langLabels={ms:'Bahasa Melayu',en:'English',ta:'தமிழ்',zh:'中文'};
 const DEMO_SAVE_CONSENT='bijaklearn:demo-save-consent';
 const savedDemo=()=>{try{return localStorage.getItem(DEMO_SAVE_CONSENT)==='yes'}catch{return false}};
