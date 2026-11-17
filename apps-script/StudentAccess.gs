@@ -65,6 +65,8 @@ function setStudentAccount(token,email,childId,status){
   if(status==='REVOKED'&&!previous)throw Error('Student link not found');
   const row={studentKey,email:address,googleSub:previous?.googleSub||'',childId:status==='REVOKED'?previous.childId:childId,parentSub:status==='REVOKED'?previous.parentSub:child.parentSub,status,linkedAt:new Date().toISOString(),linkedBy:accountKey_(admin.sub)};
   append_('StudentAccounts',row);
+  if(status==='ACTIVE'&&typeof commerceAccess_==='function')update_('Children','childId',childId,{status:'ACTIVE'});
+
   append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'STUDENT_'+status,reference:studentKey});
   return {id:studentKey,email:address,childId:String(row.childId),status};
  }finally{lock.releaseLock()}
