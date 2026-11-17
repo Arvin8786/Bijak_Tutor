@@ -1,3 +1,4 @@
+import OAuthLogin from './OAuthLogin.jsx';
 import React,{useCallback,useEffect,useRef,useState} from 'react';
 import {TRACK_CONSENT,trackingEnabled,setTrackingEnabled,readUsage,wipeUsage,recordUsage,summariseUsage,IDLE_LIMIT_MS,MAX_TICK_MS} from './learningTime.js';
 import {createRoot} from 'react-dom/client';
@@ -98,7 +99,7 @@ function GoogleLogin({onToken,notice}){
  const accountUrl=import.meta.env.VITE_ACCOUNT_APP_URL||'';
  const validAccountUrl=/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(accountUrl);
  useEffect(()=>{
-  if(!isLive)return;
+  if(!isLive||window.location.hostname.endsWith('-script.googleusercontent.com'))return;
   if(!window.BIJAKLEARN_GOOGLE_CLIENT_ID){setIssue('Google sign-in is not configured. Ask the administrator to set the OAuth Web client ID in Apps Script.');return;}
   let tries=0;
   const timer=setInterval(()=>{
@@ -128,7 +129,7 @@ function GoogleLogin({onToken,notice}){
    </div>
    <h2>{admin?'Administrator sign-in':student?'Student sign-in':'Welcome back'}</h2>
    <p>{admin?'Sign in with the administrator Google account to review requests and manage access.':student?'Use your own Google account linked by your administrator to your learner profile.':'Sign in with Google to request access or continue learning with an approved account.'}</p>
-   {isLive?<div id="google-signin"/>:validAccountUrl?<a className="primary account-signin-link" href={accountUrl+'?role='+loginRole}>Continue with Google →</a>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your administrator for the private learning app link.</p>}
+   {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin"/>}</>:validAccountUrl?<a className="primary account-signin-link" href={accountUrl+'?role='+loginRole}>Continue with Google →</a>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your administrator for the private learning app link.</p>}
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
    <p className="signin-note">{admin?'Administrator permissions are verified by the server after sign-in.':student?'Your parent or administrator must enable your student account first. Use a separate account from your parent.':'New accounts require administrator approval. If access is pending, return after your administrator approves your request.'}</p>
