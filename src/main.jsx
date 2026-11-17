@@ -41,6 +41,7 @@ import {ContinueLearning, LearningPaths, PracticeLab, ReviewQuestions} from './L
 import {PATHS, missedQuestions} from './learningPaths.js';
 import {DiscoveryActivity, DiscoveryLibrary} from './DiscoveryLearning.jsx';
 import {LessonNavigation, LearningMindMap, LessonQuickCheck, SubjectMindMap} from './InteractiveLearning.jsx';
+import EducationalVideos from './EducationalVideos.jsx';
 import ScienceLab from './ScienceLab.jsx';
 import AppBoundary from './AppBoundary.jsx';
 import MathsStudio from './MathsStudio.jsx';
@@ -423,6 +424,7 @@ function App(){
  {page==='discovery'&&<DiscoveryLibrary availableLessons={boot?.lessons||[]} onOpen={openLesson}/>}
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<AccountAccessPanel request={authRequest}/>}
  {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={LESSONS} initialYear={browseYear} school={browseSchool} onOpenLesson={openLesson}/>}
+ {page==='videos'&&<EducationalVideos request={isLive?authRequest:null} administrator={isLive&&!!boot?.canManageAccounts}/>}
  {page==='science-lab'&&<ScienceLab language={uiLanguage}/>}
  {page==='arcade'&&<ActivityArcade/>}
  {page==='wordgame'&&<WordTilesGame/>}
@@ -436,7 +438,7 @@ function App(){
 
  {!isLive&&<ContinueLearning lastLesson={lastLesson} activities={currentProgress.activities.length} quizzes={currentProgress.quizzes.length}
   missed={missed.length} onOpen={openLesson} onReview={()=>setPage('review')} onPaths={()=>setPage('paths')}/>}
- <div className="study-shortcuts" aria-label={say(uiLanguage,'navLearn')}>
+ <div className="study-shortcuts" aria-label={say(uiLanguage,'navLearn')}><button type="button" onClick={()=>setPage('videos')}>📺 Learning Videos</button>
   <a href="#study-library">📚 {say(uiLanguage,'browseLibrary')}</a>
   <button type="button" onClick={()=>setPage('discovery')}>🧩 {say(uiLanguage,'discovery')}</button>
   {isLive&&<button type="button" onClick={()=>setPage('paths')}>{say(uiLanguage,'learningPaths')}</button>}
