@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 export async function checkStudentAccessBrowser(browser,base){
  const page=await browser.newPage({viewport:{width:390,height:900}});
  try{
-  await page.addInitScript(()=>{
+  await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({status:200,contentType:'application/javascript',body:'// Google identity is mocked in this test.'}));
+await page.addInitScript(()=>{
    window.BIJAKLEARN_GOOGLE_CLIENT_ID='test-client';window.studentLink=null;
    let callback;
    function invoke(method,credential,...args){
@@ -50,3 +51,4 @@ export async function checkStudentAccessBrowser(browser,base){
   console.log('Passed student role selection, unlinked-account gate, admin linking and student-only interface browser flows.');
  }finally{await page.close()}
 }
+

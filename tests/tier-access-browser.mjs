@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 export async function checkTierAccessBrowser(browser,base){
  const page=await browser.newPage({viewport:{width:390,height:900}});
  try{
-  await page.addInitScript(()=>{
+  await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({status:200,contentType:'application/javascript',body:'// Google identity is mocked in this test.'}));
+await page.addInitScript(()=>{
    window.BIJAKLEARN_GOOGLE_CLIENT_ID='test-client';window.testKasih=null;window.testMembership='FREE';
    let signIn;
    function invoke(method,credential,...args){
@@ -63,3 +64,4 @@ export async function checkTierAccessBrowser(browser,base){
   console.log('Passed tier denial, private application upload, administrator evidence download, approval and Free assignment browser flows.');
  }finally{await page.close()}
 }
+

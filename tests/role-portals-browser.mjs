@@ -3,7 +3,8 @@ export async function checkRolePortalsBrowser(browser,base){
  for(const role of ['ADMIN','PARENT','STUDENT']){
   const page=await browser.newPage({viewport:{width:role==='PARENT'?375:1280,height:900}}),errors=[];
   page.on('pageerror',error=>errors.push(error.message));
-  await page.addInitScript(role=>{
+  await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({status:200,contentType:'application/javascript',body:'// Google identity is mocked in this test.'}));
+await page.addInitScript(role=>{
    localStorage.setItem('bijaklearn:locale','en');window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';let signIn;
    const child={id:'fictional-child',name:'Fictional learner',year:2,school:'SK',language:'en'};
    function invoke(method,...args){
