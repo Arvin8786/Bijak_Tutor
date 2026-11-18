@@ -1,3 +1,4 @@
+import Brand from './Brand.jsx';
 // Capture a referral only in this tab; no tracking cookies, email addresses or child data in URLs.
 function getReferralCode(){try{const code=new URL(window.location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('bijaklearn:referral',code);return sessionStorage.getItem('bijaklearn:referral')||''}catch{return ''}}
 getReferralCode();
@@ -59,6 +60,7 @@ import PremiumKasihApplication from './PremiumKasihApplication.jsx';
 import KasihReviewPanel from './KasihReviewPanel.jsx';
 import './professional.css';
 import './studio-refresh.css';
+import './design-system.css';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
 
 function LessonSearch({query, onChange, count}) {
@@ -124,9 +126,9 @@ function GoogleLogin({onToken,notice}){
  },[onToken]);
  return <main className="signin">
   <section className="signin-intro">
-   <span className="signin-kicker">BijakLearn Junior</span>
-   <h1>A focused space for growing minds.</h1>
-   <p>Thoughtful lessons, guided practice and a clear view of your family’s learning journey.</p>
+   <Brand subtitle="A world of little discoveries"/>
+   <h1>Little steps.<br/><span>Wonderful possibilities.</span></h1>
+   <p>A happy place to discover, practise and grow. Every learner has a bright story waiting to unfold.</p><div className="signin-discoveries" aria-hidden="true"><span>✦ Curious minds</span><span>↗ Everyday progress</span><span>♡ Growing together</span></div>
    <span className="signin-kicker">Preschool · Primary years 1–6</span>
   </section>
   <section className="signin-form">
@@ -136,7 +138,7 @@ function GoogleLogin({onToken,notice}){
     <button type="button" aria-pressed={admin} onClick={()=>chooseRole('admin')}>Administrator</button>
    </div>
    <h2>{admin?'Administrator sign-in':student?'Student sign-in':'Welcome back'}</h2>
-   <p>{admin?'Sign in with the administrator Google account to review requests and manage access.':student?'Use your own Google account linked by your administrator to your learner profile.':'Sign in with Google to request access or continue learning with an approved account.'}</p>
+   <p>{admin?'Sign in with the administrator Google account to review requests and manage access.':student?'Use your own Google account linked by your administrator to your learner profile.':'Your family’s learning journey, all in one place. Sign in to view reports and support your child.'}</p>
    {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin"/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your administrator for the private learning app link.</p>}
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
@@ -455,7 +457,7 @@ function App(){
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
  if(!token)return <><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} notice={loginNotice}/></>;
  if(portalV2&&['ADMIN','PARENT'].includes(boot?.role))return <RolePortals boot={boot} request={authRequest} onSignOut={()=>endSession()} language={uiLanguage}/>;
- return <div className="app"><header><button className="logo" onClick={()=>setPage('home')}><img src="./icons/app-icon.svg" width="44" height="44" alt=""/> <span>BijakLearn <b>Junior</b></span></button><div className="topactions"><StreakChip language={uiLanguage}/><button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
+ return <div className="app"><header><button className="logo" onClick={()=>setPage('home')}><Brand subtitle="Discover something wonderful"/></button><div className="topactions"><StreakChip language={uiLanguage}/><button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
  {portalV2&&isLive&&boot?.role==='STUDENT'&&<StudentUsage request={authRequest} page={page}/>}
  <nav className="nav" aria-label={say(uiLanguage,'navLabel')}>

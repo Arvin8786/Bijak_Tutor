@@ -7,6 +7,8 @@ jobs:
   browser:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
+    env:
+      BIJAK_SCREENSHOT_DIR: screenshots
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,3 +21,12 @@ jobs:
       - run: node tests/browser-smoke.mjs
       - run: VITE_ENABLE_DEMO=true npm run build
       - run: node tests/browser-smoke.mjs
+
+      - name: Save console design previews
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: console-design-preview
+          path: screenshots
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
 export async function checkRolePortalsBrowser(browser,base){
  for(const role of ['ADMIN','PARENT','STUDENT']){
   const page=await browser.newPage({viewport:{width:role==='PARENT'?375:1280,height:900}}),errors=[];
@@ -23,6 +24,18 @@ await page.addInitScript(role=>{
   await page.goto(base,{waitUntil:'networkidle'});
   const welcome=page.locator('.welcome-gate');if(await welcome.count()){await welcome.getByRole('button',{name:'English',exact:true}).click();await welcome.getByRole('button',{name:'Continue',exact:true}).click()}
   await page.getByRole('button',{name:'Test Google account',exact:true}).click();
+  if(role==='ADMIN')await page.getByRole('heading',{name:'Service settings',exact:true}).waitFor();
+  if(role==='PARENT')await page.getByText('75%',{exact:true}).waitFor();
+  await page.locator('.bl-brand-icon').waitFor();
+  assert.ok(await page.locator('.bl-brand-icon').evaluate(img=>img.complete&&img.naturalWidth>0),'Shared app icon must load');
+  assert.equal(await page.locator('.bl-brand-icon').count(),1,'Every console must use the shared brand component');
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Console must fit its viewport');
+  if(process.env.BIJAK_SCREENSHOT_DIR){
+   await fs.mkdir(process.env.BIJAK_SCREENSHOT_DIR,{recursive:true});
+   await page.screenshot({path:process.env.BIJAK_SCREENSHOT_DIR+'/'+role.toLowerCase()+'-'+(role==='PARENT'?'mobile':'desktop')+'.png',fullPage:true});
+   if(role==='PARENT'){await page.setViewportSize({width:1280,height:900});await page.screenshot({path:process.env.BIJAK_SCREENSHOT_DIR+'/parent-desktop.png',fullPage:true});await page.setViewportSize({width:375,height:900})}
+   if(role==='ADMIN'){await page.setViewportSize({width:375,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:process.env.BIJAK_SCREENSHOT_DIR+'/admin-mobile.png',fullPage:true});await page.setViewportSize({width:1280,height:900})}
+  }
   if(role==='ADMIN'){
    await page.getByRole('heading',{name:'Overview & usage',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Science Lab',exact:true}).count(),0);assert.equal(await page.locator('.portal-nav button').count(),8);
    await page.getByRole('button',{name:'Parent feedback',exact:true}).click();await page.getByText('No parent feedback yet.',{exact:true}).waitFor();
@@ -36,4 +49,12 @@ await page.addInitScript(role=>{
   }
   assert.equal(new URL(page.url()).pathname,'/Bijak_Tutor/','Role changes must not navigate away from the app URL');assert.deepEqual(errors,[]);await page.close();
  }
+ if(process.env.BIJAK_SCREENSHOT_DIR){
+  const iconPage=await browser.newPage({viewport:{width:600,height:600}});
+  await iconPage.goto(new URL('icons/app-icon.svg',base).href);
+  const svg=iconPage.locator('svg');await svg.waitFor();
+  for(const size of [512,192]){await svg.evaluate((node,size)=>{node.setAttribute('width',String(size));node.setAttribute('height',String(size))},size);await svg.screenshot({path:process.env.BIJAK_SCREENSHOT_DIR+'/app-icon-'+size+'.png'})}
+  await iconPage.close();
+ }
+
 }
