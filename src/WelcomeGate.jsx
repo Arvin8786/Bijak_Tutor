@@ -1,3 +1,4 @@
+import Brand from './Brand.jsx';
 import React,{useEffect,useState} from 'react';
 import {LANGUAGES,say,speechLocale} from './localization.js';
 
@@ -30,7 +31,7 @@ export function MascotFriends({language='ms',compact=false}){
 export default function WelcomeGate({language,onLanguage,onContinue}){
  return <main className="welcome-gate">
   <section className="welcome-main">
-   <div className="welcome-brand"><span className="welcome-star">🌟</span><strong>BijakLearn <em>Junior</em></strong></div>
+   <div className="welcome-brand"><Brand subtitle="Small discoveries. Bright futures."/></div>
    <h1>{say(language,'welcome')}</h1>
    <p className="welcome-sub">{say(language,'choose')}</p>
    <MascotFriends language={language}/>

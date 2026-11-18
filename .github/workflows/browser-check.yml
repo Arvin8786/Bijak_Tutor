@@ -7,6 +7,8 @@ jobs:
   browser:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
+    env:
+      BIJAK_SCREENSHOT_DIR: screenshots
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -14,8 +16,22 @@ jobs:
           node-version: '22'
       - run: npm install
       - run: npm install --no-save playwright@1.56.1
-      - run: npx playwright install --with-deps chromium
+      - name: Install browser with bounded dependency setup
+        run: |
+          if ! timeout --kill-after=10s 90s npx playwright install --with-deps chromium; then
+            echo "::warning::System dependency mirror stalled; using the runner's installed libraries. Browser tests will still fail if a library is missing."
+            npx playwright install chromium
+          fi
       - run: npm run build
       - run: node tests/browser-smoke.mjs
       - run: VITE_ENABLE_DEMO=true npm run build
       - run: node tests/browser-smoke.mjs
+
+      - name: Save console design previews
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: console-design-preview
+          path: screenshots
+          if-no-files-found: ignore
+          retention-days: 7
