@@ -1,7 +1,7 @@
-<!doctype html><html><head><meta name="referrer" content="no-referrer"></head><body><script>
+<!doctype html><html><head><meta name="referrer" content="no-referrer"></head><body data-channel='<?!= JSON.stringify(channel) ?>'><script>
 'use strict';
 const PAGES_ORIGIN='https://arvin8786.github.io';
-const channel=<?!= JSON.stringify(channel) ?>;
+const channel=JSON.parse(document.body.dataset.channel);
 // No visual controls or secrets. Only the approved site can invoke this bridge.
 if(window.top!==window&&/^[a-f0-9-]{36}$/.test(channel)){
  const source=window.top,seen=new Set();let active=0;

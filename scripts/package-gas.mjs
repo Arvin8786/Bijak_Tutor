@@ -33,3 +33,8 @@ fs.writeFileSync('release/ModuleAccess.csv',Object.keys(APP_MODULES[0]).join(','
 for(const name of ['RolePortals.gs','Transport.html'])fs.copyFileSync('apps-script/'+name,'release/'+name);
 
 fs.copyFileSync('apps-script/Commerce.gs','release/Commerce.gs');
+
+// Complete Sheet-bound maintenance source, with a separate least-privilege manifest.
+const sheetDir='release/sheet-bound';fs.mkdirSync(sheetDir,{recursive:true});
+for(const name of fs.readdirSync('release').filter(name=>name.endsWith('.gs')||['App.html','Transport.html'].includes(name)))fs.copyFileSync('release/'+name,sheetDir+'/'+name);
+for(const name of ['SheetSetup.gs','appsscript.json'])fs.copyFileSync('apps-script/sheet-bound/'+name,sheetDir+'/'+name);

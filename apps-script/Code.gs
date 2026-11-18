@@ -34,12 +34,13 @@ const TABLES = {
  Audit:['timestamp','actor','action','reference']
 };
 function props_(){return PropertiesService.getScriptProperties()}
-function sheet_(name){const ss=SpreadsheetApp.openById(props_().getProperty('SPREADSHEET_ID'));let s=ss.getSheetByName(name);if(!s)throw Error('Missing sheet '+name+'. Run setupBijakLearn_ from the editor.');return s}
+function database_(){let active=null;try{active=SpreadsheetApp.getActiveSpreadsheet()}catch{}const configured=props_().getProperty('SPREADSHEET_ID');if(active&&(!configured||active.getId()===configured))return active;if(!configured)throw Error('Spreadsheet is not configured. Run setup from the linked Google Sheet.');return SpreadsheetApp.openById(configured)}
+function sheet_(name){const ss=database_();let s=ss.getSheetByName(name);if(!s)throw Error('Missing sheet '+name+'. Run setupBijakLearn_ from the editor.');return s}
 function rows_(name){const values=sheet_(name).getDataRange().getValues();const keys=TABLES[name];return values.slice(1).filter(r=>r.some(x=>x!=='')) .map(row=>Object.fromEntries(keys.map((k,i)=>[k,row[i] instanceof Date?row[i].toISOString():row[i]])))}
 function cell_(v){if(v===undefined||v===null)return '';if(typeof v==='string'&&/^[\s]*[=+\-@]/.test(v))return '\''+v;return v;}
 function append_(name,row){sheet_(name).appendRow(TABLES[name].map(k=>cell_(row[k])));}
 function update_(name,key,value,patch){const s=sheet_(name),v=s.getDataRange().getValues(),keys=TABLES[name],ix=keys.indexOf(key);if(ix<0)throw Error('Invalid key');for(let i=1;i<v.length;i++){if(String(v[i][ix])===String(value)){Object.keys(patch).forEach(k=>{const col=keys.indexOf(k);if(col>=0)s.getRange(i+1,col+1).setValue(cell_(patch[k]));});return true}}return false}
-function initializeDatabase_(){const ss=SpreadsheetApp.openById(props_().getProperty('SPREADSHEET_ID'));Object.entries(TABLES).forEach(([name,keys])=>{let s=ss.getSheetByName(name);if(!s)s=ss.insertSheet(name);if(s.getLastRow()===0){s.appendRow(keys);s.setFrozenRows(1)}else{
+function initializeDatabase_(){const ss=database_();Object.entries(TABLES).forEach(([name,keys])=>{let s=ss.getSheetByName(name);if(!s)s=ss.insertSheet(name);if(s.getLastRow()===0){s.appendRow(keys);s.setFrozenRows(1)}else{
   // Additive schema migration: preserve all existing columns and learning data.
   const headers=s.getRange(1,1,1,s.getLastColumn()).getValues()[0].map(String);
   const missing=keys.slice(headers.length);

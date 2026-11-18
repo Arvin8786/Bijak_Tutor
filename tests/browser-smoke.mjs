@@ -185,7 +185,7 @@ try{
     await page.locator('.discovery-mission').getByRole('button',{name:/Get reflection tips/i}).click();
     assert.match(await page.locator('.discovery-feedback').textContent(),/compare your idea/i);
     await page.locator('nav.nav').getByRole('button',{name:/Preschool/i}).click();
-    await page.locator('.early-mode-grid').getByRole('button',{name:/Trace & draw/i}).click();
+    await page.locator('.early-mode-grid').getByRole('button',{name:/Draw & Learn/i}).click();
     const draw=page.locator('.trace-studio .trace-canvas');
     const bounds=await draw.boundingBox();
     assert.ok(bounds,'Finger tracing canvas missing');
@@ -197,6 +197,27 @@ try{
     assert.ok(await page.locator('.trace-feedback').isVisible(),'Drawing review does not appear');
     assert.match(await page.locator('.trace-feedback').textContent(),/stroke|movement/i);
     await page.getByRole('button',{name:/Try again/i}).first().click();
+    const preschool=page.locator('.preschool-studio');
+    await preschool.getByRole('button',{name:/Listen & find/}).click();
+    await preschool.getByRole('button',{name:/Play letter name/}).click();
+    await preschool.locator('.early-answer-grid').getByRole('button',{name:'A',exact:true}).click();
+    assert.equal(await preschool.locator('.early-answer-grid').getByRole('button',{name:'A',exact:true}).isEnabled(),false,'Repeated correct taps must not add points');
+    assert.match(await preschool.locator('.studio-game').innerText(),/Your score: 1/);
+    await preschool.getByRole('button',{name:/Next sound/}).click();
+    assert.match(await preschool.locator('.studio-game').innerText(),/Your score: 1/,'Listening score should survive the next round');
+    await preschool.locator('.early-mode-grid').getByRole('button',{name:/Maths Studio/}).click();
+    await preschool.locator('.early-answer-grid').getByRole('button',{name:'6',exact:true}).click();
+    assert.match(await preschool.locator('.studio-game').innerText(),/Stars earned: 1/);
+    assert.equal(await preschool.locator('.early-answer-grid').getByRole('button',{name:'6',exact:true}).isEnabled(),false);
+    await preschool.getByRole('button',{name:/New number puzzle/}).click();
+    await preschool.locator('.early-mode-grid').getByRole('button',{name:/Science Lab/}).click();
+    await preschool.getByRole('button',{name:/I predict it floats/}).click();
+    await preschool.getByRole('button',{name:/Test my prediction/}).click();
+    assert.equal(await preschool.getByRole('button',{name:/Test my prediction/}).isEnabled(),false);
+    assert.equal(await preschool.getByRole('button',{name:/I predict it sinks/}).isEnabled(),false);
+    assert.match(await preschool.locator('.studio-game').innerText(),/wet leaves may sink/);
+    assert.ok(await preschool.evaluate(el=>el.scrollWidth<=window.innerWidth),'Preschool refresh must fit a phone');
+
   }
   if(width===1280){
     await page.locator('nav.nav').getByRole('button',{name:'Home'}).click();

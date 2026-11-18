@@ -58,6 +58,7 @@ import MembershipPage from './MembershipPage.jsx';
 import PremiumKasihApplication from './PremiumKasihApplication.jsx';
 import KasihReviewPanel from './KasihReviewPanel.jsx';
 import './professional.css';
+import './studio-refresh.css';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
 
 function LessonSearch({query, onChange, count}) {
