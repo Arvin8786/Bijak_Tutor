@@ -106,9 +106,11 @@ function configureModuleAccessSheet_(){
  sheet.getRange(1,1,1,TABLES.ModuleAccess.length).setFontWeight('bold');
 }
 function onOpen(){
+ if(typeof buildBoundSheetMenu_==='function'){buildBoundSheetMenu_();return;}
  SpreadsheetApp.getUi().createMenu('BijakLearn').addItem('Initialize app and import modules','setupBijakFromSheet_').addToUi();
 }
 function setupBijakFromSheet_(){
+ if(typeof setupBoundSheet==='function')return setupBoundSheet();
  const result=setupBijakLearn_();
  SpreadsheetApp.getUi().alert('Setup finished. Added '+result.modules.added+' app modules. Open ModuleAccess to adjust tier checkboxes. Configure Google OAuth before testing live sign-in.');
 }
