@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 export async function checkRolePortalsBrowser(browser,base){
  for(const role of ['ADMIN','PARENT','STUDENT']){
   const page=await browser.newPage({viewport:{width:role==='PARENT'?375:1280,height:900}}),errors=[];
+  await page.emulateMedia({reducedMotion:'reduce'});
   page.on('pageerror',error=>errors.push(error.message));
   await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({status:200,contentType:'application/javascript',body:'// Google identity is mocked in this test.'}));
 await page.addInitScript(role=>{
