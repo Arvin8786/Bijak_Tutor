@@ -9,7 +9,7 @@ export async function checkAccountSyncBrowser(browser,base){
     const child={id:'fixture-child',name:'Original learner',year:2,school:'SK',language:'en',parentEmail:'parent@test.invalid',email:'wrong@test.invalid',status:'PROFILE_MISSING',missing:true,linkStatus:'REVOKED',revision:'one'};
     const account={id:'google:fixture-parent',name:'Test parent',email:'parent@test.invalid',status:'PENDING'},link={id:'email:wrong@test.invalid',email:child.email,childId:child.id,status:'REVOKED'};
     window.accountFixture={child,account,link};
-    function invoke(method,...args){
+    function invoke(method,credential,...args){
      const parent={name:account.name,email:account.email};
      if(method==='getPortalBootstrap')return {role,user:{name:role==='STUDENT'?child.name:'Test admin'},parent,children:role==='STUDENT'?[child]:[],lessons:[],modules:[],access:{plan:'FREE'},canManageAccounts:role==='ADMIN'};
      if(method==='getAdministrationOverview')return {settings:{},children:1,reportedSeconds7Days:0,modules:[],parents:[],payments:[]};
