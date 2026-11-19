@@ -78,9 +78,9 @@ function updateChildAccount(token,childId,input){
   if(input.revision!==childAccountRevision_(childId))throw Error('This record changed in Sheets or another window. Refresh before saving.');
   const child=rows_('Children').find(c=>String(c.childId)===childId),links=latestStudentLinks_().filter(l=>String(l.childId)===childId),events=rows_('Enrolments').filter(e=>String(e.childId)===childId),owners=new Set([child?.parentSub,...links.map(l=>l.parentSub),...events.map(e=>e.parentSub)].filter(Boolean).map(String));
   if(owners.size!==1)throw Error('Family ownership is missing or inconsistent. Correct parentSub in the linked Sheet first.');const parentSub=Array.from(owners)[0],parent=rows_('Parents').find(p=>String(p.googleSub)===parentSub);if(!parent)throw Error('Parent profile is missing. Restore it in the linked Sheet first.');
-  if((!child||child.status==='REMOVED')&&input.restore!==true)throw Error('Confirm restoration of this learner profile before saving');
+  if((!child||child.status==='REMOVED')&&status==='ACTIVE'&&input.restore!==true)throw Error('Confirm restoration of this learner profile before saving');
   assertStudentEmail_(email,parentSub,childId,admin);if(status==='ACTIVE')requireActiveAccount_({sub:parentSub,email:String(parent.email)},false);
-  if(child){if(!update_('Children','childId',childId,{...fields,status:'ACTIVE'}))throw Error('Profile changed. Refresh and retry.')}else append_('Children',{childId,parentSub,...fields,createdAt:new Date().toISOString(),status:'ACTIVE'});
+  if(child){if(!update_('Children','childId',childId,{...fields,status:child.status==='REMOVED'&&input.restore!==true?'REMOVED':'ACTIVE'}))throw Error('Profile changed. Refresh and retry.')}else if(input.restore===true)append_('Children',{childId,parentSub,...fields,createdAt:new Date().toISOString(),status:'ACTIVE'});
   const result=writeStudentLink_(childId,parentSub,email,status,accountKey_(admin.sub));syncChildEnrolments_(childId,{...fields,studentEmail:email,parentEmail:parent.email,status:status==='ACTIVE'?'APPROVED':'DISABLED',reviewedAt:new Date().toISOString(),reviewedBy:accountKey_(admin.sub)});
   append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'CHILD_ACCOUNT_UPDATED',reference:childId+': '+reason});return result;
  }finally{SpreadsheetApp.flush();lock.releaseLock()}
