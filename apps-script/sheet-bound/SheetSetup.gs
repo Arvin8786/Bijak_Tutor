@@ -35,3 +35,6 @@ function importBoundLearningTracks(){boundOwner_();const result=importGrowthModu
 function openBijakLearnLinks(){
  boundOwner_();SpreadsheetApp.getUi().showModalDialog(HtmlService.createHtmlOutput('<p><a href="https://arvin8786.github.io/Bijak_Tutor/" target="_blank" rel="noopener">Open BijakLearn Junior</a></p><p><a href="https://script.google.com/home/projects/1MOv6dCfSrsJwjhMHfUwGZui0032XkGLKRgjmFYTTGJyAuGfGtQH8PfPt/edit" target="_blank" rel="noopener">Open production Apps Script editor</a></p><p>This Sheet-bound project manages database setup and imports. The existing production project keeps Google login, private settings and upload retention.</p>').setWidth(440).setHeight(220),'BijakLearn links');
 }
+
+/** Manual cell edits synchronize related family records inside this private spreadsheet. */
+function onEdit(event){syncFamilyAccountEdit_(event)}

@@ -13,17 +13,17 @@ function getPortalBootstrap(token,requestedRole,referralCode){
  if(user.role==='ADMIN')return {role:'ADMIN',user:{name:user.name,email:user.email},canManageAccounts:true,children:[],lessons:[],modules:[],access:{plan:'ADMIN',active:true}};
  if(user.role==='STUDENT')return getStudentBootstrap(token);
  if(requestedRole==='student')throw Error('[STUDENT_NOT_LINKED] Ask your parent to enrol your separate student account.');
- return {role:'PARENT',parent:{name:user.name,email:user.email},canManageAccounts:false,children:familyChildren_(user),lessons:[],modules:[],access:access_(user)};
+ return {role:'PARENT',parent:parentDetails_(user),canManageAccounts:false,children:familyChildren_(user),lessons:[],modules:[],access:access_(user)};
 }
 function familyChildren_(user){return rows_('Children').filter(c=>String(c.parentSub)===user.sub&&c.status!=='REMOVED').map(c=>({id:String(c.childId),name:String(c.nickname),year:Number(c.year),school:String(c.school),language:String(c.language)}))}
 function requirePortalParent_(token){const user=portalIdentity_(token);if(user.role!=='PARENT')throw Error('Parent account required');return user}
 function getParentDashboard(token){
  const user=requirePortalParent_(token),attempts=rows_('Attempts'),mastery=rows_('Mastery'),usage=rows_('UsageEvents');
- return {parent:{name:user.name,email:user.email},access:access_(user),children:familyChildren_(user).map(child=>{
+ return {syncedAt:new Date().toISOString(),parent:parentDetails_(user),access:access_(user),children:familyChildren_(user).map(child=>{
   const checks=attempts.filter(a=>String(a.childId)===child.id),progress=mastery.filter(m=>String(m.childId)===child.id),time=usage.filter(e=>String(e.childId)===child.id),correct=checks.filter(a=>String(a.correct)==='true').length;
   const dates=Array.from(new Set(time.map(e=>String(e.createdAt).slice(0,10)))).sort().slice(-14);
   return {...child,attempts:checks.length,correct,accuracy:checks.length?Math.round(100*correct/checks.length):null,mastered:progress.filter(m=>String(m.mastered)==='true').length,reportedSeconds:time.reduce((n,e)=>n+(Number(e.seconds)||0),0),dailyUsage:dates.map(date=>({date,seconds:time.filter(e=>String(e.createdAt).startsWith(date)).reduce((n,e)=>n+(Number(e.seconds)||0),0)})),recent:checks.slice(-20).reverse().map(a=>({lessonId:String(a.lessonId),correct:String(a.correct)==='true',hints:Number(a.hints),createdAt:String(a.createdAt)}))};
- }),enrolments:rows_('Enrolments').filter(r=>String(r.parentSub)===user.sub).map(r=>({id:r.requestId,studentEmail:r.studentEmail,name:r.nickname,status:r.status})),feedback:rows_('ParentFeedback').filter(r=>String(r.parentSub)===user.sub).slice(-50).reverse().map(r=>({id:r.feedbackId,category:r.category,message:r.message,status:r.status,reply:r.reply,createdAt:r.createdAt}))};
+ }),enrolments:familyEnrolments_(user.sub),feedback:rows_('ParentFeedback').filter(r=>String(r.parentSub)===user.sub).slice(-50).reverse().map(r=>({id:r.feedbackId,category:r.category,message:r.message,status:r.status,reply:r.reply,createdAt:r.createdAt}))};
 }
 function submitParentEnrolment(token,details){if(typeof linkParentChild==='function')return linkParentChild(token,details);
  const user=requirePortalParent_(token);details=details||{};
@@ -90,13 +90,13 @@ function recordStudentUsage(token,eventId,moduleId,seconds){
 }
 function getAdministrationOverview(token){
  requireAccountAdmin_(token);const events=rows_('UsageEvents'),since=Date.now()-7*86400000;
- return {settings:oauthSetupStatus_(),modules:rows_('ModuleAccess'),parents:rows_('Parents').map(p=>({id:accountKey_(String(p.googleSub)),email:p.email})),children:rows_('Children').length,payments:rows_('Payments').slice(-100).reverse(),reportedSeconds7Days:events.filter(e=>Date.parse(String(e.createdAt))>=since).reduce((n,e)=>n+(Number(e.seconds)||0),0),activityEvents:events.length};
+ return {syncedAt:new Date().toISOString(),databaseUrl:'https://docs.google.com/spreadsheets/d/'+database_().getId()+'/edit',settings:oauthSetupStatus_(),modules:rows_('ModuleAccess'),parents:rows_('Parents').map(p=>({id:accountKey_(String(p.googleSub)),email:p.email})),children:rows_('Children').length,payments:rows_('Payments').slice(-100).reverse(),reportedSeconds7Days:events.filter(e=>Date.parse(String(e.createdAt))>=since).reduce((n,e)=>n+(Number(e.seconds)||0),0),activityEvents:events.length};
 }
 function setModulePolicy(token,moduleId,policy){
  const admin=requireAccountAdmin_(token),current=rows_('ModuleAccess').find(m=>String(m.moduleId)===moduleId);if(!current)throw Error('Unknown module');
  const patch={};for(const key of ['enabled','free','premium','premiumKasih']){if(typeof policy?.[key]!=='boolean')throw Error('Choose a valid tier policy');patch[key]=policy[key]?'TRUE':'FALSE';}
  const limit=Number(policy.freeLessonLimit);if(!Number.isInteger(limit)||limit<0||limit>1000)throw Error('Free lesson limit must be 0–1000');
- patch.freeLessonLimit=limit;patch.updatedAt=new Date().toISOString();update_('ModuleAccess','moduleId',moduleId,patch);
+ patch.freeLessonLimit=limit;patch.updatedAt=new Date().toISOString();if(!update_('ModuleAccess','moduleId',moduleId,patch))throw Error('Module was removed. Refresh and try again.');
  append_('Audit',{timestamp:patch.updatedAt,actor:accountKey_(admin.sub),action:'MODULE_POLICY_UPDATED',reference:moduleId});return {ok:true};
 }
 function recordPaymentReview(token,details){
@@ -110,7 +110,12 @@ function recordPaymentReview(token,details){
 /** Explicit RPC allowlist: never dispatch a client-supplied global function name. */
 function portalRequest(method,args){
  if(typeof method!=='string'||!Array.isArray(args)||args.length>8||JSON.stringify(args).length>3000000)throw Error('Invalid account request');
- const operations={removeChildLink,setDiscountEnabled,uploadPaymentQr,getFamilyCommerce,linkParentChild,getCommerceAdministration,setCommerceSettings,saveDiscountCampaign,createFamilyOrder,submitOrderProof,listFamilyOrders,reviewFamilyOrder,getPrivateUpload,recordCommissionPayout,getPortalBootstrap,getParentDashboard,submitParentEnrolment,listEnrolments,reviewEnrolment,submitParentFeedback,listParentFeedback,replyParentFeedback,recordStudentUsage,getAdministrationOverview,setModulePolicy,recordPaymentReview,listAccountAccess,setAccountAccess,listStudentAccounts,listStudentProfiles,setStudentAccount,setMembership,listKasihApplications,getKasihDocument,reviewKasihApplication,submitKasihApplication,getKasihApplication,addChild,getLesson,submitAttempt,getParentReport,setParentPin,getGrowthModule,checkGrowthAnswer,authorizeModule,askTutor};
+ const operations={updateChildAccount,updateChildDetails,updateParentDetails,requestChildEmailCorrection,removeChildLink,setDiscountEnabled,uploadPaymentQr,getFamilyCommerce,linkParentChild,getCommerceAdministration,setCommerceSettings,saveDiscountCampaign,createFamilyOrder,submitOrderProof,listFamilyOrders,reviewFamilyOrder,getPrivateUpload,recordCommissionPayout,getPortalBootstrap,getParentDashboard,submitParentEnrolment,listEnrolments,reviewEnrolment,submitParentFeedback,listParentFeedback,replyParentFeedback,recordStudentUsage,getAdministrationOverview,setModulePolicy,recordPaymentReview,listAccountAccess,setAccountAccess,listStudentAccounts,listStudentProfiles,setStudentAccount,setMembership,listKasihApplications,getKasihDocument,reviewKasihApplication,submitKasihApplication,getKasihApplication,addChild,getLesson,submitAttempt,getParentReport,setParentPin,getGrowthModule,checkGrowthAnswer,authorizeModule,askTutor};
  if(!Object.prototype.hasOwnProperty.call(operations,method))throw Error('Unsupported account request');
- return operations[method].apply(null,args);
+ RPC_ROWS_=new Map();RPC_DATABASE_=null;
+ try{return operations[method].apply(null,args)}finally{SpreadsheetApp.flush();RPC_ROWS_=null;RPC_DATABASE_=null}
+
 }
+
+function parentDetails_(user){const row=rows_('Parents').find(p=>String(p.googleSub)===user.sub);return {name:String(row?.displayName||user.name||''),email:String(row?.email||user.email||''),signInEmail:String(user.email||'')}}
+function familyEnrolments_(parentSub){const children=rows_('Children'),links=latestStudentLinks_();return rows_('Enrolments').filter(r=>String(r.parentSub)===parentSub).map(r=>{const child=children.find(c=>String(c.childId)===String(r.childId)&&String(c.parentSub)===parentSub),related=links.filter(l=>String(l.childId)===String(r.childId)&&String(l.parentSub)===parentSub),link=related.find(l=>l.status==='ACTIVE')||related.slice(-1)[0];let status=r.status;if(['REMOVED','DECLINED'].includes(r.status)||child?.status==='REMOVED')status='REMOVED';else if(!child&&link)status='PROFILE_MISSING';else if(child)status=link?.status==='ACTIVE'?'ACTIVE':link?'DISABLED':'UNLINKED';return {id:r.requestId,childId:String(r.childId),studentEmail:link?.email||r.studentEmail,name:child?.nickname||r.nickname,year:Number(child?.year??r.year??1),school:child?.school||r.school||'SK',language:child?.language||r.language||'ms',status}})}

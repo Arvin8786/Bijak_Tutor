@@ -1,3 +1,4 @@
+import {checkAccountSyncBrowser} from './account-sync-browser.mjs';
 import {chromium} from 'playwright';
 import {spawn} from 'node:child_process';
 import assert from 'node:assert/strict';
@@ -588,6 +589,7 @@ try{
  await checkTierAccessBrowser(browser, base);
  await checkStudentAccessBrowser(browser, base);
  await checkRolePortalsBrowser(browser, base);
+ await checkAccountSyncBrowser(browser, base);
  await checkFamilyCommerceBrowser(browser, base);
  console.log('Passed pending, approval, blocking, restoration and revoked-session browser flows.');
  console.log('Browser smoke tests passed for the selected production or demo build, offline reload and account access flows.');

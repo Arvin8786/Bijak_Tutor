@@ -34,12 +34,15 @@ const TABLES = {
  Audit:['timestamp','actor','action','reference']
 };
 function props_(){return PropertiesService.getScriptProperties()}
-function database_(){let active=null;try{active=SpreadsheetApp.getActiveSpreadsheet()}catch{}const configured=props_().getProperty('SPREADSHEET_ID');if(active&&(!configured||active.getId()===configured))return active;if(!configured)throw Error('Spreadsheet is not configured. Run setup from the linked Google Sheet.');return SpreadsheetApp.openById(configured)}
-function sheet_(name){const ss=database_();let s=ss.getSheetByName(name);if(!s)throw Error('Missing sheet '+name+'. Run setupBijakLearn_ from the editor.');return s}
-function rows_(name){const values=sheet_(name).getDataRange().getValues();const keys=TABLES[name];return values.slice(1).filter(r=>r.some(x=>x!=='')) .map(row=>Object.fromEntries(keys.map((k,i)=>[k,row[i] instanceof Date?row[i].toISOString():row[i]])))}
-function cell_(v){if(v===undefined||v===null)return '';if(typeof v==='string'&&/^[\s]*[=+\-@]/.test(v))return '\''+v;return v;}
-function append_(name,row){sheet_(name).appendRow(TABLES[name].map(k=>cell_(row[k])));}
-function update_(name,key,value,patch){const s=sheet_(name),v=s.getDataRange().getValues(),keys=TABLES[name],ix=keys.indexOf(key);if(ix<0)throw Error('Invalid key');for(let i=1;i<v.length;i++){if(String(v[i][ix])===String(value)){Object.keys(patch).forEach(k=>{const col=keys.indexOf(k);if(col>=0)s.getRange(i+1,col+1).setValue(cell_(patch[k]));});return true}}return false}
+// Request-local only: never reuse private rows across authenticated RPC calls.
+let RPC_DATABASE_=null,RPC_ROWS_=null;
+function database_(){if(typeof RPC_DATABASE_!=='undefined'&&RPC_DATABASE_)return RPC_DATABASE_;let active=null;try{active=SpreadsheetApp.getActiveSpreadsheet()}catch{}const configured=props_().getProperty('SPREADSHEET_ID');const db=active&&(!configured||active.getId()===configured)?active:configured?SpreadsheetApp.openById(configured):null;if(!db)throw Error('Spreadsheet is not configured. Run setup from the linked Google Sheet.');if(typeof RPC_ROWS_!=='undefined'&&RPC_ROWS_)RPC_DATABASE_=db;return db}
+function sheet_(name){const s=database_().getSheetByName(name);if(!s)throw Error('Missing sheet '+name+'. Run setup from the linked Sheet.');return s}
+function tableColumns_(name,values){const headers=(values[0]||[]).map(v=>String(v).trim()),keys=TABLES[name];if(!keys)throw Error('Unknown database table');const columns=keys.map(key=>headers.indexOf(key));if(columns[0]<0||new Set(headers.filter(Boolean)).size!==headers.filter(Boolean).length)throw Error('Invalid headers in '+name+'. Restore the column names.');return {headers,keys,columns}}
+function rows_(name){if(RPC_ROWS_?.has(name))return RPC_ROWS_.get(name);const values=sheet_(name).getDataRange().getValues(),{keys,columns}=tableColumns_(name,values);const rows=values.slice(1).filter(r=>r.some(x=>x!=='')).map(row=>Object.fromEntries(keys.map((key,i)=>{const value=columns[i]<0?'':row[columns[i]];return [key,value instanceof Date?value.toISOString():value]})));if(RPC_ROWS_)RPC_ROWS_.set(name,rows);return rows}
+function cell_(v){if(v===undefined||v===null)return '';if(typeof v==='string'&&/^[\s]*[=+\-@]/.test(v))return "'"+v;return v;}
+function append_(name,row){const s=sheet_(name),values=s.getDataRange().getValues(),{headers}=tableColumns_(name,values);s.appendRow(headers.map(k=>cell_(row[k])));RPC_ROWS_?.delete(name)}
+function update_(name,key,value,patch){const s=sheet_(name),values=s.getDataRange().getValues(),{headers}=tableColumns_(name,values),ix=headers.indexOf(key);if(ix<0)throw Error('Invalid key');for(let i=1;i<values.length;i++){if(String(values[i][ix])===String(value)){Object.keys(patch).forEach(k=>{const col=headers.indexOf(k);if(col<0)throw Error('Missing column '+k+' in '+name);s.getRange(i+1,col+1).setValue(cell_(patch[k]))});RPC_ROWS_?.delete(name);return true}}return false}
 function initializeDatabase_(){const ss=database_();Object.entries(TABLES).forEach(([name,keys])=>{let s=ss.getSheetByName(name);if(!s)s=ss.insertSheet(name);if(s.getLastRow()===0){s.appendRow(keys);s.setFrozenRows(1)}else{
   // Additive schema migration: preserve all existing columns and learning data.
   const headers=s.getRange(1,1,1,s.getLastColumn()).getValues()[0].map(String);

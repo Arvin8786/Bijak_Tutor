@@ -1,3 +1,4 @@
+import {useSheetRefresh} from './sheetRefresh.js';
 import Brand from './Brand.jsx';
 // Capture a referral only in this tab; no tracking cookies, email addresses or child data in URLs.
 function getReferralCode(){try{const code=new URL(window.location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('bijaklearn:referral',code);return sessionStorage.getItem('bijaklearn:referral')||''}catch{return ''}}
@@ -360,6 +361,7 @@ function App(){
   return (activeChapter==='all'||topic===activeChapter)&&searchTerms.every(term=>searchable.includes(term));
  });
  const noSearchResults=subjectLessons.length>0&&visibleLessons.length===0;
+ const [accountRevision]=useSheetRefresh(isLive&&!!token&&boot?.role==='STUDENT');
  const endSession=useCallback((notice='')=>{
   loginAttempt.current++;
   activeToken.current='';
@@ -413,6 +415,7 @@ function App(){
   }
  },[authRequest,endSession]);
  async function refresh(){const b=await call(portalV2?'getPortalBootstrap':boot?.role==='STUDENT'?'getStudentBootstrap':'getBootstrap',...(portalV2?[boot?.role?.toLowerCase()]:[]));setBoot(b);if(!b.children.some(x=>x.id===childId))setChildId(b.children[0]?.id||'');}
+ useEffect(()=>{if(accountRevision&&isLive&&token&&boot?.role==='STUDENT')refresh().catch(()=>{})},[accountRevision]);
  function toggleDemoSave(enabled){
   setRememberDemo(enabled);
   try{if(enabled){localStorage.setItem(DEMO_SAVE_CONSENT,'yes');persistDemo()}else{localStorage.removeItem(DEMO_SAVE_CONSENT);clearDemo()}}
@@ -457,7 +460,7 @@ function App(){
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
  if(!token)return <><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} notice={loginNotice}/></>;
  if(portalV2&&['ADMIN','PARENT'].includes(boot?.role))return <RolePortals boot={boot} request={authRequest} onSignOut={()=>endSession()} language={uiLanguage}/>;
- return <div className="app"><header><button className="logo" onClick={()=>setPage('home')}><Brand subtitle="Discover something wonderful"/></button><div className="topactions"><StreakChip language={uiLanguage}/><button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
+ return <div className="app"><header><button className="logo" onClick={()=>setPage('home')}><Brand subtitle="Discover something wonderful"/></button><div className="topactions"><StreakChip language={uiLanguage}/>{isLive&&boot?.role==='STUDENT'&&<button disabled={busy} onClick={()=>refresh().catch(()=>{})}>Refresh account details</button>}<button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
  {portalV2&&isLive&&boot?.role==='STUDENT'&&<StudentUsage request={authRequest} page={page}/>}
  <nav className="nav" aria-label={say(uiLanguage,'navLabel')}>
