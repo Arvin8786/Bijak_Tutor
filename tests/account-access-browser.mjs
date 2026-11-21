@@ -60,7 +60,7 @@ await page.addInitScript(() => {
   await page.getByRole('button', {name: 'English'}).click();
   await page.getByRole('button', {name: 'Continue'}).click();
   await page.getByRole('button', {name: 'Test family sign-in'}).click();
-  await page.getByRole('alert').filter({hasText: 'waiting for administrator approval'}).waitFor();
+  await page.getByRole('alert').filter({hasText: 'waiting for BijakLearn Team approval'}).waitFor();
   await page.getByRole('button', {name: 'Test operator sign-in'}).click();
   await page.getByRole('button', {name: 'Manage account access'}).click();
   await page.getByLabel('Access status', {exact: true}).selectOption('ACTIVE');

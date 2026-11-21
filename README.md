@@ -23,6 +23,8 @@ See [Google Sheets, tier rules and OAuth setup](docs/TIERS_AND_GOOGLE_SETUP.md).
 
 Parents can link a child's separate Google account from their portal; administrators can correct, disable, restore or remove links. Students inherit their family’s available tier and cannot access parent reports, account administration or sponsorship documents. See [connected account records](docs/ACCOUNT_RECORD_SYNC.md).
 
+The configured owner may use the same Google account with Parent, Student and BijakLearn Team sign-in options. The chosen role opens the corresponding live interface. See [owner role access](docs/OWNER_ROLE_ACCESS.md).
+
 ## Backend deployment and teacher-review requirements
 
 See [Operational release guide](docs/OPERATIONAL_RELEASE.md) for the separate Google Apps Script deployment, full curriculum import, owner-only membership/scholarship administration and security requirements. Build generates `release/CurriculumData.gs`, `release/CurriculumImport.gs`, `release/AdminOperations.gs` and `release/CURRICULUM_COVERAGE.json`.

@@ -116,10 +116,11 @@ export default function AccountAccessPanel({request,revision=0}) {
     <ParentDetails account={account} request={request} onSaved={()=>setRefresh(n=>n+1)}/>
     <p>{statusLabels[account.status] || 'Access unavailable'}</p>
     <div className="actions">
-     {account.status !== 'ACTIVE' && <button type="button" disabled={!!selected} onClick={() => select(account)}>
+     {!account.owner && account.status !== 'ACTIVE' && <button type="button" disabled={!!selected} onClick={() => select(account)}>
       {account.status === 'REVOKED' ? 'Restore access' : 'Approve'}
      </button>}
-     {account.status !== 'REVOKED' && <button type="button" disabled={!!selected} onClick={() => select(account, true)}>Block</button>}
+     {!account.owner && account.status !== 'REVOKED' && <button type="button" disabled={!!selected} onClick={() => select(account, true)}>Block</button>}
+     {account.owner&&<small>Owner access is managed through Google account configuration.</small>}
     </div>
    </li>)}
   </ul>}

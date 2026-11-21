@@ -31,7 +31,7 @@ await page.addInitScript(()=>{
   await page.getByRole('heading',{name:'Student sign-in',exact:true}).waitFor();
   await page.getByRole('button',{name:'Test learner sign-in'}).click();
   await page.getByRole('alert').filter({hasText:'not linked to a learner profile'}).waitFor();
-  await page.getByRole('button',{name:'Administrator',exact:true}).click();
+  await page.getByRole('button',{name:'BijakLearn Team',exact:true}).click();
   await page.getByRole('button',{name:'Test operator sign-in'}).click();
   await page.getByRole('button',{name:'Manage account access',exact:true}).click();
   await page.getByLabel('Student Google email',{exact:true}).fill('student@example.test');

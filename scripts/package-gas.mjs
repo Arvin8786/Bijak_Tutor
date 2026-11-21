@@ -30,7 +30,7 @@ fs.writeFileSync('release/ModuleData.gs','const BIJAK_APP_MODULES = '+JSON.strin
 fs.writeFileSync('release/ModuleAccess.csv',Object.keys(APP_MODULES[0]).join(',')+'\n'+APP_MODULES.map(m=>Object.values(m).map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n')+'\n');
 
 
-for(const name of ['RolePortals.gs','Transport.html'])fs.copyFileSync('apps-script/'+name,'release/'+name);
+for(const name of ['RolePortals.gs','Transport.html','EducationalVideos.gs'])fs.copyFileSync('apps-script/'+name,'release/'+name);
 
 fs.copyFileSync('apps-script/Commerce.gs','release/Commerce.gs');
 
