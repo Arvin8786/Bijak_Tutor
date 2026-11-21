@@ -28,6 +28,8 @@ await page.addInitScript(role=>{
   if(role==='ADMIN')await page.getByRole('heading',{name:'Service settings',exact:true}).waitFor();
   if(role==='PARENT')await page.getByText('75%',{exact:true}).waitFor();
   await page.locator('.bl-brand-icon').waitFor();
+  if(role==='PARENT'){const signout=await page.getByRole('button',{name:'Sign out',exact:true}).boundingBox();assert.ok(signout.width>=75&&signout.height<=60,'Parent sign-out must stay readable beside the language selector on phones')}
+
   assert.ok(await page.locator('.bl-brand-icon').evaluate(img=>img.complete&&img.naturalWidth>0),'Shared app icon must load');
   assert.equal(await page.locator('.bl-brand-icon').count(),1,'Every console must use the shared brand component');
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Console must fit its viewport');
