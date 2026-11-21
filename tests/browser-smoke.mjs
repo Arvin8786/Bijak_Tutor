@@ -127,7 +127,7 @@ try{
    await lab.getByRole('button',{name:/Let it go/}).click();
    await lab.getByRole('status').filter({hasText:'The car'}).waitFor({timeout:6000});
    for(const [tab,control,value] of [['Melting ice','#ice-temp','-5'],['Dissolving','#dis-temp','3'],['Mixing light','#light-r','100'],['Singing glasses','#glass-0','90'],['Seesaw','#see-w1','5']]){
-    await lab.getByRole('button',{name:tab,exact:true}).click();await lab.locator(control).fill(value);await lab.getByRole('status').waitFor();assert.equal(await lab.locator(control).inputValue(),value);
+    await lab.getByRole('button',{name:tab,exact:true}).click();await lab.locator(control).fill(value);await lab.locator('.lab-observation[role="status"]').waitFor();assert.equal(await lab.locator(control).inputValue(),value);
    }
    await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
   }

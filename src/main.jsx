@@ -442,7 +442,7 @@ function App(){
  async function openLesson(id,{quiz=false,questionId}={}){
   setError('');
   const listed=activeLessons.find(item=>item.id===id);
-  if(!listed){setError('This study topic could not be found. Please choose another lesson.');return}
+  if(!listed&&!(isLive&&boot?.lessons?.some(item=>item.id===id))){setError('This study topic could not be found. Please choose another lesson.');return}
   try{
     // Reading is available to everyone in demo mode, even before a profile is made.
     // Never bypass authenticated access controls in the live backend.
@@ -453,7 +453,7 @@ function App(){
      setQIndex(Math.max(0,l.questions.findIndex(question=>question.id===questionId)));
     }
     updateProgress('lastLesson',id);
-    setPage('lesson',{lesson:{...l,activity:listed.activity},review:Boolean(questionId)});
+    setPage('lesson',{lesson:{...l,activity:listed?.activity},review:Boolean(questionId)});
   }catch(e){setError('Unable to open the lesson: '+(e?.message||'unknown error'))}
  }
  async function recordPractice(question,response){
