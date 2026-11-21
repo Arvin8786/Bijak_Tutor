@@ -21,7 +21,7 @@ export async function checkOwnerRolesBrowser(browser,base){
    }
    window.google={accounts:{id:{initialize(o){callback=o.callback},renderButton(el){const b=document.createElement('button');b.textContent='Use my Google account';b.onclick=()=>callback({credential:'same-owner-google-token'});el.append(b)}}},script:{run:{withSuccessHandler(ok){return {withFailureHandler:fail=>new Proxy({},{get:(_,method)=>(...args)=>{try{ok(invoke(method,...args))}catch(e){fail(e)}}})}}}}};
   });
-  await page.goto(base);await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
+  await page.goto(base);const welcome=page.locator('.welcome-gate');if(await welcome.count()){await welcome.getByRole('button',{name:'English',exact:true}).click();await welcome.getByRole('button',{name:'Continue',exact:true}).click()}await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   for(const [choice,role,heading] of [['BijakLearn Team','admin','Overview & usage'],['Parent sign-in','parent','Child reports'],['Student sign-in','student','Your learning profile']]){
    await page.getByRole('button',{name:choice,exact:true}).click();await page.getByRole('button',{name:'Use my Google account',exact:true}).click();
    await page.getByRole('heading',{name:heading,exact:true}).waitFor();
