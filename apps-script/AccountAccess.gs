@@ -17,7 +17,7 @@ function accountKey_(sub) {
 
 function latestAccountEvents_() {
  const latest = new Map();
- for (const event of rows_('AccountAccess')) latest.set(event.accountKey, event);
+ for (const event of rows_('AccountAccess')) latest.set(String(event.accountKey).trim(), {...event,status:String(event.status||'').trim().toUpperCase()});
  return latest;
 }
 
@@ -80,8 +80,8 @@ function listAccountAccess(token) {
  accounts.delete(accountKey_(admin.sub));
  return Array.from(accounts.values(), account => ({
   id: account.accountKey,
-  email: String(account.email || ''),
-  name: String(account.displayName || ''),
+  email: String(rows_('Parents').find(p=>accountKey_(String(p.googleSub))===account.accountKey)?.email||account.email||''),
+  name: String(rows_('Parents').find(p=>accountKey_(String(p.googleSub))===account.accountKey)?.displayName||account.displayName||''),
   status: account.status,
  })).sort((a, b) => Number(b.status === 'PENDING') - Number(a.status === 'PENDING') || a.email.localeCompare(b.email));
 }

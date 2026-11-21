@@ -1,9 +1,9 @@
 import PrivateDocument from './PrivateDocument.jsx';
 import React,{useEffect,useState} from 'react';
-export default function KasihReviewPanel({request}){
+export default function KasihReviewPanel({request,revision=0}){
  const [items,setItems]=useState(null),[error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[selected,setSelected]=useState(null),[note,setNote]=useState(''),[months,setMonths]=useState('12');
  const load=()=>request('listKasihApplications').then(setItems).catch(e=>setError(e.message));
- useEffect(()=>{let active=true;request('listKasihApplications').then(data=>{if(active)setItems(data)}).catch(e=>{if(active)setError(e.message)});return()=>{active=false}},[request]);
+ useEffect(()=>{let active=true;request('listKasihApplications').then(data=>{if(active)setItems(data)}).catch(e=>{if(active)setError(e.message)});return()=>{active=false}},[request,revision]);
  async function review(event){event.preventDefault();setBusy(true);setError('');setNotice('');try{const result=await request('reviewKasihApplication',selected.id,selected.decision,Number(months),note);setSelected(null);setNotice('Application '+result.status.toLowerCase());await load()}catch(e){setError(e.message)}finally{setBusy(false)}}
  const [preview,setPreview]=useState(null);
  function document(requestId,id){setPreview([requestId,id])}

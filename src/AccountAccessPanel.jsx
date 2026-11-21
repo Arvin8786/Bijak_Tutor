@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 
 const statusLabels = {PENDING: 'Awaiting approval', ACTIVE: 'Active', REVOKED: 'Blocked'};
 
-export default function AccountAccessPanel({request}) {
+export default function AccountAccessPanel({request,revision=0}) {
  const [accounts, setAccounts] = useState(null);
  const [query, setQuery] = useState('');
  const [filter, setFilter] = useState('ALL');
@@ -33,7 +33,7 @@ export default function AccountAccessPanel({request}) {
    if (current) setError(failure.message);
   });
   return () => { current = false; };
- }, [request, refresh]);
+ }, [request, refresh, revision]);
 
  const visible = (accounts || []).filter(account =>
   (filter === 'ALL' || account.status === filter) &&
@@ -49,7 +49,7 @@ export default function AccountAccessPanel({request}) {
   setNotice('');
   try {
    const result = await request('setAccountAccess', selected.id, status, reason);
-   setAccounts(current => current.map(account => account.id === result.id ? {...account, status: result.status} : account));
+   setAccounts(await request('listAccountAccess'));
    setNotice(statusLabels[result.status] + ': ' + (selected.email || selected.id));
    setSelected(null);
    setReason('');
@@ -113,6 +113,7 @@ export default function AccountAccessPanel({request}) {
    {visible.map(account => <li className="panel" key={account.id}>
     <strong>{account.name || account.email || account.id}</strong>
     <p style={{overflowWrap: 'anywhere'}}>{account.email}</p>
+    <ParentDetails account={account} request={request} onSaved={()=>setRefresh(n=>n+1)}/>
     <p>{statusLabels[account.status] || 'Access unavailable'}</p>
     <div className="actions">
      {account.status !== 'ACTIVE' && <button type="button" disabled={!!selected} onClick={() => select(account)}>
@@ -125,3 +126,5 @@ export default function AccountAccessPanel({request}) {
  </section>;
 }
 
+
+function ParentDetails({account,request,onSaved}){const [editing,setEditing]=useState(false),[name,setName]=useState(account.name),[email,setEmail]=useState(account.email),[error,setError]=useState(''),[busy,setBusy]=useState(false);return <>{!editing?<button type="button" onClick={()=>{setName(account.name);setEmail(account.email);setEditing(true)}}>Edit parent details</button>:<form className="portal-form" onSubmit={async e=>{e.preventDefault();setBusy(true);setError('');try{await request('updateParentDetails',account.id,{name,email});setEditing(false);onSaved()}catch(e){setError(e.message)}finally{setBusy(false)}}}><label>Parent display name<input required maxLength={80} value={name} onChange={e=>setName(e.target.value)}/></label><label>Parent contact email<input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label><p>Google sign-in remains tied to the verified Google account. This changes contact details, not Google credentials.</p>{error&&<p role="alert">{error}</p>}<button disabled={busy}>Save parent details</button><button type="button" disabled={busy} onClick={()=>setEditing(false)}>Cancel editing parent</button></form>}</>}

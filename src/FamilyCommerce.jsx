@@ -3,9 +3,9 @@ import PrivateDocument,{encodePrivateFile,PaymentQr} from './PrivateDocument.jsx
 const money=cents=>'RM '+(Number(cents||0)/100).toFixed(2);
 export const adminContact='https://wa.me/601154443154';
 function useCommerce(request,admin,revision){const [state,setState]=useState({data:null,error:''});useEffect(()=>{let active=true;request(admin?'getCommerceAdministration':'getFamilyCommerce').then(data=>{if(active)setState({data,error:''})}).catch(e=>{if(active)setState({data:null,error:e.message})});return()=>{active=false}},[request,admin,revision]);return state}
-export default function FamilyCommerce({request,admin=false,section='membership'}){
+export default function FamilyCommerce({request,admin=false,section='membership',revision:externalRevision=0}){
  const [revision,setRevision]=useState(0),[busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[document,setDocument]=useState(null);
- const {data,error}=useCommerce(request,admin,revision);
+ const {data,error}=useCommerce(request,admin,revision+externalRevision);
  async function mutate(method,...args){setBusy(true);setNotice('');try{const result=await request(method,...args);setNotice('Saved successfully.');setRevision(n=>n+1);return result}catch(e){setNotice(e.message);throw e}finally{setBusy(false)}}
  return <>{error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}{!data&&!error&&<p role="status">Loading account services…</p>}{data&&<>
  {!data.uploadsConfigured&&<p role="status">Private uploads are awaiting owner configuration. Contact the administrator before making payment.</p>}
