@@ -421,7 +421,7 @@ function App(){
   activeToken.current=credential;
   setLoginNotice('');
   try{
-   const data=await api(portalV2?'getPortalBootstrap':role==='student'?'getStudentBootstrap':'getBootstrap',credential,...(portalV2?[role,getReferralCode()]:[]));
+   const data=await api(portalV2?'getPortalBootstrap':role==='student'?'getStudentBootstrap':'getBootstrap',credential,...(portalV2?[role,getReferralCode(),'owner-roles-v1']:[]));
    if(attempt!==loginAttempt.current||activeToken.current!==credential)return;
    if(data.role==='STUDENT'){setGrowthAudience('junior');setGrowthKind('ai');}
    const session=data.ownerRoleAccess?{idToken:credential,role:data.role.toLowerCase(),childId:data.role==='STUDENT'?data.children[0]?.id||'':''}:credential;

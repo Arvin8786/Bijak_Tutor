@@ -7,9 +7,9 @@ function portalIdentity_(token){
  if(link)return bindStudentIdentity_(verified);
  requireActiveAccount_(verified,true);upsertParent_(verified);return {...verified,role:'PARENT'};
 }
-function getPortalBootstrap(token,requestedRole,referralCode){
+function getPortalBootstrap(token,requestedRole,referralCode,roleSelection){
  const verified=verify_(token);
- if(typeof isOwnerAccount_==='function'&&isOwnerAccount_(verified))return ownerPortalBootstrap_(verified,requestedRole);
+ if(typeof isOwnerAccount_==='function'&&isOwnerAccount_(verified)&&(roleSelection==='owner-roles-v1'||verified.ownerRoleAccess))return ownerPortalBootstrap_(verified,requestedRole);
  if(typeof registerReferralOnboarding_==='function')registerReferralOnboarding_(verify_(token),referralCode);
  const user=portalIdentity_(token);
  if(requestedRole==='admin'&&user.role!=='ADMIN')throw Error('Administrator access required');

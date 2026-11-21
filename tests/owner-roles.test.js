@@ -22,12 +22,12 @@ function backend(){
 
 test('owner sign-in choices open real, separate roles and create one persistent learner',()=>{
  const {api,tables,tokens,session}=backend();
- assert.equal(api.getPortalBootstrap(tokens.owner,'admin').role,'ADMIN');
+ assert.equal(api.getPortalBootstrap(tokens.owner,'admin','','owner-roles-v1').role,'ADMIN');
  assert.equal(tables.Children.length,0);
- assert.equal(api.getPortalBootstrap(tokens.owner,'parent').role,'PARENT');
- const student=api.getPortalBootstrap(tokens.owner,'student'),id=student.children[0].id;
+ assert.equal(api.getPortalBootstrap(tokens.owner,'parent','','owner-roles-v1').role,'PARENT');
+ const student=api.getPortalBootstrap(tokens.owner,'student','','owner-roles-v1'),id=student.children[0].id;
  assert.equal(student.role,'STUDENT');assert.equal(student.canManageAccounts,false);assert.equal(student.access.plan,'PREMIUM');
- assert.equal(api.getPortalBootstrap(tokens.owner,'student').children[0].id,id);
+ assert.equal(api.getPortalBootstrap(tokens.owner,'student','','owner-roles-v1').children[0].id,id);
  assert.equal(tables.Children.length,1);assert.equal(tables.StudentAccounts.length,1);assert.equal(tables.Enrolments.length,1);
  assert.equal(api.getParentDashboard(session('parent')).children[0].id,id);
  assert.equal(api.getLesson(session('student',id),id,'lesson').questions[0].text,'2 + 3');
@@ -40,7 +40,7 @@ test('owner sign-in choices open real, separate roles and create one persistent 
 });
 
 test('owner child corrections propagate and disabling access never recreates or reactivates it',()=>{
- const {api,tables,tokens,session}=backend();const id=api.getPortalBootstrap(tokens.owner,'student').children[0].id;
+ const {api,tables,tokens,session}=backend();const id=api.getPortalBootstrap(tokens.owner,'student','','owner-roles-v1').children[0].id;
  const admin=session('admin'),student=session('student',id),profile=api.listStudentProfiles(admin)[0];
  api.updateChildAccount(admin,id,{...profile,name:'Updated learner',year:3,school:'SJKT',language:'ta',status:'ACTIVE',reason:'Update details',revision:profile.revision});
  assert.equal(api.getPortalBootstrap(student,'student').children[0].name,'Updated learner');
@@ -48,15 +48,15 @@ test('owner child corrections propagate and disabling access never recreates or 
  assert.equal(tables.Enrolments[0].nickname,'Updated learner');
  api.setStudentAccount(admin,'owner@example.test',id,'REVOKED');
  assert.throws(()=>api.getLesson(student,id,'lesson'),/STUDENT_REVOKED/);
- assert.throws(()=>api.getPortalBootstrap(tokens.owner,'student'),/STUDENT_REVOKED/);
+ assert.throws(()=>api.getPortalBootstrap(tokens.owner,'student','','owner-roles-v1'),/STUDENT_REVOKED/);
  assert.equal(tables.Children.length,1);
- assert.equal(api.getPortalBootstrap(tokens.owner,'admin').role,'ADMIN');
+ assert.equal(api.getPortalBootstrap(tokens.owner,'admin','','owner-roles-v1').role,'ADMIN');
  api.setStudentAccount(admin,'owner@example.test',id,'ACTIVE');
- assert.equal(api.getPortalBootstrap(tokens.owner,'student').children[0].id,id);
+ assert.equal(api.getPortalBootstrap(tokens.owner,'student','','owner-roles-v1').children[0].id,id);
 });
 
 test('role envelopes never grant other Google accounts owner powers or cross-family access',()=>{
- const {api,tables,tokens,other,session}=backend();const id=api.getPortalBootstrap(tokens.owner,'student').children[0].id;
+ const {api,tables,tokens,other,session}=backend();const id=api.getPortalBootstrap(tokens.owner,'student','','owner-roles-v1').children[0].id;
  for(const role of ['admin','parent','student'])assert.throws(()=>api.verify_({idToken:tokens.other,role,childId:id}),/configured owner/);
  assert.throws(()=>api.getPortalBootstrap(tokens.other,'admin'),/ACCOUNT_PENDING/);
  assert.equal(tables.AccountAccess[0].status,'PENDING');
