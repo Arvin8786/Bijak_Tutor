@@ -1,5 +1,6 @@
 import {useSheetRefresh} from './sheetRefresh.js';
 import Brand,{BrandCredit} from './Brand.jsx';
+import EducationalVideos from './EducationalVideos.jsx';
 // Capture a referral only in this tab; no tracking cookies, email addresses or child data in URLs.
 function getReferralCode(){try{const code=new URL(window.location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('bijaklearn:referral',code);return sessionStorage.getItem('bijaklearn:referral')||''}catch{return ''}}
 getReferralCode();
@@ -97,13 +98,13 @@ async function localCall(method,args){
  if(method==='getParentReport'){if(args[2]!==mockPin)throw Error('Incorrect parent PIN');const childId=args[1];const skills=Object.entries(mockAttempts).filter(([k])=>k.startsWith(childId+'/'));const attempts=skills.flatMap(([,s])=>s.attempts);return {attempts:attempts.length,errors:attempts.filter(a=>!a.correct).length,independent:attempts.filter(a=>a.correct&&!a.hints&&a.mode!=='choice').length,mastered:skills.filter(([,s])=>evaluateSkill(s).mastered).length,topics:skills.map(([k,s])=>({lessonId:k.split('/')[1],...evaluateSkill(s)})),recent:attempts.slice(-20)};}
  throw Error('Unsupported demo operation: '+method)
 }
-function api(method,...args){if(!isLive)return localCall(method,args);if(!nativeAccountService)return remoteAccountCall(method,...args);return new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));}
+function api(method,...args){const pending=!isLive?localCall(method,args):!nativeAccountService?remoteAccountCall(method,...args):new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));return pending.catch(error=>{throw new Error(String(error.message||error).replace(/\badministrator\b/gi,'BijakLearn Team'))});}
 function accountNotice(error) {
- if(error.message.includes('[STUDENT_NOT_LINKED]'))return 'Your Google account is not linked to a learner profile. Ask your parent or administrator to enable student sign-in.';
- if(error.message.includes('[STUDENT_REVOKED]'))return 'Student sign-in is unavailable. Ask your parent or administrator to check your profile link.';
+ if(error.message.includes('[STUDENT_NOT_LINKED]'))return 'Your Google account is not linked to a learner profile. Ask your parent or BijakLearn Team to enable student sign-in.';
+ if(error.message.includes('[STUDENT_REVOKED]'))return 'Student sign-in is unavailable. Ask your parent or BijakLearn Team to check your profile link.';
  if(error.message.includes('[STUDENT_ONLY]'))return 'This is a student account. Please choose Student sign-in.';
- if (error.message.includes('[ACCOUNT_PENDING]')) return 'Your account is waiting for administrator approval. Sign in again once access is granted.';
- if (error.message.includes('[ACCOUNT_REVOKED]')) return 'Your account access has been blocked. Contact your BijakLearn administrator.';
+ if (error.message.includes('[ACCOUNT_PENDING]')) return 'Your account is waiting for BijakLearn Team approval. Sign in again once access is granted.';
+ if (error.message.includes('[ACCOUNT_REVOKED]')) return 'Your account access has been blocked. Contact your BijakLearn Team.';
  return '';
 }
 function GoogleLogin({onToken,notice}){
@@ -117,7 +118,7 @@ function GoogleLogin({onToken,notice}){
  const validAccountUrl=/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(accountUrl);
  useEffect(()=>{
   if(!isLive||window.location.hostname.endsWith('-script.googleusercontent.com'))return;
-  if(!(window.BIJAKLEARN_GOOGLE_CLIENT_ID||GOOGLE_CLIENT_ID)){setIssue('Google sign-in is not configured. Ask the administrator to set the OAuth Web client ID in Apps Script.');return;}
+  if(!(window.BIJAKLEARN_GOOGLE_CLIENT_ID||GOOGLE_CLIENT_ID)){setIssue('Google sign-in is not configured. Ask the BijakLearn Team to set the OAuth Web client ID in Apps Script.');return;}
   let tries=0;
   const timer=setInterval(()=>{
    const id=window.BIJAKLEARN_GOOGLE_CLIENT_ID||GOOGLE_CLIENT_ID;
@@ -142,14 +143,14 @@ function GoogleLogin({onToken,notice}){
    <div className="signin-tabs" role="group" aria-label="Sign-in type">
     <button type="button" aria-pressed={loginRole==='parent'} onClick={()=>chooseRole('parent')}>Parent sign-in</button>
     <button type="button" aria-pressed={student} onClick={()=>chooseRole('student')}>Student sign-in</button>
-    <button type="button" aria-pressed={admin} onClick={()=>chooseRole('admin')}>Administrator</button>
+    <button type="button" aria-pressed={admin} onClick={()=>chooseRole('admin')}>BijakLearn Team</button>
    </div>
-   <h2>{admin?'Administrator sign-in':student?'Student sign-in':'Welcome back'}</h2>
-   <p>{admin?'Sign in with the administrator Google account to review requests and manage access.':student?'Use your own Google account linked by your parent or administrator to your learner profile.':'Your family’s learning journey, all in one place. Sign in to view reports and support your child.'}</p>
-   {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin"/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your administrator for the private learning app link.</p>}
+   <h2>{admin?'BijakLearn Team sign-in':student?'Student sign-in':'Welcome back'}</h2>
+   <p>{admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Use your own Google account linked by your parent or BijakLearn Team to your learner profile.':'Your family’s learning journey, all in one place. Sign in to view reports and support your child.'}</p>
+   {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin"/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your BijakLearn Team for the private learning app link.</p>}
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
-   <p className="signin-note">{admin?'Administrator permissions are verified by the server after sign-in.':student?'Your parent or administrator must enable your student account first. Use a separate account from your parent.':'New accounts require administrator approval. If access is pending, return after your administrator approves your request.'}</p>
+   <p className="signin-note">{admin?'BijakLearn Team permissions are verified by the server after sign-in.':student?'Your parent or BijakLearn Team must enable your student account first. Use a separate account from your parent.':'New accounts require BijakLearn Team approval. If access is pending, return after your BijakLearn Team approves your request.'}</p>
    {!isLive&&demoEnabled&&<button type="button" onClick={()=>onToken('DEMO')}>Explore learning demo</button>}
    <BrandCredit/>
   </section>
@@ -423,10 +424,12 @@ function App(){
    const data=await api(portalV2?'getPortalBootstrap':role==='student'?'getStudentBootstrap':'getBootstrap',credential,...(portalV2?[role,getReferralCode()]:[]));
    if(attempt!==loginAttempt.current||activeToken.current!==credential)return;
    if(data.role==='STUDENT'){setGrowthAudience('junior');setGrowthKind('ai');}
+   const session=data.ownerRoleAccess?{idToken:credential,role:data.role.toLowerCase(),childId:data.role==='STUDENT'?data.children[0]?.id||'':''}:credential;
+   activeToken.current=session;
    setBoot(data);
    setChildId(data.children[0]?.id||'');
    setPage('home');
-   setToken(credential);
+   setToken(session);
   }catch(error){
    if(attempt===loginAttempt.current&&activeToken.current===credential)endSession(accountNotice(error)||'Sign-in could not be completed. Please try again.');
   }
@@ -488,6 +491,7 @@ function App(){
    <NavButton icon="🗺️" label={say(uiLanguage,'map')} active={page==='map'} onClick={()=>setPage('map')}/>
    <NavButton icon="🤖" label={say(uiLanguage,'tutor')} active={page==='tutor'} onClick={()=>setPage('tutor')}/>
    <NavButton icon="🔬" label={say(uiLanguage,'science')} active={page==='science-lab'} onClick={()=>setPage('science-lab')}/>
+   <NavButton icon="📺" label="Learning Videos" active={page==='videos'} onClick={()=>setPage('videos')}/>
    <NavButton icon="🧮" label={say(uiLanguage,'maths')} active={page==='maths-studio'} onClick={()=>setPage('maths-studio')}/>
   </div>
   <div className="nav-group" role="group" aria-label={say(uiLanguage,'navPlay')}><span className="nav-title">{say(uiLanguage,'navPlay')}</span>
@@ -517,6 +521,7 @@ function App(){
  {page==='lab'&&selectedPath&&<PracticeLab key={selectedPath.id} path={selectedPath} onComplete={()=>updateProgress('activities',selectedPath.id)}/>}
  {page==='review'&&!isLive&&<ReviewQuestions items={selectedPath?missed.filter(item=>selectedPath.lessons.includes(item.lesson.id)):missed}
   onRetry={(id,questionId)=>openLesson(id,{questionId})}/>}
+ {page==='videos'&&<EducationalVideos request={isLive?authRequest:null}/>}
  {page==='discovery'&&<DiscoveryLibrary availableLessons={bootLessons||[]} onOpen={openLesson}/>}
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<><AccountAccessPanel request={authRequest}/><StudentAccessPanel request={authRequest}/><KasihReviewPanel request={authRequest}/></>}
  {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={activeLessons} initialYear={browseYear} school={browseSchool} onOpenLesson={openLesson}/>}
@@ -529,7 +534,7 @@ function App(){
  {page==='packs'&&<><div className="library-filters"><label>Learning pathway<select value={browseSchool} disabled={!!child} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Year<select value={browseYear} disabled={!!child} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>Tahun {y}</option>)}</select></label><span className="library-hint">Short learning adventures created from available lessons</span></div><AdventurePacks lessons={LESSONS.filter(l=>(!l.school||l.school==='ALL'||l.school===browseSchool))} year={browseYear} school={browseSchool} childId={childId} attempts={isLive?{}:mockAttempts} onOpen={openLesson} onPreschool={()=>setPage('preschool')}/></>}
  {page==='preschool'&&<PreschoolStudio/>}
  {page==='home'&&<><div className="hero"><div><span className="eyebrow">{say(uiLanguage,'heroEyebrow')}</span><h1>{say(uiLanguage,'heroTitle')}</h1><p>{say(uiLanguage,'heroText')}</p></div><div className="hero-mascots"><MascotFriends language={uiLanguage} compact/></div><button type="button" className="preschool-launch" onClick={()=>setPage("preschool")}>🐣 {say(uiLanguage,'preschoolCta')}</button></div>
- <div className="studio-cards"><button type="button" className="studio-card science" onClick={()=>setPage('science-lab')}><span className="studio-card-icon" aria-hidden="true">🔬</span><span><strong>{say(uiLanguage,'science')}</strong><small>{say(uiLanguage,'sciCardSub')}</small></span><span aria-hidden="true">→</span></button><button type="button" className="studio-card maths" onClick={()=>setPage('maths-studio')}><span className="studio-card-icon" aria-hidden="true">🧮</span><span><strong>{say(uiLanguage,'maths')}</strong><small>{say(uiLanguage,'mathCardSub')}</small></span><span aria-hidden="true">→</span></button></div>{boot?.role==='STUDENT'?<section className="panel"><h2>Your learning profile</h2><p>{child?.name} · Tahun {child?.year} · {child?.school}</p><p>Your parent or administrator manages your profile and membership.</p></section>:<section className="panel"><h2>{say(uiLanguage,'personaliseTitle')}</h2><div className="demo-save-settings"><div><strong>⭐ {say(uiLanguage,'nickTitle')}</strong><p>{say(uiLanguage,'nickText')}</p></div><label className="demo-save-check"><input type="checkbox" checked={rememberDemo} onChange={e=>toggleDemoSave(e.target.checked)}/> {say(uiLanguage,'rememberDevice')}</label><button type="button" onClick={resetDemo}>{say(uiLanguage,'clearSaved')}</button></div>{boot?.children.length?<div className="chips">{boot.children.map(c=><button key={c.id} className={childId===c.id?'selected':''} onClick={()=>setChildId(c.id)}>{c.name} · {say(uiLanguage,'yearWord')} {c.year}</button>)}</div>:<p>{say(uiLanguage,'noProfileText')}</p>}<details><summary>{say(uiLanguage,'addNickname')}</summary><form onSubmit={createChild} className="form"><label>{say(uiLanguage,'fictionalNickname')}<input required maxLength={40} value={newName} onChange={e=>setNewName(e.target.value)}/></label><label>{say(uiLanguage,'yearWord')}<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>{say(uiLanguage,'yearLabel',{n:y})}</option>)}</select></label><label>{say(uiLanguage,'schoolWord')}<select value={school} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{say(uiLanguage,'languageWord')}<select value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(langLabels).map(([k,v])=><option value={k} key={k}>{v}</option>)}</select></label><button className="primary" disabled={busy}>{say(uiLanguage,'addProfile')}</button></form></details></section>}
+ <div className="studio-cards"><button type="button" className="studio-card science" onClick={()=>setPage('science-lab')}><span className="studio-card-icon" aria-hidden="true">🔬</span><span><strong>{say(uiLanguage,'science')}</strong><small>{say(uiLanguage,'sciCardSub')}</small></span><span aria-hidden="true">→</span></button><button type="button" className="studio-card maths" onClick={()=>setPage('maths-studio')}><span className="studio-card-icon" aria-hidden="true">🧮</span><span><strong>{say(uiLanguage,'maths')}</strong><small>{say(uiLanguage,'mathCardSub')}</small></span><span aria-hidden="true">→</span></button></div>{boot?.role==='STUDENT'?<section className="panel"><h2>Your learning profile</h2><p>{child?.name} · Tahun {child?.year} · {child?.school}</p><p>Your parent or BijakLearn Team manages your profile and membership.</p></section>:<section className="panel"><h2>{say(uiLanguage,'personaliseTitle')}</h2><div className="demo-save-settings"><div><strong>⭐ {say(uiLanguage,'nickTitle')}</strong><p>{say(uiLanguage,'nickText')}</p></div><label className="demo-save-check"><input type="checkbox" checked={rememberDemo} onChange={e=>toggleDemoSave(e.target.checked)}/> {say(uiLanguage,'rememberDevice')}</label><button type="button" onClick={resetDemo}>{say(uiLanguage,'clearSaved')}</button></div>{boot?.children.length?<div className="chips">{boot.children.map(c=><button key={c.id} className={childId===c.id?'selected':''} onClick={()=>setChildId(c.id)}>{c.name} · {say(uiLanguage,'yearWord')} {c.year}</button>)}</div>:<p>{say(uiLanguage,'noProfileText')}</p>}<details><summary>{say(uiLanguage,'addNickname')}</summary><form onSubmit={createChild} className="form"><label>{say(uiLanguage,'fictionalNickname')}<input required maxLength={40} value={newName} onChange={e=>setNewName(e.target.value)}/></label><label>{say(uiLanguage,'yearWord')}<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>{say(uiLanguage,'yearLabel',{n:y})}</option>)}</select></label><label>{say(uiLanguage,'schoolWord')}<select value={school} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{say(uiLanguage,'languageWord')}<select value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(langLabels).map(([k,v])=><option value={k} key={k}>{v}</option>)}</select></label><button className="primary" disabled={busy}>{say(uiLanguage,'addProfile')}</button></form></details></section>}
 
  {!isLive&&<ContinueLearning lastLesson={lastLesson} activities={currentProgress.activities.length} quizzes={currentProgress.quizzes.length}
   missed={missed.length} onOpen={openLesson} onReview={()=>setPage('review')} onPaths={()=>setPage('paths')}/>}

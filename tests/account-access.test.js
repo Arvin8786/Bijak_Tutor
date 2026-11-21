@@ -91,8 +91,10 @@ test('admin access requires the verified Google ID and cannot be changed through
  assert.equal(tables.AccountAccess.length, 0);
  const roster = api.listAccountAccess(token(operator));
  assert.equal(roster.length, 1);
- assert.deepEqual(Object.keys(roster[0]), ['id', 'email', 'name', 'status']);
+ assert.deepEqual(Object.keys(roster[0]), ['id', 'email', 'name', 'status', 'owner']);
+ assert.equal(roster[0].owner,false);
  payloads.get(token(operator)).exp = 'invalid';
  assert.throws(() => api.listAccountAccess(token(operator)), /Invalid Google identity/);
  assert.equal(api.upgradeCurriculumV5, undefined);
 });
+

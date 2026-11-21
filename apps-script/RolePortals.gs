@@ -1,12 +1,15 @@
 /** Role-specific data contracts. Roles and family ownership come from verified Google identity. */
 function portalIdentity_(token){
  const verified=verify_(token);
+ if(verified.ownerRoleAccess)return verified;
  if(isAccountAdmin_(verified))return {...verified,role:'ADMIN'};
  const link=studentLink_(verified);
  if(link)return bindStudentIdentity_(verified);
  requireActiveAccount_(verified,true);upsertParent_(verified);return {...verified,role:'PARENT'};
 }
 function getPortalBootstrap(token,requestedRole,referralCode){
+ const verified=verify_(token);
+ if(typeof isOwnerAccount_==='function'&&isOwnerAccount_(verified))return ownerPortalBootstrap_(verified,requestedRole);
  if(typeof registerReferralOnboarding_==='function')registerReferralOnboarding_(verify_(token),referralCode);
  const user=portalIdentity_(token);
  if(requestedRole==='admin'&&user.role!=='ADMIN')throw Error('Administrator access required');
@@ -14,6 +17,46 @@ function getPortalBootstrap(token,requestedRole,referralCode){
  if(user.role==='STUDENT')return getStudentBootstrap(token);
  if(requestedRole==='student')throw Error('[STUDENT_NOT_LINKED] Ask your parent to enrol your separate student account.');
  return {role:'PARENT',parent:parentDetails_(user),canManageAccounts:false,children:familyChildren_(user),lessons:[],modules:[],access:access_(user)};
+}
+/** The configured Google owner may use each real role; the role is verified on every request. */
+function ownerRoleIdentity_(verified,role,childId,createLearner){
+ if(!isOwnerAccount_(verified))throw Error('Only the configured owner can choose multiple roles.');
+ if(!['parent','student','admin'].includes(role))throw Error('Choose Parent, Student or BijakLearn Team sign-in.');
+ const user={...verified,role:role.toUpperCase(),ownerRoleAccess:true};
+ if(role==='admin')return user;
+ if(role==='parent'){upsertParent_(user);return user}
+ if(createLearner)ensureOwnerLearner_(verified);
+ const links=latestStudentLinks_().filter(l=>String(l.parentSub)===verified.sub&&l.email===verified.email.toLowerCase()&&(!childId||String(l.childId)===childId));
+ const link=links.slice(-1)[0];
+ if(!link||link.status!=='ACTIVE'||String(link.googleSub)!==verified.sub)throw Error('[STUDENT_REVOKED] Your learner access is disabled. Use BijakLearn Team sign-in to manage it.');
+ const child=rows_('Children').find(c=>String(c.childId)===String(link.childId)&&String(c.parentSub)===verified.sub&&c.status!=='REMOVED');
+ if(!child)throw Error('[STUDENT_REVOKED] Your learner profile is unavailable. Restore it from the BijakLearn Team console.');
+ return {...user,familySub:verified.sub,studentChildId:String(child.childId)};
+}
+function ensureOwnerLearner_(user){
+ const lock=LockService.getScriptLock();lock.waitLock(10000);
+ try{
+  upsertParent_(user);
+  const links=latestStudentLinks_().filter(l=>l.email===user.email.toLowerCase());
+  if(links.some(l=>String(l.parentSub)!==user.sub||(l.googleSub&&String(l.googleSub)!==user.sub)))throw Error('[STUDENT_REVOKED] Resolve the conflicting owner learner link in the BijakLearn Team console.');
+  if(links.length)return;
+  const childId='owner-'+user.sub;
+  if(rows_('Children').some(c=>String(c.childId)===childId)||rows_('Enrolments').some(e=>String(e.childId)===childId))throw Error('[STUDENT_REVOKED] Restore the existing owner learner from the BijakLearn Team console.');
+  const now=new Date().toISOString();
+  append_('Children',{childId,parentSub:user.sub,nickname:user.name||'My learner profile',year:1,school:'SK',language:'en',status:'ACTIVE',createdAt:now});
+  append_('StudentAccounts',{studentKey:'email:'+user.email.toLowerCase(),email:user.email.toLowerCase(),googleSub:user.sub,childId,parentSub:user.sub,status:'ACTIVE',linkedAt:now,linkedBy:accountKey_(user.sub)});
+  append_('Enrolments',{requestId:Utilities.getUuid(),parentSub:user.sub,parentEmail:user.email,studentEmail:user.email.toLowerCase(),nickname:user.name||'My learner profile',year:1,school:'SK',language:'en',consentAt:now,status:'APPROVED',childId,createdAt:now,reviewedAt:now,reviewedBy:accountKey_(user.sub)});
+  append_('Audit',{timestamp:now,actor:accountKey_(user.sub),action:'OWNER_LEARNER_LINKED',reference:childId});
+ }finally{SpreadsheetApp.flush();lock.releaseLock()}
+}
+function ownerPortalBootstrap_(verified,requestedRole){
+ const role=requestedRole||'parent';
+ if(verified.ownerRoleAccess&&verified.role.toLowerCase()!==role)throw Error('Sign out before changing your account role.');
+ const user=ownerRoleIdentity_(verified,role,verified.studentChildId,true);
+ if(role==='admin')return {role:'ADMIN',ownerRoleAccess:true,user:{name:user.name,email:user.email},canManageAccounts:true,children:[],lessons:[],modules:[],access:{plan:'ADMIN',active:true}};
+ if(role==='parent')return {role:'PARENT',ownerRoleAccess:true,parent:parentDetails_(user),canManageAccounts:false,children:familyChildren_(user),lessons:[],modules:[],access:access_(user)};
+ const child=requireChild_(user,user.studentChildId);
+ return {role:'STUDENT',ownerRoleAccess:true,user:{name:String(child.nickname),email:user.email},parent:null,canManageAccounts:false,children:[{id:String(child.childId),name:String(child.nickname),year:Number(child.year),school:String(child.school),language:String(child.language||'en')}],access:access_(user),modules:moduleSummary_(user),lessons:lessonCatalogue_(),scholarship:null};
 }
 function familyChildren_(user){return rows_('Children').filter(c=>String(c.parentSub)===user.sub&&c.status!=='REMOVED').map(c=>({id:String(c.childId),name:String(c.nickname),year:Number(c.year),school:String(c.school),language:String(c.language)}))}
 function requirePortalParent_(token){const user=portalIdentity_(token);if(user.role!=='PARENT')throw Error('Parent account required');return user}
@@ -110,7 +153,7 @@ function recordPaymentReview(token,details){
 /** Explicit RPC allowlist: never dispatch a client-supplied global function name. */
 function portalRequest(method,args){
  if(typeof method!=='string'||!Array.isArray(args)||args.length>8||JSON.stringify(args).length>3000000)throw Error('Invalid account request');
- const operations={updateChildAccount,updateChildDetails,updateParentDetails,requestChildEmailCorrection,removeChildLink,setDiscountEnabled,uploadPaymentQr,getFamilyCommerce,linkParentChild,getCommerceAdministration,setCommerceSettings,saveDiscountCampaign,createFamilyOrder,submitOrderProof,listFamilyOrders,reviewFamilyOrder,getPrivateUpload,recordCommissionPayout,getPortalBootstrap,getParentDashboard,submitParentEnrolment,listEnrolments,reviewEnrolment,submitParentFeedback,listParentFeedback,replyParentFeedback,recordStudentUsage,getAdministrationOverview,setModulePolicy,recordPaymentReview,listAccountAccess,setAccountAccess,listStudentAccounts,listStudentProfiles,setStudentAccount,setMembership,listKasihApplications,getKasihDocument,reviewKasihApplication,submitKasihApplication,getKasihApplication,addChild,getLesson,submitAttempt,getParentReport,setParentPin,getGrowthModule,checkGrowthAnswer,authorizeModule,askTutor};
+ const operations={getEducationalVideos,setEducationalVideos,updateChildAccount,updateChildDetails,updateParentDetails,requestChildEmailCorrection,removeChildLink,setDiscountEnabled,uploadPaymentQr,getFamilyCommerce,linkParentChild,getCommerceAdministration,setCommerceSettings,saveDiscountCampaign,createFamilyOrder,submitOrderProof,listFamilyOrders,reviewFamilyOrder,getPrivateUpload,recordCommissionPayout,getPortalBootstrap,getParentDashboard,submitParentEnrolment,listEnrolments,reviewEnrolment,submitParentFeedback,listParentFeedback,replyParentFeedback,recordStudentUsage,getAdministrationOverview,setModulePolicy,recordPaymentReview,listAccountAccess,setAccountAccess,listStudentAccounts,listStudentProfiles,setStudentAccount,setMembership,listKasihApplications,getKasihDocument,reviewKasihApplication,submitKasihApplication,getKasihApplication,addChild,getLesson,submitAttempt,getParentReport,setParentPin,getGrowthModule,checkGrowthAnswer,authorizeModule,askTutor};
  if(!Object.prototype.hasOwnProperty.call(operations,method))throw Error('Unsupported account request');
  RPC_ROWS_=new Map();RPC_DATABASE_=null;
  try{return operations[method].apply(null,args)}finally{SpreadsheetApp.flush();RPC_ROWS_=null;RPC_DATABASE_=null}

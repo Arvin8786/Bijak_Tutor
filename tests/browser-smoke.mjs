@@ -1,4 +1,5 @@
 import {checkAccountSyncBrowser} from './account-sync-browser.mjs';
+import {checkOwnerRolesBrowser} from './owner-roles-browser.mjs';
 import {chromium} from 'playwright';
 import {spawn} from 'node:child_process';
 import assert from 'node:assert/strict';
@@ -37,8 +38,8 @@ try{
   assert.doesNotMatch(await page.locator('.signin').innerText(),/fictional profiles|pilot phase|Studio · [0-9a-f]{7}/i,'Customer sign-in must show product attribution, not development notices');
   if(!await page.getByRole('button',{name:'Explore learning demo',exact:true}).count()){
    assert.equal(await page.locator('nav.nav').count(),0,'Learning must stay behind the gate');
-   await page.getByRole('button',{name:'Administrator',exact:true}).click();
-   await page.getByRole('heading',{name:'Administrator sign-in',exact:true}).waitFor();
+   await page.getByRole('button',{name:'BijakLearn Team',exact:true}).click();
+   await page.getByRole('heading',{name:'BijakLearn Team sign-in',exact:true}).waitFor();
    assert.equal(await page.getByRole('button',{name:'Manage account access',exact:true}).count(),0);
    assert.ok(await page.locator('.signin').evaluate(el=>el.scrollWidth<=window.innerWidth),'Login gate must fit viewport');
    assert.deepEqual(exceptions,[]);
@@ -594,6 +595,7 @@ try{
  await checkTierAccessBrowser(browser, base);
  await checkStudentAccessBrowser(browser, base);
  await checkRolePortalsBrowser(browser, base);
+ await checkOwnerRolesBrowser(browser, base);
  await checkAccountSyncBrowser(browser, base);
  await checkFamilyCommerceBrowser(browser, base);
  console.log('Passed pending, approval, blocking, restoration and revoked-session browser flows.');

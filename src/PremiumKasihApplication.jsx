@@ -21,7 +21,7 @@ export default function PremiumKasihApplication({request,live,onSubmitted,studen
  }
  return <section className="panel narrow kasih-application">
   <span className="mini-label">Giving back to our community</span><h1>Apply for Premium Kasih</h1>
-  <p>Learning opportunities should be within reach of every family. Tell us how sponsored access would help. Applications are reviewed privately by an administrator; submission does not automatically grant access.</p>
+  <p>Learning opportunities should be within reach of every family. Tell us how sponsored access would help. Applications are reviewed privately by an BijakLearn Team; submission does not automatically grant access.</p>
   {student?<p role="status">Applications and supporting documents must be submitted by your parent or guardian from their parent account.</p>:!live?<p role="status">Applications and document uploads are available only after signing in to the private learning app. Please do not enter personal information in this demo.</p>:result?<div role="status"><h2>Application received</h2><p>Reference: {result.requestId}</p><p>Your application is awaiting review. You can check its status under Membership.</p></div>:<form className="kasih-form" onSubmit={submit}>
    <label>Parent or guardian name<input autoComplete="name" required minLength={2} maxLength={100} value={details.guardianName} disabled={busy} onChange={e=>change('guardianName',e.target.value)}/></label>
    <label>Student nickname<input required maxLength={40} value={details.studentNickname} disabled={busy} onChange={e=>change('studentNickname',e.target.value)}/></label>
@@ -29,10 +29,11 @@ export default function PremiumKasihApplication({request,live,onSubmitted,studen
    <label>Why would Premium Kasih help your family?<textarea required rows={6} minLength={40} maxLength={2000} value={details.reason} disabled={busy} onChange={e=>change('reason',e.target.value)} aria-describedby="kasih-privacy"/></label>
    <p id="kasih-privacy" className="hint">Share only what is needed to explain your circumstances. Attach a redacted support letter or similar evidence. Hide identity numbers, bank account numbers and unrelated personal details. Do not upload full identity documents or bank statements.</p>
    <label>Supporting documents (one or two, PDF/JPEG/PNG, up to 1 MB each)<input type="file" accept="application/pdf,image/png,image/jpeg" multiple required disabled={busy} onChange={e=>setFiles(Array.from(e.target.files||[]))}/></label>
-   <p className="hint">Documents are held privately for administrator review. Reviewed evidence is scheduled for deletion after 90 days by the owner’s retention task. You can contact the administrator to request earlier deletion.</p>
+   <p className="hint">Documents are held privately for BijakLearn Team review. Reviewed evidence is scheduled for deletion after 90 days by the owner’s retention task. You can contact the BijakLearn Team to request earlier deletion.</p>
    <label className="consent-check"><input type="checkbox" required checked={details.guardianConsent} disabled={busy} onChange={e=>change('guardianConsent',e.target.checked)}/> I am the parent or guardian. I consent to private review of these details and documents for the Premium Kasih application.</label>
    {error&&<p role="alert" className="error">{error}</p>}
    <button className="primary" disabled={busy}>{busy?'Submitting application…':'Submit application for review'}</button>
   </form>}
  </section>;
 }
+
