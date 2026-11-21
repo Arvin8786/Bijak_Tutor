@@ -179,7 +179,7 @@ try{
     await page.locator('.curriculum-map select').nth(1).selectOption('1');
     for(const subject of ['Bahasa Melayu','Bahasa Inggeris','Sains','Pendidikan Islam','Pendidikan Moral','Pendidikan Seni Visual','Pendidikan Muzik']){
       await page.locator('.curriculum-map select').nth(2).selectOption(subject);
-      assert.ok(await page.locator('.curriculum-map .illustrated-lesson').count()>=8,subject+' Year 1 still displays one or two lessons');
+      const eligible=LESSONS.filter(l=>l.subject===subject&&l.year===1&&(!l.school||['ALL','SK'].includes(l.school)));assert.ok(eligible.length>=3,subject+' Year 1 needs several age-appropriate topics');assert.equal(await page.locator('.curriculum-map .illustrated-lesson').count(),eligible.length,subject+' must show every eligible Year 1 topic');
     }
     await page.locator('.curriculum-map select').nth(2).selectOption('Sains');
     await page.locator('.curriculum-map .illustrated-lesson').filter({hasText:'Deria manusia'}).last().click();
