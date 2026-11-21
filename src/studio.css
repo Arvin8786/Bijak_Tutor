@@ -131,7 +131,8 @@ body .signin .signin-form>p,body .signin .signin-note{color:#d7deef}
 body .signin .signin-tabs{background:#101a383d;border-color:#ffffff20}
 body .signin .signin-tabs button{color:#dbe3f6}
 body .signin .signin-tabs button[aria-pressed=true]{background:#d9f8ed;color:#1e594d;box-shadow:0 3px 14px #0002}
-body .signin .signin-note{border-top-color:#ffffff25}
+body .signin .signin-form .signin-note{background:#ffffff0d;border-color:#ffffff30;color:#e1e8f7}
+body .signin .signin-form>small{color:#cbd5ea}
 body .signin #google-signin{padding:12px;border-radius:15px;background:#fff;min-height:66px}
 body .welcome-gate .welcome-main{border:5px solid #fff;background:linear-gradient(145deg,#fff,#edf9f6 55%,#f1edff);box-shadow:0 28px 80px #24325e20}
 body .portal-shell{background:linear-gradient(145deg,#f0f7f8,#f5f2ff);--bl-primary:#4f48b8;--bl-ink:#23345d}
