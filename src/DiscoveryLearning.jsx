@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import {tx} from './i18n.js';
 import {DISCOVERY_MODULES} from './discoveryModules.js';
 
 const copy = {
@@ -19,19 +20,19 @@ export function DiscoveryLibrary({availableLessons, onOpen}) {
  return <section className="discovery-library">
   <div className="section-heading"><div>
    <span className="mini-label">🧩 BELAJAR SAMBIL BERMAIN</span>
-   <h1>Interactive Modules · Modul Interaktif</h1>
-   <p>Choose a lesson to match cards, put ideas in order, and try a short quiz.</p>
+   <h1>{tx("Interactive Modules · Modul Interaktif")}</h1>
+   <p>{tx("Choose a lesson to match cards, put ideas in order, and try a short quiz.")}</p>
   </div></div>
   <div className="library-filters">
-   <label>Year <select value={year} onChange={event=>setYear(event.target.value)}><option value="all">All years</option>
+   <label>{tx("Year")} <select value={year} onChange={event=>setYear(event.target.value)}><option value="all">{tx("All years")}</option>
     {[...new Set(catalogue.map(lesson=>lesson.year))].sort().map(value=><option key={value} value={value}>Tahun {value}</option>)}</select></label>
-   <label>Subject <select value={subject} onChange={event=>setSubject(event.target.value)}><option value="all">All subjects</option>
+   <label>{tx("Subject")} <select value={subject} onChange={event=>setSubject(event.target.value)}><option value="all">{tx("All subjects")}</option>
     {[...new Set(catalogue.map(lesson=>lesson.subject))].sort().map(value=><option key={value}>{value}</option>)}</select></label>
-   <label>Activity type <select value={kind} onChange={event=>setKind(event.target.value)}>
-    <option value="all">All activities</option><option value="match">Match cards</option><option value="order">Put in order</option>
+   <label>{tx("Activity type")} <select value={kind} onChange={event=>setKind(event.target.value)}>
+    <option value="all">{tx("All activities")}</option><option value="match">{tx("Match cards")}</option><option value="order">{tx("Put in order")}</option>
    </select></label>
   </div>
-  {!catalogue.some(matches)&&<p role="status">No lessons match these filters.</p>}
+  {!catalogue.some(matches)&&<p role="status">{tx("No lessons match these filters.")}</p>}
   {DISCOVERY_MODULES.map(module => {
    const lessons = module.lessons.filter(matches);
    if (!lessons.length) return null;
@@ -48,7 +49,7 @@ export function DiscoveryLibrary({availableLessons, onOpen}) {
     </div>
    </section>;
   })}
-  <p className="draft-note">Supplementary learning materials under educator review.</p>
+  <p className="draft-note">{tx("Supplementary learning materials under educator review.")}</p>
  </section>;
 }
 
@@ -75,7 +76,7 @@ export function DiscoveryActivity({activity, language, onComplete}) {
   if(position+1===answers.length)onComplete?.();
  }
 
- return <section className="lesson-quick-check discovery-activity" aria-label="Interactive lesson activity">
+ return <section className="lesson-quick-check discovery-activity" aria-label={tx("Interactive lesson activity")}>
   <span className="mini-label">🎮 MODUL INTERAKTIF</span>
   <h2>{heading}</h2>
   <p dir="auto">{activity.prompt}</p>

@@ -45,6 +45,7 @@ await page.addInitScript(role=>{
    await page.getByRole('heading',{name:'Child reports',exact:true}).waitFor();await page.getByText('75%',{exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Science Lab',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'Access & family links',exact:true}).count(),0);
    await page.getByRole('button',{name:'Enrol a child',exact:true}).click();await page.getByLabel('Student Google email',{exact:true}).waitFor();await page.getByText('parent@test.invalid',{exact:true}).waitFor();
    await page.getByRole('button',{name:'Comments & suggestions',exact:true}).click();await page.getByLabel('Your message',{exact:true}).fill('Fictional suggestion for testing');await page.getByRole('button',{name:'Send to administrator',exact:true}).click();await page.getByText('Saved successfully.',{exact:true}).waitFor();
+   await page.locator('.portal-language select').selectOption('ta');await page.getByRole('button',{name:'வெளியேறு',exact:true}).waitFor();await page.locator('.portal-language select').selectOption('en');await page.getByRole('button',{name:'Sign out',exact:true}).waitFor();
   }else{
    await page.getByRole('heading',{name:/Learn, explore and grow/}).waitFor();assert.equal(await page.locator('.portal-shell').count(),0);assert.equal(await page.getByRole('button',{name:'Manage account access',exact:true}).count(),0);
   }

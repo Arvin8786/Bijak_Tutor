@@ -19,7 +19,7 @@ test('the new lessons appear in the right stream and year with a playable quick 
  const supported = PRIMARY_SUBJECT_CATALOG.filter(({name}) => !SUBJECT_MAPS[name].guidedByTeacher);
  assert.deepEqual(new Set(EXPLORE_LESSONS.map(lesson => lesson.subject)), new Set(supported.map(subject => subject.name)));
  for (const lesson of EXPLORE_LESSONS) {
-  assert.ok(LESSONS.includes(lesson));
+  assert.ok(LESSONS.some(item => item.id === lesson.id));
   const streams = lesson.school === 'ALL' ? SCHOOL_STREAMS : [lesson.school];
   for (const stream of streams) {
    assert.ok(availableSubjects(stream, lesson.year, {includeOptional: true}).some(subject => subject.name === lesson.subject), lesson.id);

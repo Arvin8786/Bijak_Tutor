@@ -134,14 +134,14 @@ const activities = [
   ],
  },
  {
-  subject: 'tamil', year: 1, title: 'எண்ணுவோம் · Kira satu hingga tiga',
-  idea: 'ஒன்று, இரண்டு dan மூன்று ialah perkataan Tamil untuk satu, dua dan tiga.',
-  example: 'இரண்டு bermaksud dua. Letak dua pensel di atas meja untuk memadankannya.',
-  try: 'Susun satu, dua dan tiga benda. Padankan setiap kumpulan dengan perkataan nombor yang sesuai.',
+  subject: 'tamil', year: 1, title: 'குடும்பச் சொற்கள்',
+  idea: 'அம்மா, அப்பா, அக்கா என்பவை நம் குடும்பத்தினரைக் குறிக்கும் சொற்கள்.',
+  example: 'அம்மா எனக்குச் சோறு ஊட்டுகிறார். இங்கே “அம்மா” என்பது குடும்பத்தில் ஒருவரைக் குறிக்கிறது.',
+  try: 'உங்கள் குடும்பத்தில் உள்ளவர்களின் படத்தை வரைந்து, ஒவ்வொருவருக்கும் உரிய சொல்லை எழுதுங்கள்.',
   questions: [
-   ['Apakah maksud மூன்று?', ['Satu', 'Tiga', 'Dua'], 1, 'மூன்று bermaksud tiga.'],
-   ['Pilih perkataan untuk satu.', ['ஒன்று', 'இரண்டு', 'மூன்று'], 0, 'ஒன்று bermaksud satu.'],
-   ['Pilih perkataan untuk dua.', ['மூன்று', 'ஒன்று', 'இரண்டு'], 2, 'இரண்டு bermaksud dua.'],
+   ['“அப்பா” என்பது யாரைக் குறிக்கிறது?', ['தந்தை', 'தாய்', 'அக்காள்'], 0, 'அப்பா என்றால் தந்தை.'],
+   ['“அக்கா” என்பது யாரைக் குறிக்கிறது?', ['அண்ணன்', 'தங்கை', 'உடன் பிறந்த மூத்த சகோதரி'], 2, 'அக்கா என்பது மூத்த சகோதரி.'],
+   ['பாசத்துடன் உணவு ஊட்டுபவர் யார்?', ['அம்மா', 'மேசை', 'நாற்காலி'], 0, 'அம்மா பாசத்துடன் உணவு ஊட்டுவார்.'],
   ],
  },
  {

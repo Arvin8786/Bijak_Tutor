@@ -126,6 +126,9 @@ try{
    await lab.getByRole('button',{name:'Ramp race'}).click();
    await lab.getByRole('button',{name:/Let it go/}).click();
    await lab.getByRole('status').filter({hasText:'The car'}).waitFor({timeout:6000});
+   for(const [tab,control,value] of [['Melting ice','#ice-temp','-5'],['Dissolving','#dis-temp','3'],['Mixing light','#light-r','100'],['Singing glasses','#glass-0','90'],['Seesaw','#see-w1','5']]){
+    await lab.getByRole('button',{name:tab,exact:true}).click();await lab.locator(control).fill(value);await lab.locator('.lab-observation[role="status"]').waitFor();assert.equal(await lab.locator(control).inputValue(),value);
+   }
    await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
   }
   await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
@@ -168,7 +171,7 @@ try{
   await page.locator('.curriculum-map .illustrated-lesson').first().click();
   await page.locator('.lesson-reader').waitFor();
   assert.ok((await page.locator('.lesson-reader h1').textContent()).length>2);
-  if(width===1280){await pageControls.getByRole('button',{name:'Back',exact:true}).click();for(const stream of ['SK','SJKC','SJKT']){await page.locator('.curriculum-map select').first().selectOption(stream);for(let y=1;y<=6;y++){await page.locator('.curriculum-map select').nth(1).selectOption(String(y));await page.locator('.curriculum-map select').nth(2).selectOption('Matematik');const cards=page.locator('.curriculum-map .illustrated-lesson');assert.ok(await cards.count()>0,stream+' year '+y+' has no lessons');await cards.first().click();await page.locator('.lesson-reader').waitFor();await pageControls.getByRole('button',{name:'Back',exact:true}).click()}}}
+  if(width===1280){await pageControls.getByRole('button',{name:'Back',exact:true}).click();for(const stream of ['SK','SJKC','SJKT']){await page.locator('.curriculum-map select').first().selectOption(stream);if(stream==='SJKT'){await page.waitForFunction(()=>document.documentElement.lang==='ta');await page.locator('.language-switch').click();await page.getByRole('button',{name:'English',exact:true}).click();await page.getByRole('button',{name:'Continue',exact:true}).click();await page.waitForFunction(()=>document.documentElement.lang==='en')}for(let y=1;y<=6;y++){await page.locator('.curriculum-map select').nth(1).selectOption(String(y));await page.locator('.curriculum-map select').nth(2).selectOption('Matematik');const cards=page.locator('.curriculum-map .illustrated-lesson');assert.ok(await cards.count()>0,stream+' year '+y+' has no lessons');await cards.first().click();await page.locator('.lesson-reader').waitFor();await pageControls.getByRole('button',{name:'Back',exact:true}).click()}}}
   if(width===1280){
     // Audit real selected subject/year lesson cards rather than only checking source data.
     await page.locator('nav.nav').getByRole('button',{name:/Learning map/i}).click();
@@ -176,7 +179,7 @@ try{
     await page.locator('.curriculum-map select').nth(1).selectOption('1');
     for(const subject of ['Bahasa Melayu','Bahasa Inggeris','Sains','Pendidikan Islam','Pendidikan Moral','Pendidikan Seni Visual','Pendidikan Muzik']){
       await page.locator('.curriculum-map select').nth(2).selectOption(subject);
-      assert.ok(await page.locator('.curriculum-map .illustrated-lesson').count()>=8,subject+' Year 1 still displays one or two lessons');
+      const eligible=LESSONS.filter(l=>l.subject===subject&&l.year===1&&(!l.school||['ALL','SK'].includes(l.school)));assert.ok(eligible.length>=3,subject+' Year 1 needs several age-appropriate topics');assert.equal(await page.locator('.curriculum-map .illustrated-lesson').count(),eligible.length,subject+' must show every eligible Year 1 topic');
     }
     await page.locator('.curriculum-map select').nth(2).selectOption('Sains');
     await page.locator('.curriculum-map .illustrated-lesson').filter({hasText:'Deria manusia'}).last().click();

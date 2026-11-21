@@ -1,3 +1,4 @@
+import {unifyLessonLanguage} from './lessonLocale.js';
 import {DISCOVERY_LESSONS} from './discoveryModules.js';
 import {EXPLORE_LESSONS} from './exploreLessons.js';
 import {EXPANDED_LESSONS} from './expandedLessons.js';
@@ -333,4 +334,6 @@ export const SKILL_DEMO_LESSONS = [
 ];
 export const PRIMARY_SUBJECTS=[['Matematik','🧮'],['Bahasa Melayu','📖'],['English','🔤'],['Sains','🔬'],['Sejarah','🌏'],['Bahasa Cina','🀄'],['Bahasa Tamil','✍️'],['Pendidikan Islam','🌙'],['Pendidikan Moral','🤝'],['Reka Bentuk dan Teknologi','🛠️'],['Pendidikan Seni Visual','🎨'],['Pendidikan Muzik','🎼'],['Pendidikan Jasmani dan Kesihatan','🏃']];
 
-export const LESSONS = [...SKILL_DEMO_LESSONS, ...ORIGINAL_LESSONS, ...EXPANDED_LESSONS, ...withMathPractice(enrichPractice([...JUNIOR_FOUNDATION_LESSONS,...JUNIOR_ENRICHMENT_LESSONS,...JUNIOR_STREAM_LESSONS,...OPTIONAL_STARTER_LESSONS])), ...SUPPLEMENTARY_LESSONS, ...REVIEW_LESSONS, ...EXPLORE_LESSONS, ...DISCOVERY_LESSONS];
+export const RAW_LESSONS = [...SKILL_DEMO_LESSONS, ...ORIGINAL_LESSONS, ...EXPANDED_LESSONS, ...withMathPractice(enrichPractice([...JUNIOR_FOUNDATION_LESSONS,...JUNIOR_ENRICHMENT_LESSONS,...JUNIOR_STREAM_LESSONS,...OPTIONAL_STARTER_LESSONS])), ...SUPPLEMENTARY_LESSONS, ...REVIEW_LESSONS, ...EXPLORE_LESSONS, ...DISCOVERY_LESSONS];
+// Every lesson now speaks one language (the one of its subject); see lessonLocale.js.
+export const LESSONS = unifyLessonLanguage(RAW_LESSONS);
