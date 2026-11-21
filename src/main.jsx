@@ -5,10 +5,13 @@ getReferralCode();
 import {ACCOUNT_URL,GOOGLE_CLIENT_ID,remoteAccountCall} from './accountTransport.js';
 import {RolePortals,StudentUsage} from './RolePortals.jsx';
 import OAuthLogin from './OAuthLogin.jsx';
-import React,{useCallback,useEffect,useRef,useState} from 'react';
+import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {tx,setUiLang} from './i18n.js';
 import {TRACK_CONSENT,trackingEnabled,setTrackingEnabled,readUsage,wipeUsage,recordUsage,summariseUsage,IDLE_LIMIT_MS,MAX_TICK_MS} from './learningTime.js';
 import {createRoot} from 'react-dom/client';
-import {LESSONS} from './lessons';
+import {LESSONS,RAW_LESSONS} from './lessons';
+import {lessonsForSchool,shownInTamil} from './lessonLocale.js';
+import TAMIL_CONTENT from './tamilContent.json' with {type:'json'};
 import {availableSubjects,lessonCountForSubject,lessonsForSubject} from './primarySubjects.js';
 import {SKILL_CATALOG,CURRICULUM_INFO} from './skillCatalog';
 import {initialSkill,recordAttempt,evaluateSkill} from './mastery';
@@ -61,12 +64,13 @@ import KasihReviewPanel from './KasihReviewPanel.jsx';
 import './professional.css';
 import './studio-refresh.css';
 import './design-system.css';
+import './studio.css';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
 
 function LessonSearch({query, onChange, count}) {
  return <div className="lesson-search">
-  <label>Find a lesson <input type="search" placeholder="Search lesson titles or topics" value={query} onChange={event=>onChange(event.target.value)}/></label>
-  <span role="status">{count} {count===1?'lesson':'lessons'} shown</span>
+  <label>{tx("Find a lesson")} <input type="search" placeholder={tx("Search lesson titles or topics")} value={query} onChange={event=>onChange(event.target.value)}/></label>
+  <span role="status">{count} {count===1?tx('lesson'):tx('lessons')} {tx('shown')}</span>
  </div>;
 }
 const nativeAccountService=!!window.google?.script?.run;
@@ -80,12 +84,14 @@ const initialDemo=savedDemo()?loadDemo():{children:[],attempts:{}};
 let mockChildren=initialDemo.children,mockAttempts=initialDemo.attempts,mockProgress=initialDemo.progress||{},mockPin='';
 const persistDemo=()=>{if(savedDemo())saveDemo(mockChildren,mockAttempts,undefined,mockProgress)};
 const fakeUser={name:'Guest',email:''};
-const fakeLessons=LESSONS.map(l=>({id:l.id,year:l.year,title:l.title,subject:l.subject,school:l.school||'ALL',icon:l.icon,chapter:l.chapter||'Foundational skills',status:l.status||'DRAFT_TEACHER_REVIEW',premium:false}));
+let liveLessons=LESSONS;
+const listLesson=l=>({id:l.id,year:l.year,title:l.title,subject:l.subject,school:l.school||'ALL',icon:l.icon,chapter:l.chapter||'Foundational skills',status:l.status||'DRAFT_TEACHER_REVIEW',premium:false});
+const fakeLessons=LESSONS.map(listLesson);
 async function localCall(method,args){
  if(method==='getBootstrap')return {parent:fakeUser,children:mockChildren,access:{active:false,plan:'FREE'},lessons:fakeLessons,scholarship:null};
  if(method==='addChild'){const [_,d]=args;const c={id:'demo-'+Date.now(),name:d.name,year:d.year,school:d.school,language:d.language};mockChildren.push(c);persistDemo();return c;}
- if(method==='getLesson'){const l=LESSONS.find(x=>x.id===args[2]);if(!l)throw Error('Lesson not found');return {...l,questions:l.check.map(q=>({id:q.id,mode:q.mode,text:q.text,options:q.options||[],transfer:!!q.transfer}))};}
- if(method==='submitAttempt'){const [_,childId,lessonId,questionId,answer,hints]=args;const l=LESSONS.find(x=>x.id===lessonId),q=l.check.find(x=>x.id===questionId);const correct=markPractice(q, answer);const key=childId+'/'+lessonId;mockAttempts[key]=recordAttempt(mockAttempts[key]||initialSkill(),{questionId:q.id,mode:q.mode,correct,hints,transfer:!!q.transfer});persistDemo();return {correct,feedback:correct?q.why:(l.misconceptions?.[answer]||q.why),suggestedAnswer:correct?undefined:q.answer,mastery:evaluateSkill(mockAttempts[key])};}
+ if(method==='getLesson'){const l=liveLessons.find(x=>x.id===args[2]);if(!l)throw Error('Lesson not found');return {...l,questions:l.check.map(q=>({id:q.id,mode:q.mode,text:q.text,options:q.options||[],transfer:!!q.transfer}))};}
+ if(method==='submitAttempt'){const [_,childId,lessonId,questionId,answer,hints]=args;const l=liveLessons.find(x=>x.id===lessonId),q=l.check.find(x=>x.id===questionId);const correct=markPractice(q, answer);const key=childId+'/'+lessonId;mockAttempts[key]=recordAttempt(mockAttempts[key]||initialSkill(),{questionId:q.id,mode:q.mode,correct,hints,transfer:!!q.transfer});persistDemo();return {correct,feedback:correct?q.why:(l.misconceptions?.[answer]||q.why),suggestedAnswer:correct?undefined:q.answer,mastery:evaluateSkill(mockAttempts[key])};}
  if(method==='setParentPin'){mockPin=args[1];return {ok:true}}
  if(method==='getParentReport'){if(args[2]!==mockPin)throw Error('Incorrect parent PIN');const childId=args[1];const skills=Object.entries(mockAttempts).filter(([k])=>k.startsWith(childId+'/'));const attempts=skills.flatMap(([,s])=>s.attempts);return {attempts:attempts.length,errors:attempts.filter(a=>!a.correct).length,independent:attempts.filter(a=>a.correct&&!a.hints&&a.mode!=='choice').length,mastered:skills.filter(([,s])=>evaluateSkill(s).mastered).length,topics:skills.map(([k,s])=>({lessonId:k.split('/')[1],...evaluateSkill(s)})),recent:attempts.slice(-20)};}
  throw Error('Unsupported demo operation: '+method)
@@ -232,9 +238,20 @@ function PwaControls({language='ms'}){
 function NavButton({icon,label,active,onClick}){return <button type="button" className={active?'active':''} aria-current={active?'page':undefined} onClick={onClick}><span aria-hidden="true">{icon}</span> {label}</button>}
 function App(){
  const [uiLanguage,setUiLanguage]=useState(()=>readLocale()||'ms');
+ setUiLang(uiLanguage);
  const [welcomeDone,setWelcomeDone]=useState(()=>!!readLocale());
  useEffect(()=>{document.documentElement.lang=uiLanguage},[uiLanguage]);
  const [token,setToken]=useState(''),[boot,setBoot]=useState(null),[childId,setChildId]=useState(''),[qIndex,setQIndex]=useState(0),[answer,setAnswer]=useState(''),[hints,setHints]=useState(0),[result,setResult]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[pin,setPin]=useState(''),[oldPin,setOldPin]=useState(''),[report,setReport]=useState(null),[newName,setNewName]=useState(''),[year,setYear]=useState(1),[school,setSchool]=useState('SK'),[language,setLanguage]=useState('ms');
+ const schoolNow=boot?.children?.find(x=>x.id===childId)?.school||school;
+ const activeLessons=useMemo(()=>schoolNow==='SJKT'?lessonsForSchool(RAW_LESSONS,'SJKT',TAMIL_CONTENT):LESSONS,[schoolNow]);
+ liveLessons=activeLessons;
+ const bootLessons=useMemo(()=>isLive?boot?.lessons:activeLessons.map(listLesson),[isLive,boot,activeLessons]);
+ // Choosing an SJKT pathway switches the whole app to Tamil (the child can still change language afterwards).
+ const lastSchool=useRef(schoolNow);
+ useEffect(()=>{
+  if(lastSchool.current!==schoolNow&&schoolNow==='SJKT'){setUiLanguage('ta');try{writeLocale('ta')}catch{}}
+  lastSchool.current=schoolNow;
+ },[schoolNow]);
  const [routes,setRoutes]=useState([{page:'home'}]);
  const route=routes.at(-1);
  const {page,lesson}=route;
@@ -279,9 +296,9 @@ function App(){
  const learner=childId||'guest';
  const currentProgress=progress[learner]||{lastLesson:null,activities:[],quizzes:[]};
  const selectedPath=PATHS.find(path=>path.id===route.pathId);
- const missed=!isLive&&(page==='home'||page==='review')?missedQuestions(mockAttempts,childId,LESSONS):[];
- const lastLesson=boot?.lessons.find(item=>item.id===currentProgress.lastLesson);
- const relatedLessons=(boot?.lessons||[]).filter(item=>lesson&&item.subject===lesson.subject&&item.year===lesson.year&&(!item.school||item.school==='ALL'||item.school===(lesson.school||school)));
+ const missed=!isLive&&(page==='home'||page==='review')?missedQuestions(mockAttempts,childId,activeLessons):[];
+ const lastLesson=bootLessons?.find(item=>item.id===currentProgress.lastLesson);
+ const relatedLessons=(bootLessons||[]).filter(item=>lesson&&item.subject===lesson.subject&&item.year===lesson.year&&(!item.school||item.school==='ALL'||item.school===(lesson.school||school)));
  const nextLesson=relatedLessons[relatedLessons.findIndex(item=>item.id===lesson?.id)+1];
  function updateProgress(field,value){
   if(isLive)return;
@@ -350,7 +367,7 @@ function App(){
  const subjectOptions=availableSubjects(browseSchool,browseYear,{includeOptional:showOptional});
  const selectedSubject=subjectOptions.some(subject=>subject.name===subjectPreference)?subjectPreference:'Matematik';
  const browseSubject=route.subject||selectedSubject;
- const subjectLessons=lessonsForSubject(boot?.lessons,browseSubject,browseYear,browseSchool);
+ const subjectLessons=lessonsForSubject(bootLessons,browseSubject,browseYear,browseSchool);
  const chapters=[...new Set(subjectLessons.map(l=>l.chapter||'Fundamentals'))];
  const activeChapter=chapters.includes(browseChapter)?browseChapter:'all';
  const searchTerms=normalizedAnswer(lessonQuery).split(' ').filter(Boolean);
@@ -424,7 +441,7 @@ function App(){
  async function createChild(e){e.preventDefault();try{const x=await call('addChild',{name:newName,year,school,language});await refresh();setChildId(x.id);setNewName('');setPage('home')}catch{}}
  async function openLesson(id,{quiz=false,questionId}={}){
   setError('');
-  const listed=LESSONS.find(item=>item.id===id);
+  const listed=activeLessons.find(item=>item.id===id);
   if(!listed){setError('This study topic could not be found. Please choose another lesson.');return}
   try{
     // Reading is available to everyone in demo mode, even before a profile is made.
@@ -492,20 +509,20 @@ function App(){
  </nav>}
  {timeConsent&&<p className="time-child-notice" role="status">⏱️ {say(uiLanguage,'timeNotice')}</p>}
  <ModuleGate moduleId={isLive?moduleForPage(page,growthAudience,growthKind):null} request={authRequest} onMembership={()=>setPage('membership')}>
- {page==='paths'&&<LearningPaths lessons={boot?.lessons||[]} onOpen={openLesson} finished={currentProgress.activities}
+ {page==='paths'&&<LearningPaths lessons={bootLessons||[]} onOpen={openLesson} finished={currentProgress.activities}
   onLab={pathId=>setPage('lab',{pathId})} onReview={isLive?undefined:pathId=>setPage('review',{pathId})}/>}
  {page==='lab'&&selectedPath&&<PracticeLab key={selectedPath.id} path={selectedPath} onComplete={()=>updateProgress('activities',selectedPath.id)}/>}
  {page==='review'&&!isLive&&<ReviewQuestions items={selectedPath?missed.filter(item=>selectedPath.lessons.includes(item.lesson.id)):missed}
   onRetry={(id,questionId)=>openLesson(id,{questionId})}/>}
- {page==='discovery'&&<DiscoveryLibrary availableLessons={boot?.lessons||[]} onOpen={openLesson}/>}
+ {page==='discovery'&&<DiscoveryLibrary availableLessons={bootLessons||[]} onOpen={openLesson}/>}
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<><AccountAccessPanel request={authRequest}/><StudentAccessPanel request={authRequest}/><KasihReviewPanel request={authRequest}/></>}
- {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={LESSONS} initialYear={browseYear} school={browseSchool} onOpenLesson={openLesson}/>}
+ {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={activeLessons} initialYear={browseYear} school={browseSchool} onOpenLesson={openLesson}/>}
  {page==='science-lab'&&<ScienceLab language={uiLanguage}/>}
  {page==='arcade'&&<ActivityArcade/>}
  {page==='wordgame'&&<WordTilesGame/>}
  {page==='growth'&&<GrowthHub studentOnly={boot?.role==='STUDENT'} audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?id=>authRequest("getGrowthModule",id):null} checkAnswer={isLive?(lessonId,answerIndex)=>authRequest("checkGrowthAnswer",lessonId,answerIndex):null}/>}
- {page==='practice'&&<PracticeArena lessons={LESSONS} year={browseYear} school={browseSchool} language={uiLanguage} onOpenLesson={openLesson} onAttempt={isLive?undefined:recordPractice}/>}
- {page==='tutor'&&<StudyBuddy lessons={LESSONS} year={browseYear} subject={lesson?.subject||''} currentLesson={lesson} askOnline={isLive?(question,context)=>authRequest('askTutor',question,context):null}/>}
+ {page==='practice'&&<PracticeArena lessons={activeLessons} year={browseYear} school={browseSchool} language={uiLanguage} onOpenLesson={openLesson} onAttempt={isLive?undefined:recordPractice}/>}
+ {page==='tutor'&&<StudyBuddy lessons={activeLessons} year={browseYear} subject={lesson?.subject||''} currentLesson={lesson} askOnline={isLive?(question,context)=>authRequest('askTutor',question,context):null}/>}
  {page==='packs'&&<><div className="library-filters"><label>Learning pathway<select value={browseSchool} disabled={!!child} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Year<select value={browseYear} disabled={!!child} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>Tahun {y}</option>)}</select></label><span className="library-hint">Short learning adventures created from available lessons</span></div><AdventurePacks lessons={LESSONS.filter(l=>(!l.school||l.school==='ALL'||l.school===browseSchool))} year={browseYear} school={browseSchool} childId={childId} attempts={isLive?{}:mockAttempts} onOpen={openLesson} onPreschool={()=>setPage('preschool')}/></>}
  {page==='preschool'&&<PreschoolStudio/>}
  {page==='home'&&<><div className="hero"><div><span className="eyebrow">{say(uiLanguage,'heroEyebrow')}</span><h1>{say(uiLanguage,'heroTitle')}</h1><p>{say(uiLanguage,'heroText')}</p></div><div className="hero-mascots"><MascotFriends language={uiLanguage} compact/></div><button type="button" className="preschool-launch" onClick={()=>setPage("preschool")}>🐣 {say(uiLanguage,'preschoolCta')}</button></div>
@@ -529,10 +546,10 @@ function App(){
  <div className="home-packs-teaser"><div><span className="mini-label">{say(uiLanguage,'packsTeaserEyebrow')}</span><h2>{say(uiLanguage,'packsTeaserTitle')}</h2><p>{say(uiLanguage,'packsTeaserText')}</p></div><button type="button" className="primary" onClick={()=>setPage('packs')}>{say(uiLanguage,'openPacks')}</button></div>
  <section className="library-section" id="study-library">
    <div className="section-heading"><div><span className="mini-label">{say(uiLanguage,'libraryEyebrow')}</span><h2>{say(uiLanguage,'explore')}</h2><p>{say(uiLanguage,'libraryText')}</p></div><span className="heading-spark" aria-hidden="true">🌟</span></div>
-   <div className="library-filters"><label>Learning pathway <select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>School year <select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{[1,2,3,4,5,6].map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><span className="library-hint">{child?'Showing subjects for '+child.name:'Browse without creating a learner'}</span></div>
-   <div className="optional-subject-toggle"><button type="button" aria-pressed={showOptional} onClick={()=>setShowOptional(v=>!v)}>{showOptional?'Hide optional-language catalogues':'Show additional optional languages'} <span aria-hidden="true">{showOptional?'−':'+'}</span></button><small>Optional subjects vary by school and some do not yet have authored study content.</small></div>
+   <div className="library-filters"><label>{tx("Learning pathway")} <select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{tx("School year")} <select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{[1,2,3,4,5,6].map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><span className="library-hint">{child?'Showing subjects for '+child.name:'Browse without creating a learner'}</span></div>
+   <div className="optional-subject-toggle"><button type="button" aria-pressed={showOptional} onClick={()=>setShowOptional(v=>!v)}>{showOptional?'Hide optional-language catalogues':'Show additional optional languages'} <span aria-hidden="true">{showOptional?'−':'+'}</span></button><small>{tx("Optional subjects vary by school and some do not yet have authored study content.")}</small></div>
    <div className="subjects playful-subjects">{subjectOptions.map((subject,index)=>{
-    const total=lessonCountForSubject(boot?.lessons,subject.name,browseYear,browseSchool);
+    const total=lessonCountForSubject(bootLessons,subject.name,browseYear,browseSchool);
     return <button type="button" className="subject subject-picker" id={'subject-'+subject.id}
      style={{'--card-hue':(index*43+185)%360}} key={subject.id}
      onClick={()=>{
@@ -548,48 +565,48 @@ function App(){
    })}</div>
  </section></>}
 
- {(page==='map'||page==='subject')&&<section className={page==='subject'?'subject-page':'curriculum-map'}><div className="section-heading"><div><span className="mini-label">🗺️ EXPLORE ALL LESSONS</span><h1>{page==='subject'?browseSubject:'My Learning Adventure'}</h1><p>{page==='subject'
- ? 'Tahun '+browseYear+' · '+browseSchool+' · '+subjectLessons.length+' '+(subjectLessons.length===1?'lesson':'lessons')
- : 'Choose your preferred learning pathway, level and topic. These are supplementary lessons, not school classes or exams.'}</p></div></div>
- {page==='map'&&<><div className="library-filters"><label>Learning pathway<select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Year<select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{[1,2,3,4,5,6].map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><label>Subject<select value={browseSubject} onChange={e=>{setBrowseSubject(e.target.value);setBrowseChapter('all')}}>{subjectOptions.map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label></div>
- {browseSchool==='SK'&&<label className="map-optional"><input type="checkbox" checked={showOptional} onChange={event=>setShowOptional(event.target.checked)}/> Show optional languages</label>}</>}
+ {(page==='map'||page==='subject')&&<section className={page==='subject'?'subject-page':'curriculum-map'}><div className="section-heading"><div><span className="mini-label">{tx("🗺️ EXPLORE ALL LESSONS")}</span><h1>{page==='subject'?browseSubject:tx('My Learning Adventure')}</h1><p>{page==='subject'
+ ? 'Tahun '+browseYear+' · '+browseSchool+' · '+subjectLessons.length+' '+(subjectLessons.length===1?tx('lesson'):tx('lessons'))
+ : tx('Choose your preferred learning pathway, level and topic. These are supplementary lessons, not school classes or exams.')}</p></div></div>
+ {page==='map'&&<><div className="library-filters"><label>{tx("Learning pathway")}<select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{tx("Year")}<select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{[1,2,3,4,5,6].map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><label>{tx("Subject")}<select value={browseSubject} onChange={e=>{setBrowseSubject(e.target.value);setBrowseChapter('all')}}>{subjectOptions.map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label></div>
+ {browseSchool==='SK'&&<label className="map-optional"><input type="checkbox" checked={showOptional} onChange={event=>setShowOptional(event.target.checked)}/> {tx("Show optional languages")}</label>}</>}
  <SubjectMindMap key={browseSubject} subject={browseSubject}/>
  {subjectLessons.length>0&&<LessonSearch query={lessonQuery} onChange={setLessonQuery} count={visibleLessons.length}/>}
- <div className="chapter-chips" aria-label="Filter lessons by topic"><button type="button" aria-pressed={activeChapter==='all'} className={activeChapter==='all'?'selected':''} onClick={()=>setBrowseChapter('all')}>All topics</button>{chapters.map(ch=><button type="button" key={ch} aria-pressed={activeChapter===ch} className={activeChapter===ch?'selected':''} onClick={()=>setBrowseChapter(ch)}>{ch}</button>)}</div>
- <div className="cards lesson-shelf">{visibleLessons.map((l,i)=><button type="button" className="lesson illustrated-lesson" key={l.id} onClick={()=>openLesson(l.id)}><span className="lesson-art" aria-hidden="true">{l.icon}</span><span className="lesson-index">LESSON {i+1}</span><strong>{l.title}</strong><small>{l.chapter||l.subject} · Tahun {l.year}</small><span className="lesson-link">📖 Open lesson →</span></button>)}</div>
- {noSearchResults&&<p className="lesson-no-results">No matching lessons. <button type="button" onClick={()=>{setLessonQuery('');setBrowseChapter('all')}}>Clear filters</button></p>}
- {!subjectLessons.length&&<div className="empty-library"><h2>More lessons are being prepared</h2><p>Study materials for this subject and year are being prepared. Choose another year or subject to explore currently available lessons.</p><button type="button" className="primary" onClick={()=>{setBrowseSubject('Matematik');setBrowseChapter('all');setPage('map')}}>Explore Tahun {browseYear} Mathematics</button></div>}
- <p className="draft-note">Content and curriculum mappings remain under educational review.</p></section>}
+ <div className="chapter-chips" aria-label={tx("Filter lessons by topic")}><button type="button" aria-pressed={activeChapter==='all'} className={activeChapter==='all'?'selected':''} onClick={()=>setBrowseChapter('all')}>{tx("All topics")}</button>{chapters.map(ch=><button type="button" key={ch} aria-pressed={activeChapter===ch} className={activeChapter===ch?'selected':''} onClick={()=>setBrowseChapter(ch)}>{ch}</button>)}</div>
+ <div className="cards lesson-shelf">{visibleLessons.map((l,i)=><button type="button" className="lesson illustrated-lesson" key={l.id} onClick={()=>openLesson(l.id)}><span className="lesson-art" aria-hidden="true">{l.icon}</span><span className="lesson-index">LESSON {i+1}</span><strong>{l.title}</strong><small>{l.chapter||l.subject} · Tahun {l.year}</small><span className="lesson-link">{tx("📖 Open lesson →")}</span></button>)}</div>
+ {noSearchResults&&<p className="lesson-no-results">{tx("No matching lessons.")} <button type="button" onClick={()=>{setLessonQuery('');setBrowseChapter('all')}}>{tx("Clear filters")}</button></p>}
+ {!subjectLessons.length&&<div className="empty-library"><h2>{tx("More lessons are being prepared")}</h2><p>{tx("Study materials for this subject and year are being prepared. Choose another year or subject to explore currently available lessons.")}</p><button type="button" className="primary" onClick={()=>{setBrowseSubject('Matematik');setBrowseChapter('all');setPage('map')}}>Explore Tahun {browseYear} Mathematics</button></div>}
+ <p className="draft-note">{tx("Content and curriculum mappings remain under educational review.")}</p></section>}
 
  {page==='lesson'&&lesson&&<div className="lesson-reader">
-  <div className="reader-toolbar"><span className="draft-tag">📚 Draft learning material · Educator review pending</span></div>
-  <div className="lessonhead colourful-lessonhead"><span className="lesson-head-art" aria-hidden="true">{lesson.icon}</span><div><span className="mini-label">{lesson.subject} • TAHUN {lesson.year}</span><h1>{lesson.title}</h1><p>Discover the idea, study the examples, then test your understanding.</p></div></div>
+  <div className="reader-toolbar"><span className="draft-tag">{tx("📚 Draft learning material · Educator review pending")}</span></div>
+  <div className="lessonhead colourful-lessonhead"><span className="lesson-head-art" aria-hidden="true">{lesson.icon}</span><div><span className="mini-label">{lesson.subject} • TAHUN {lesson.year}</span><h1>{lesson.title}</h1><p>{tx("Discover the idea, study the examples, then test your understanding.")}</p></div></div>
   <LessonNavigation active={studyTab} onChange={setStudyTab} questionCount={lesson.questions.length} onTutor={()=>setPage('tutor',{lesson})}/>
   <div id="lesson-panel" role="tabpanel" aria-labelledby={'lesson-tab-'+studyTab} tabIndex={0}>
   {studyTab==='notes'?<>
    <LearningVisuals title={lesson.title} subject={lesson.subject}/>
-   <div className="panel study-summary"><span className="mini-label">💡 LET'S UNDERSTAND</span><h2>What will I learn?</h2><p className="large-reading">{lesson.summary}</p>{lesson.visual&&<div className="visual-example" role="note"><span className="visual-symbol" aria-hidden="true">{lesson.icon}</span><div><strong>👀 Look at this example</strong><p>{lesson.visual}</p></div></div>}</div>
-   <section className="study-chapter"><div className="section-heading"><div><span className="mini-label">🪜 ONE STEP AT A TIME</span><h2>Let's learn together</h2></div></div><div className="study-steps">{(lesson.steps||[]).map((s,i)=><article className="study-step" key={i}><span className="step-number">{i+1}</span><div><h3>{s.title}</h3><p>{s.body}</p></div><span className="step-emoji" aria-hidden="true">{['🔎','🧠','✨'][i%3]}</span></article>)}</div></section>
+   <div className="panel study-summary"><span className="mini-label">{tx("💡 LET'S UNDERSTAND")}</span><h2>{tx("What will I learn?")}</h2><p className="large-reading">{lesson.summary}</p>{lesson.visual&&<div className="visual-example" role="note"><span className="visual-symbol" aria-hidden="true">{lesson.icon}</span><div><strong>{tx("👀 Look at this example")}</strong><p>{lesson.visual}</p></div></div>}</div>
+   <section className="study-chapter"><div className="section-heading"><div><span className="mini-label">{tx("🪜 ONE STEP AT A TIME")}</span><h2>{tx("Let's learn together")}</h2></div></div><div className="study-steps">{(lesson.steps||[]).map((s,i)=><article className="study-step" key={i}><span className="step-number">{i+1}</span><div><h3>{s.title}</h3><p>{s.body}</p></div><span className="step-emoji" aria-hidden="true">{['🔎','🧠','✨'][i%3]}</span></article>)}</div></section>
    {lesson.enrichment&&<LearningMission enrichment={lesson.enrichment} title={lesson.title}/>}
    {lesson.activity&&(lesson.activity.kind
     ? <DiscoveryActivity key={lesson.id} activity={lesson.activity} language={uiLanguage} onComplete={()=>updateProgress('activities',lesson.id)}/>
     : <LessonQuickCheck key={lesson.id} question={lesson.activity} onComplete={()=>updateProgress('activities',lesson.id)}/>)}
-   <div className="study-cta"><div><strong>Ready for a challenge?</strong><p>Try the questions when you understand the lesson.</p></div><button type="button" className="primary" onClick={()=>{setStudyTab('quiz');setQIndex(0);setResult(null);setAnswer('');setHints(0)}}>Start practice →</button></div>
+   <div className="study-cta"><div><strong>{tx("Ready for a challenge?")}</strong><p>{tx("Try the questions when you understand the lesson.")}</p></div><button type="button" className="primary" onClick={()=>{setStudyTab('quiz');setQIndex(0);setResult(null);setAnswer('');setHints(0)}}>{tx("Start practice →")}</button></div>
   </>:studyTab==='map'?<LearningMindMap key={lesson.id} title={lesson.title} icon={lesson.icon}
-   branches={lesson.mind?.length?lesson.mind:[['Idea utama',lesson.summary],...lesson.steps.map(step=>[step.title,step.body])]}/>:<section className="panel quiz colour-quiz"><div className="quiz-progress"><span>🎯 Practice challenge</span><span>{Math.min(qIndex+1,lesson.questions.length)} / {lesson.questions.length}</span></div><div className="progress-track"><div style={{width:(100*Math.min(qIndex,lesson.questions.length)/Math.max(1,lesson.questions.length))+'%'}}/></div>{q?<><h2>{q.text}</h2>{q.options.length?<div className="choices">{q.options.map(x=><button type="button" className={answer===x?'selected':''} key={x} disabled={!!result} onClick={()=>setAnswer(x)}>{x}</button>)}</div>:<label>Your answer<input autoComplete="off" inputMode={q.mode==='number'?'decimal':'text'} value={answer} disabled={!!result} onChange={e=>setAnswer(e.target.value)} placeholder="Type your answer here"/></label>}<div className="actions">{!result?<><button type="button" onClick={()=>setHints(h=>h+1)}>💡 Hint {hints? '('+hints+' used)':''}</button><button type="button" className="primary" disabled={busy||!answer.trim()} onClick={submit}>Check my answer</button></>:<><button type="button" onClick={()=>{setAnswer('');setResult(null);setHints(x=>x+1)}}>Try with guidance</button><button type="button" className="primary" onClick={next}>Next question →</button></>}</div>{hints>0&&!result&&<p className="hint">Try drawing the objects or using your fingers. What changes when you move one?</p>}{result&&<div className={'feedback '+(result.correct?'good':'gentle')}><strong>{result.correct?'🌟 Wonderful effort!':'💛 Good try — we learn from mistakes!'}</strong>{result.correct&&<div className="celebrate-stars" aria-hidden="true">⭐ ✨ 🎉 ✨ ⭐</div>}<p>{result.feedback}</p>{!result.correct&&result.suggestedAnswer!==undefined&&<p>Worked answer: <strong>{result.suggestedAnswer}</strong></p>}<p>{result.mastery.mastered?'⭐ Great independent practice! Keep exploring.':'Keep practising in different ways. One correct answer alone never passes a topic.'}</p></div>}</>:<div className="feedback good"><h2>🎉 You explored all the questions!</h2><p>Keep revisiting the study content and try again with fresh examples.</p><button type="button" className="primary" onClick={()=>{setQIndex(0);setAnswer('');setResult(null);setHints(0)}}>Practice again</button><button type="button" onClick={()=>setStudyTab('notes')}>Review study notes</button>{nextLesson&&<button type="button" onClick={()=>openLesson(nextLesson.id)}>Next lesson: {nextLesson.title}</button>}</div>}</section>}
+   branches={lesson.mind?.length?lesson.mind:[['Idea utama',lesson.summary],...lesson.steps.map(step=>[step.title,step.body])]}/>:<section className="panel quiz colour-quiz"><div className="quiz-progress"><span>{tx("🎯 Practice challenge")}</span><span>{Math.min(qIndex+1,lesson.questions.length)} / {lesson.questions.length}</span></div><div className="progress-track"><div style={{width:(100*Math.min(qIndex,lesson.questions.length)/Math.max(1,lesson.questions.length))+'%'}}/></div>{q?<><h2>{q.text}</h2>{q.options.length?<div className="choices">{q.options.map(x=><button type="button" className={answer===x?'selected':''} key={x} disabled={!!result} onClick={()=>setAnswer(x)}>{x}</button>)}</div>:<label>{tx("Your answer")}<input autoComplete="off" inputMode={q.mode==='number'?'decimal':'text'} value={answer} disabled={!!result} onChange={e=>setAnswer(e.target.value)} placeholder={tx("Type your answer here")}/></label>}<div className="actions">{!result?<><button type="button" onClick={()=>setHints(h=>h+1)}>💡 Hint {hints? '('+hints+' used)':''}</button><button type="button" className="primary" disabled={busy||!answer.trim()} onClick={submit}>{tx("Check my answer")}</button></>:<><button type="button" onClick={()=>{setAnswer('');setResult(null);setHints(x=>x+1)}}>{tx("Try with guidance")}</button><button type="button" className="primary" onClick={next}>{tx("Next question →")}</button></>}</div>{hints>0&&!result&&<p className="hint">{tx("Try drawing the objects or using your fingers. What changes when you move one?")}</p>}{result&&<div className={'feedback '+(result.correct?'good':'gentle')}><strong>{result.correct?'🌟 Wonderful effort!':'💛 Good try — we learn from mistakes!'}</strong>{result.correct&&<div className="celebrate-stars" aria-hidden="true">⭐ ✨ 🎉 ✨ ⭐</div>}<p>{result.feedback}</p>{!result.correct&&result.suggestedAnswer!==undefined&&<p>{tx("Worked answer:")} <strong>{result.suggestedAnswer}</strong></p>}<p>{result.mastery.mastered?'⭐ Great independent practice! Keep exploring.':'Keep practising in different ways. One correct answer alone never passes a topic.'}</p></div>}</>:<div className="feedback good"><h2>{tx("🎉 You explored all the questions!")}</h2><p>{tx("Keep revisiting the study content and try again with fresh examples.")}</p><button type="button" className="primary" onClick={()=>{setQIndex(0);setAnswer('');setResult(null);setHints(0)}}>{tx("Practice again")}</button><button type="button" onClick={()=>setStudyTab('notes')}>{tx("Review study notes")}</button>{nextLesson&&<button type="button" onClick={()=>openLesson(nextLesson.id)}>Next lesson: {nextLesson.title}</button>}</div>}</section>}
   </div>
   <p className="reader-footer-note">Practice feedback supports learning; this is not a certified school assessment.</p>
  </div>}
 
- {page==='pin'&&<div className="panel narrow"><h1>🔒 Parent-only learning reports</h1><p>Parents use a six-digit PIN to view their child's progress. Set a PIN on your first visit.</p><label>Parent PIN<input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={e=>setPin(e.target.value)} placeholder="6 digits"/></label><label>Existing PIN (only when replacing)<input type="password" inputMode="numeric" maxLength={6} value={oldPin} onChange={e=>setOldPin(e.target.value)} placeholder="Leave blank for first setup"/></label><div className="actions"><button onClick={savePin} disabled={pin.length!==6||busy}>Set or replace PIN</button><button className="primary" onClick={viewReport} disabled={pin.length!==6||!childId||busy}>View child report</button></div><small>{isLive?'Protect this PIN and use separate parent and child accounts.':'This is a local preview, not secure child monitoring. A child with browser access can inspect or clear local information. Use distinct authenticated parent and child accounts for real families.'}</small></div>}
- {page==='parent'&&report&&<section className="panel learning-time-panel" aria-label="Parent learning time report">
+ {page==='pin'&&<div className="panel narrow"><h1>{tx("🔒 Parent-only learning reports")}</h1><p>{tx("Parents use a six-digit PIN to view their child's progress. Set a PIN on your first visit.")}</p><label>{tx("Parent PIN")}<input type="password" inputMode="numeric" maxLength={6} value={pin} onChange={e=>setPin(e.target.value)} placeholder={tx("6 digits")}/></label><label>Existing PIN (only when replacing)<input type="password" inputMode="numeric" maxLength={6} value={oldPin} onChange={e=>setOldPin(e.target.value)} placeholder={tx("Leave blank for first setup")}/></label><div className="actions"><button onClick={savePin} disabled={pin.length!==6||busy}>{tx("Set or replace PIN")}</button><button className="primary" onClick={viewReport} disabled={pin.length!==6||!childId||busy}>{tx("View child report")}</button></div><small>{isLive?'Protect this PIN and use separate parent and child accounts.':'This is a local preview, not secure child monitoring. A child with browser access can inspect or clear local information. Use distinct authenticated parent and child accounts for real families.'}</small></div>}
+ {page==='parent'&&report&&<section className="panel learning-time-panel" aria-label={tx("Parent learning time report")}>
  <h2>⏱️ Learning Time & Breaks</h2>
- <p>This optional report measures approximate time while the app is visible and a learner is interacting. It cannot see other apps or confirm why a session stopped.</p>
- {!timeConsent?<div className="time-consent"><p><strong>Parent opt-in required.</strong> Children will see a short notice when this feature is enabled. The detailed report is shown only after the parent PIN check.</p><button type="button" className="primary" onClick={optIntoTracking}>Enable learning-time recording</button></div>:
+ <p>{tx("This optional report measures approximate time while the app is visible and a learner is interacting. It cannot see other apps or confirm why a session stopped.")}</p>
+ {!timeConsent?<div className="time-consent"><p><strong>{tx("Parent opt-in required.")}</strong> {tx("Children will see a short notice when this feature is enabled. The detailed report is shown only after the parent PIN check.")}</p><button type="button" className="primary" onClick={optIntoTracking}>{tx("Enable learning-time recording")}</button></div>:
  <><div className="time-metrics">{[['Active minutes (7 days)',usageReport?.minutes7||0],['Study days (7 days)',usageReport?.activeDays||0],['App backgrounded (7 days)',usageReport?.backgroundEvents7||0]].map(([label,value])=><div key={label}><strong>{value}</strong><span>{label}</span></div>)}</div>
  <p className="time-small">Last observed activity: {usageReport?.lastSeen?new Date(usageReport.lastSeen).toLocaleString():'No study activity recorded yet'}. “App backgrounded” can mean switching apps, locking the device, navigating away, or an interruption; it is not proof of cheating or force-closing.</p>
- <div className="time-days">{(usageReport?.days||[]).length?(usageReport?.days||[]).map(d=><div key={d.date}><strong>{d.date}</strong><span>{Math.round(d.seconds/60)} active min · {d.backgroundEvents} interruptions</span></div>):<p>No activity in the last seven days.</p>}</div>
- <div className="actions"><button type="button" onClick={()=>setUsageReport(summariseUsage(childId))}>Refresh report</button><button type="button" onClick={stopTracking}>Stop recording</button><button type="button" onClick={clearTracking}>Delete device usage history</button></div></>}
+ <div className="time-days">{(usageReport?.days||[]).length?(usageReport?.days||[]).map(d=><div key={d.date}><strong>{d.date}</strong><span>{Math.round(d.seconds/60)} active min · {d.backgroundEvents} interruptions</span></div>):<p>{tx("No activity in the last seven days.")}</p>}</div>
+ <div className="actions"><button type="button" onClick={()=>setUsageReport(summariseUsage(childId))}>{tx("Refresh report")}</button><button type="button" onClick={stopTracking}>{tx("Stop recording")}</button><button type="button" onClick={clearTracking}>{tx("Delete device usage history")}</button></div></>}
  <p className="time-small">Device-local preview: this report may be cleared or altered through browser settings. Reliable multi-device parent reporting requires separate parent/child accounts, consent controls and a private backend; no remote tracking is active on the public site.</p>
  </section>}
 {page==='parent'&&report&&<><h1>👨‍👩‍👧 Parent Learning Intelligence</h1><p>Practice overview for {child?.name} — formative and not independently certified</p><div className="statgrid">{[['Practice milestones',report.mastered],['Practice attempts',report.attempts],['Independent attempts',report.independent],['Learning opportunities',report.errors]].map(([name,n])=><div className="stat" key={name}><strong>{n}</strong><span>{name}</span></div>)}</div><div className="panel"><h2>🕵️ Learning Detective</h2>{report.topics.length?report.topics.map(x=><p key={x.lessonId}><strong>{boot.lessons.find(l=>l.id===x.lessonId)?.title||x.lessonId}</strong> — {x.mastered?'Practice milestone reached (not certified)':'Needs more independent practice'} · {x.independent} independent answers</p>):<p>Complete a few lessons to begin building the learning profile.</p>}<p className="hint">We report observed evidence, not a diagnosis of intelligence or a fixed learning style.</p></div><div className="panel"><h2>💡 Suggested home activity</h2><p>Ask your child to explain a maths problem using household objects, then try a similar example with different quantities.</p></div></>}

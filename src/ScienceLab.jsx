@@ -2,10 +2,13 @@ import React,{useEffect,useMemo,useRef,useState} from 'react';
 import {say} from './localization.js';
 import {recordActivity} from './dailyStreak.js';
 import {ShadowLab,MagnetLab,PuddleLab,RampLab} from './LabExtras.jsx';
+import {IceLab,DissolveLab,LightLab,SoundLab,SeesawLab} from './LabMore.jsx';
+import {MORE_DISCOVERY_GOALS,MORE_TABS} from './labModelsMore.js';
 import {MAX_DAYS,simulatePlant,blendPlants,diagnosePlant,OBJECTS,LIQUIDS,floatResult,circuitResult,DISCOVERY_GOALS} from './labModels.js';
 
+const ALL_GOALS=[...DISCOVERY_GOALS,...MORE_DISCOVERY_GOALS];
 const STORE='bijaklearn:lab-discoveries:v1';
-const loadFound=()=>{try{const v=JSON.parse(window.localStorage.getItem(STORE)||'[]');return Array.isArray(v)?v.filter(k=>DISCOVERY_GOALS.includes(k)):[]}catch{return[]}};
+const loadFound=()=>{try{const v=JSON.parse(window.localStorage.getItem(STORE)||'[]');return Array.isArray(v)?v.filter(k=>ALL_GOALS.includes(k)):[]}catch{return[]}};
 const saveFound=list=>{try{window.localStorage.setItem(STORE,JSON.stringify(list))}catch{}};
 const reducedMotion=()=>{try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch{return false}};
 
@@ -215,16 +218,16 @@ export default function ScienceLab({language='ms'}){
  const [kind,setKind]=useState('plant'),[found,setFound]=useState(loadFound),[flash,setFlash]=useState('');
  const foundRef=useRef(found); // the latest list, so saving and the streak run once, outside any state updater
  const discover=key=>{
-  if(!DISCOVERY_GOALS.includes(key)||foundRef.current.includes(key))return;
+  if(!ALL_GOALS.includes(key)||foundRef.current.includes(key))return;
   const next=[...foundRef.current,key];
   foundRef.current=next;
   setFound(next);saveFound(next);recordActivity(1);setFlash(key);
  };
  useEffect(()=>{if(!flash)return;const id=setTimeout(()=>setFlash(''),3500);return()=>clearTimeout(id)},[flash]);
- const tabs=[['plant','🌱','expPlant'],['float','🛟','expFloat'],['circuit','💡','expCircuit'],['shadow','🌳','expShadow'],['magnet','🧲','expMagnet'],['puddle','💧','expPuddle'],['ramp','🚗','expRamp']];
+ const tabs=[['plant','🌱','expPlant'],['float','🛟','expFloat'],['circuit','💡','expCircuit'],['shadow','🌳','expShadow'],['magnet','🧲','expMagnet'],['puddle','💧','expPuddle'],['ramp','🚗','expRamp'],...MORE_TABS];
  return <section className="panel science-lab" aria-label={t('science')}>
   <div className="studio-head"><div><h1><span aria-hidden="true">🔬</span> {t('sciTitle')}</h1><p>{t('sciIntro')}</p></div>
-   <div className="discovery-count" aria-live="polite"><strong>🏅 {t('discoveryCount',{n:found.length,total:DISCOVERY_GOALS.length})}</strong>{flash&&<span className="discovery-new">✨ {t('discoveryNew')} {t('dn_'+flash)}</span>}</div>
+   <div className="discovery-count" aria-live="polite"><strong>🏅 {t('discoveryCount',{n:found.length,total:ALL_GOALS.length})}</strong>{flash&&<span className="discovery-new">✨ {t('discoveryNew')} {t('dn_'+flash)}</span>}</div>
   </div>
   <div className="studio-tabs" role="group" aria-label={t('chooseExp')}>{tabs.map(([id,icon,label])=><button type="button" key={id} className={kind===id?'on':''} aria-pressed={kind===id} onClick={()=>setKind(id)}><span aria-hidden="true">{icon}</span> {t(label)}</button>)}</div>
   {kind==='plant'&&<PlantLab language={language} found={found} discover={discover}/>}
@@ -234,8 +237,13 @@ export default function ScienceLab({language='ms'}){
   {kind==='magnet'&&<MagnetLab language={language} discover={discover}/>}
   {kind==='puddle'&&<PuddleLab language={language} discover={discover}/>}
   {kind==='ramp'&&<RampLab language={language} discover={discover}/>}
-  <details className="discovery-list"><summary>{t('discoveries')} · {t('discoveryCount',{n:found.length,total:DISCOVERY_GOALS.length})}</summary>
-   <ul>{DISCOVERY_GOALS.map(k=><li key={k} className={found.includes(k)?'got':''}><span aria-hidden="true">{found.includes(k)?'✅':'🔒'}</span> {found.includes(k)?t('dn_'+k):'???'}</li>)}</ul>
+  {kind==='ice'&&<IceLab language={language} discover={discover}/>}
+  {kind==='dissolve'&&<DissolveLab language={language} discover={discover}/>}
+  {kind==='light'&&<LightLab language={language} discover={discover}/>}
+  {kind==='sound'&&<SoundLab language={language} discover={discover}/>}
+  {kind==='seesaw'&&<SeesawLab language={language} discover={discover}/>}
+  <details className="discovery-list"><summary>{t('discoveries')} · {t('discoveryCount',{n:found.length,total:ALL_GOALS.length})}</summary>
+   <ul>{ALL_GOALS.map(k=><li key={k} className={found.includes(k)?'got':''}><span aria-hidden="true">{found.includes(k)?'✅':'🔒'}</span> {found.includes(k)?t('dn_'+k):'???'}</li>)}</ul>
   </details>
   <p className="studio-foot">{t('modelNote')}</p>
  </section>;

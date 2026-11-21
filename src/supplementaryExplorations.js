@@ -1,3 +1,4 @@
+import {EXTRA_UNITS} from './supplementaryExtraUnits.js';
 /* Original supplementary learning adventures for enrichment, not a school or KPM curriculum.
  * Carefully authored topic notes are intentionally reused as age-progressive spiral practice.
  * No lesson is represented as educator-certified or as a unique official year-level standard.
@@ -1032,10 +1033,35 @@ export function extraMathChecks(year,unit,id,existingQuestion){
   throw Error('Could not create distinct practice for '+id);
  });
 }
+
+// Matematik is not banded: its practice questions already scale with the year.
+// The same six topics used to be copied into every year. Each topic now appears only in the years it suits.
+export const UNIT_YEAR_BANDS = {
+ 'Bahasa Melayu': [[1,2],[1,3],[1,3],[2,4],[3,5],[4,6]],
+ 'Bahasa Inggeris': [[1,2],[1,3],[1,3],[3,5],[3,6],[4,6]],
+ 'Sains': [[1,2],[1,3],[2,4],[3,6],[4,6],[3,6]],
+ 'Pendidikan Islam': [[1,3],[2,6],[3,6],[1,4],[1,6],[1,4]],
+ 'Pendidikan Moral': [[1,3],[1,4],[2,6],[3,6],[2,6],[1,6]],
+ 'Pendidikan Jasmani dan Pendidikan Kesihatan': [[1,3],[1,3],[1,6],[1,4],[2,6],[1,6]],
+ 'Pendidikan Seni Visual': [[1,3],[1,4],[2,5],[1,4],[3,6],[1,6]],
+ 'Pendidikan Muzik': [[1,3],[1,4],[2,5],[2,6],[1,6],[3,6]],
+ 'Sejarah': [[4,5],[4,6],[4,6],[5,6],[6,6],[5,6]],
+ 'Reka Bentuk dan Teknologi': [[4,6],[4,6],[4,6],[4,6],[4,6],[4,6]],
+ 'Bahasa Cina': [[1,2],[1,2],[1,3],[1,3],[2,4],[3,6]],
+ 'Bahasa Tamil': [[1,2],[1,3],[2,4],[2,4],[3,5],[3,6]],
+ 'Bahasa Arab': [[1,3],[1,3],[1,4],[1,4],[2,5],[2,6]]
+};
+
+for(const [subject,extras] of Object.entries(EXTRA_UNITS)){
+ for(const {band,unit} of extras){SUPPLEMENTARY_TOPICS[subject].units.push(unit);(UNIT_YEAR_BANDS[subject]??=[]).push(band)}
+}
+export const unitFitsYear=(subject,unit,year)=>{const b=UNIT_YEAR_BANDS[subject]?.[unit];return !b||(year>=b[0]&&year<=b[1])};
+
 export function createSupplementaryLessons(){
  const lessons=[];
  for(const [subject,entry] of Object.entries(SUPPLEMENTARY_TOPICS)){
   for(let year=entry.minYear||1;year<=6;year++)for(let i=0;i<entry.units.length;i++){
+   if(!unitFitsYear(subject,i,year))continue;
    const [title,summary,example,question,answer,wrong1,wrong2,why,mission]=entry.units[i];
    const id='supp-'+Object.keys(SUPPLEMENTARY_TOPICS).indexOf(subject)+'-'+year+'-'+(i+1);
    const activity=year<=2?'First try this slowly with objects, pictures or a family member.':year<=4?'Give a second example and explain how it is similar.':'Compare two possible answers and say how you checked your evidence.';

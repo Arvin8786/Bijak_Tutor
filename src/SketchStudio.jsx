@@ -1,4 +1,5 @@
 import React,{useState} from 'react';
+import {tx} from './i18n.js';
 import {DrawingPad} from './PreschoolStudio.jsx';
 const TASKS=[
  {title:'Draw a friendly whale',icon:'🐳',steps:['Start with a long, rounded oval for the body.','Add a tail at one end and a small eye.','Draw a spout and a few waves around the whale.'],tip:'Look at how the whale body joins to the tail.'},
@@ -21,16 +22,16 @@ export default function SketchStudio({index=0,onStar=()=>{}}){
   setFinished(true);
   if(checks.length>0)onStar();
  };
- return <div className="sketch-studio" aria-label="Free drawing practice with coaching">
-   <h2>🖍️ Creative Sketchbook</h2>
-   <div className="sketch-idea"><span aria-hidden="true">{task.icon}</span><div><h3>{task.title}</h3><p>Draw your own version. There is no single right picture.</p></div></div>
+ return <div className="sketch-studio" aria-label={tx("Free drawing practice with coaching")}>
+   <h2>{tx("🖍️ Creative Sketchbook")}</h2>
+   <div className="sketch-idea"><span aria-hidden="true">{task.icon}</span><div><h3>{task.title}</h3><p>{tx("Draw your own version. There is no single right picture.")}</p></div></div>
    <ol className="extra-craft-steps">{task.steps.map((step,i)=><li key={i}>{step}</li>)}</ol>
    <div className="sketch-paper"><DrawingPad letter="" freeDraw key={task.title}/></div>
-   <div className="sketch-self-review"><strong>🎨 My artist check-in</strong><p>Before you finish, think about what you tried. Use the drawing check above for guidance on your lines.</p>
+   <div className="sketch-self-review"><strong>{tx("🎨 My artist check-in")}</strong><p>{tx("Before you finish, think about what you tried. Use the drawing check above for guidance on your lines.")}</p>
      {prompts.map((prompt,i)=><label key={i}><input type="checkbox" checked={checks.includes(i)} onChange={e=>setChecks(prev=>e.target.checked?[...prev,i]:prev.filter(v=>v!==i))}/>{prompt}</label>)}
-     <button type="button" className="primary" onClick={complete}>🌟 Reflect on my picture</button>
+     <button type="button" className="primary" onClick={complete}>{tx("🌟 Reflect on my picture")}</button>
      {finished&&<div className="extra-feedback success" role="status">{checks.length===0?'Choose a step you tried. You can improve one small part and try again.':checks.length===1?'Nice beginning! '+task.tip:checks.length===2?'Great progress! '+task.tip:'You reflected on shapes, details and improvement. That is how artists grow! '+task.tip}</div>}
    </div>
-   <p className="extra-footer-note">The sketch feedback measures pen movement and uses your own check-in. It cannot see and understand your artwork or award a meaningful artistic grade.</p>
+   <p className="extra-footer-note">{tx("The sketch feedback measures pen movement and uses your own check-in. It cannot see and understand your artwork or award a meaningful artistic grade.")}</p>
  </div>;
 }

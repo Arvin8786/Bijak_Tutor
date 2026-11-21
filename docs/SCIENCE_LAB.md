@@ -17,3 +17,17 @@ All text is in `src/labCopy.js` for English, Malay, Chinese and Tamil. `tests/un
 - **Ramp race**: slope and surface friction decide whether the car moves and how far it rolls.
 
 All are simple classroom models, to be reviewed by a teacher before sale. There are 21 discoveries to collect.
+
+## More experiments (added later, nothing above was changed)
+
+Five extra experiments sit after "Ramp race" in the tab row. They live in their own files (`labModelsMore.js`, `LabMore.jsx`, `labCopyMore.js`) so the original seven are untouched.
+
+| Experiment | What the child changes | What they discover |
+| --- | --- | --- |
+| 🧊 Melting ice | room temperature, wrapping (none / foil / woolly sock), one big cube or small cubes | warm melts ice faster; wool slows heat; small cubes melt faster; ice below 0 °C stays frozen |
+| 🧂 Dissolving | sugar, salt, sand or flour; water temperature; stirring | sugar and salt dissolve (faster hot and stirred); sand settles; flour only clouds the water |
+| 🌈 Mixing light | red, green and blue lamps | red + green = yellow, green + blue = cyan, all three = white |
+| 🥂 Singing glasses | water level in five glasses, tap to hear a note | more water = lower note; rising levels make a musical scale |
+| ⚖️ Seesaw | weight and distance on each side | balance depends on weight x distance; a lighter weight can win by sitting farther out |
+
+Fourteen new discoveries are added to the collection (35 in total). Older saved progress keeps working. Every label is in English, Malay, Chinese and Tamil, and all models are plain deterministic functions covered by `tests/lab-models-more.test.js`. As with the rest of the lab these are simple computer models for learning, not lab measurements.

@@ -2,18 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {LESSONS} from '../src/lessons.js';
-import {SUPPLEMENTARY_LESSONS,SUPPLEMENTARY_TOPICS} from '../src/supplementaryExplorations.js';
+import {SUPPLEMENTARY_LESSONS,SUPPLEMENTARY_TOPICS,unitFitsYear} from '../src/supplementaryExplorations.js';
 import {availableSubjects} from '../src/primarySubjects.js';
 import {assessTrace,traceMetrics} from '../src/drawingFeedback.js';
 import {addUsageSlice,summariseUsage,IDLE_LIMIT_MS,MAX_TICK_MS} from '../src/learningTime.js';
 
-test('core subjects have at least six real selectable supplementary topics per eligible year',()=>{
- assert.ok(SUPPLEMENTARY_LESSONS.length>=400);
+test('every eligible year has real selectable supplementary topics that suit its level',()=>{
+ assert.ok(SUPPLEMENTARY_LESSONS.length>=300);
  for(const [subject,entry] of Object.entries(SUPPLEMENTARY_TOPICS)){
   for(let year=entry.minYear||1;year<=6;year++){
    const matched=LESSONS.filter(l=>l.year===year&&l.subject===subject&&(!l.school||l.school==='ALL'));
-   assert.ok(matched.length>=6,`${subject} Year ${year} only has ${matched.length} lessons`);
-   assert.ok(new Set(matched.map(l=>l.title)).size>=6,subject+' repeated title cards');
+   assert.ok(matched.length>=2,`${subject} Year ${year} only has ${matched.length} lessons`);
+   assert.ok(new Set(matched.map(l=>l.title)).size>=Math.min(matched.length,2),subject+' repeated title cards');
    for(const l of matched)assert.ok(l.check?.length>=2 && l.steps?.length>=3,l.id+' cannot open with complete content');
   }
  }
@@ -64,4 +64,15 @@ test('parent report requires PIN and student gets a transparent tracking notice'
  assert.match(src,/Stop recording/);
  assert.match(src,/Delete device usage history/);
  assert.match(src,/not proof of cheating/);
+});
+
+test('supplementary topics only appear in the years they suit (no Year 1 topic in Year 6)',()=>{
+ for(const l of SUPPLEMENTARY_LESSONS){
+  if(l.subject==='Matematik')continue;
+  const unit=Number(l.id.split('-').at(-1))-1;
+  assert.ok(unitFitsYear(l.subject,unit,l.year),l.id+' shown outside its year band');
+ }
+ const tamilY6=SUPPLEMENTARY_LESSONS.filter(l=>l.subject==='Bahasa Tamil'&&l.year===6).map(l=>l.title);
+ assert.ok(!tamilY6.includes('உயிரெழுத்துகள்'),'Year 6 Tamil must not repeat the Year 1 vowel lesson');
+ assert.ok(tamilY6.includes('திருக்குறள்'));
 });
