@@ -1,12 +1,12 @@
 # BijakLearn Junior — Primary & Preschool learning platform
 
-**Current state: functional pilot for UI/content/assessment testing, not a teacher-certified production service.**
+**BijakLearn Junior is a ProEase Studio™ learning platform, deployed on GitHub Pages with Google sign-in and a private Apps Script/Sheets backend. Learning materials remain under educator review.**
 
-The repository contains the interactive preschool module, responsive primary-school study library for Tahun 1–6 and three school streams, and a separately deployable Apps Script/Sheets parent-account backend package. The public GitHub Pages app is a demonstration and should be used only with fictional profiles.
+The repository contains interactive preschool modules, a primary-school study library for Tahun 1–6 and three school streams, a virtual science lab, learning games, and separate parent and administrator consoles. The deployed app uses verified Google accounts and server-enforced family access. An explicit local demonstration mode is available for development testing.
 
 ## Run the learning app
 
-The production site now opens a parent/administrator login gate. Real sign-in and administrator approval run in the separately deployed Google Apps Script app. Configure its public URL as `VITE_ACCOUNT_APP_URL`; see the [operational release guide](docs/OPERATIONAL_RELEASE.md). If no app has been deployed, sign-in stays unavailable. Local development includes an explicit demo entry for testing.
+The production site opens parent, student and administrator Google sign-in on the GitHub Pages URL. An origin-restricted Apps Script transport handles private backend requests. Configure its public service URL as `VITE_ACCOUNT_APP_URL`; see the [role portal guide](docs/ROLE_PORTALS.md). Local development includes an explicit demo entry for testing.
 
 ```bash
 npm install
@@ -21,7 +21,7 @@ Deploy `dist/` to GitHub Pages via the existing workflow. The optional *Remember
 
 See [Google Sheets, tier rules and OAuth setup](docs/TIERS_AND_GOOGLE_SETUP.md). The generated Apps Script package imports the app’s 18 modules into `ModuleAccess`, enforces Free/Premium/Premium Kasih permissions, and provides private sponsorship applications with document review. Run `setupBijakLearn_` in your bound Apps Script project to populate the existing workbook; setup preserves existing module rules. Real OAuth credentials and deployment still require the Google account owner.
 
-Student Google sign-in is available through an administrator-linked learner profile. Students inherit their family’s tier and cannot access parent reports, account administration or sponsorship documents. See [student setup](docs/TIERS_AND_GOOGLE_SETUP.md#6-student-google-sign-in).
+Parents can link a child's separate Google account from their portal; administrators can correct, disable, restore or remove links. Students inherit their family’s available tier and cannot access parent reports, account administration or sponsorship documents. See [connected account records](docs/ACCOUNT_RECORD_SYNC.md).
 
 ## Backend deployment and teacher-review requirements
 
@@ -29,7 +29,7 @@ See [Operational release guide](docs/OPERATIONAL_RELEASE.md) for the separate Go
 
 The build generates the current lesson and assessment counts in `release/CURRICULUM_COVERAGE.json`. To test the compiled app, use the [full test checklist](docs/FULL_TEST_CHECKLIST.md). Guided Mathematics and Science review lessons for Years 1–6 are listed under **Ulang Kaji Berpandu**. Qualified educators should review materials before classroom use.
 
-The deployed GitHub Pages PWA is **not** securely connected to the private Apps Script backend. Do not process real child personal data, subscriptions or scholarship evidence in the demo.
+Private account, assessment and payment-evidence requests use the authenticated Apps Script backend. Static lesson assets remain publicly downloadable from this repository. Local demo data stays in the browser. Passing automated checks does not constitute educator approval, an independent security audit or a production capacity test.
 
 ---
 ## Earlier development notes (historical)
@@ -86,3 +86,4 @@ Topic structure confirmed against DSKP: Nombor Bulat Hingga 100, Operasi Asas, P
 ## QA
 
 `npm test` verifies basic content consistency, all eight areas, unique lesson IDs, question answer presence, mastery logic and PWA metadata. Passing source tests is **not** equivalent to teacher approval or a deployable production service.
+

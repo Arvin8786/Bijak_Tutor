@@ -33,6 +33,8 @@ try{
   await welcome.getByRole('button',{name:/English/i}).click();
   await welcome.getByRole('button',{name:/Continue/i}).click();
   await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
+  assert.match(await page.locator('.signin .brand-credit').innerText(),/ProEase Studio/);
+  assert.doesNotMatch(await page.locator('.signin').innerText(),/fictional profiles|pilot phase|Studio · [0-9a-f]{7}/i,'Customer sign-in must show product attribution, not development notices');
   if(!await page.getByRole('button',{name:'Explore learning demo',exact:true}).count()){
    assert.equal(await page.locator('nav.nav').count(),0,'Learning must stay behind the gate');
    await page.getByRole('button',{name:'Administrator',exact:true}).click();

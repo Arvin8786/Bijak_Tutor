@@ -1,5 +1,5 @@
 import {useSheetRefresh} from './sheetRefresh.js';
-import Brand,{APP_ICON,PortalGlyph} from './Brand.jsx';
+import Brand,{APP_ICON,PortalGlyph,BrandCredit} from './Brand.jsx';
 import React,{useEffect,useState} from 'react';
 import AccountAccessPanel from './AccountAccessPanel.jsx';
 import StudentAccessPanel from './StudentAccessPanel.jsx';
@@ -60,7 +60,7 @@ export function RolePortals({boot,request,onSignOut}){
  {!admin&&data&&page==='feedback'&&<ParentFeedback feedback={data.feedback} mutate={mutate} busy={busy} t={t}/>}
  {!admin&&['membership','referrals'].includes(page)&&<FamilyCommerce revision={sheetRevision+refresh} request={request} section={page}/>}
  {!admin&&page==='kasih'&&<PremiumKasihApplication request={request} live={true} student={false} onSubmitted={()=>setRefresh(n=>n+1)}/>}
- </main><footer className="portal-footer">BijakLearn Junior · {admin?'Administrator operations':t('Family reports')} · {admin?'Google account access is checked by the server.':t('Google account access is checked by the server.')}<span className="build-version">Studio · {__BIJAK_RELEASE__.slice(0,7)}</span></footer></div>;
+ </main><footer className="portal-footer">BijakLearn Junior · {admin?'Administrator operations':t('Family reports')} · {admin?'Google account access is checked by the server.':t('Google account access is checked by the server.')}<BrandCredit language={lang}/></footer></div>;
 }
 function ParentEnrolment({parent,enrolments,mutate,busy,t=x=>x}){
  const [form,setForm]=useState({requestId:crypto.randomUUID(),name:'',studentEmail:'',year:1,school:'SK',language:'ms',consent:false});

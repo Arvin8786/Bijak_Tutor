@@ -1,5 +1,5 @@
 import {useSheetRefresh} from './sheetRefresh.js';
-import Brand from './Brand.jsx';
+import Brand,{BrandCredit} from './Brand.jsx';
 // Capture a referral only in this tab; no tracking cookies, email addresses or child data in URLs.
 function getReferralCode(){try{const code=new URL(window.location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('bijaklearn:referral',code);return sessionStorage.getItem('bijaklearn:referral')||''}catch{return ''}}
 getReferralCode();
@@ -145,13 +145,13 @@ function GoogleLogin({onToken,notice}){
     <button type="button" aria-pressed={admin} onClick={()=>chooseRole('admin')}>Administrator</button>
    </div>
    <h2>{admin?'Administrator sign-in':student?'Student sign-in':'Welcome back'}</h2>
-   <p>{admin?'Sign in with the administrator Google account to review requests and manage access.':student?'Use your own Google account linked by your administrator to your learner profile.':'Your family’s learning journey, all in one place. Sign in to view reports and support your child.'}</p>
+   <p>{admin?'Sign in with the administrator Google account to review requests and manage access.':student?'Use your own Google account linked by your parent or administrator to your learner profile.':'Your family’s learning journey, all in one place. Sign in to view reports and support your child.'}</p>
    {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin"/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your administrator for the private learning app link.</p>}
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
    <p className="signin-note">{admin?'Administrator permissions are verified by the server after sign-in.':student?'Your parent or administrator must enable your student account first. Use a separate account from your parent.':'New accounts require administrator approval. If access is pending, return after your administrator approves your request.'}</p>
    {!isLive&&demoEnabled&&<button type="button" onClick={()=>onToken('DEMO')}>Explore learning demo</button>}
-   <small>Use fictional profiles while this service is in its pilot phase.</small><small className="build-version">Studio · {__BIJAK_RELEASE__.slice(0,7)}</small>
+   <BrandCredit/>
   </section>
  </main>;
 }

@@ -32,6 +32,7 @@ await page.addInitScript(role=>{
 
   assert.ok(await page.locator('.bl-brand-icon').evaluate(img=>img.complete&&img.naturalWidth>0),'Shared app icon must load');
   assert.equal(await page.locator('.bl-brand-icon').count(),1,'Every console must use the shared brand component');
+  assert.match(await page.locator(role==='STUDENT'?'.proease-footer':'.portal-footer .brand-credit').innerText(),/ProEase Studio/,'Every console must display ProEase Studio attribution');
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Console must fit its viewport');
   if(process.env.BIJAK_SCREENSHOT_DIR){
    await fs.mkdir(process.env.BIJAK_SCREENSHOT_DIR,{recursive:true});
