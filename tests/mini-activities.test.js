@@ -34,5 +34,5 @@ test('activity playground is directly navigable and uses touch-tracing module',(
  assert.match(app,/page==='arcade'&&<ActivityArcade/);
  assert.match(arcade,/DrawingPad/);
  assert.match(arcade,/aria-live="polite"/);
- assert.match(arcade,/aria-label="Picture clue"/);
+ assert.match(arcade,/aria-label=\{tx\("Picture clue"\)\}/);
 });

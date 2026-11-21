@@ -1,4 +1,5 @@
 import React, {useId, useState} from 'react';
+import {tx} from './i18n.js';
 import {SUBJECT_MAPS} from './subjectMaps.js';
 
 const branchIcons = ['💡', '🔍', '✨'];
@@ -6,7 +7,7 @@ const branchIcons = ['💡', '🔍', '✨'];
 export function LessonNavigation({active, onChange, questionCount, onTutor}) {
  const tabs = [['notes', '📚 Study content'], ['map', '🧠 Mind map'], ['quiz', '🎯 Try the quiz (' + questionCount + ')']];
  return <div className="lesson-navigation">
-  <div className="reader-tabs" role="tablist" aria-label="Ways to learn">
+  <div className="reader-tabs" role="tablist" aria-label={tx("Ways to learn")}>
    {tabs.map(([id, label], index) => <button type="button" role="tab" key={id}
     id={'lesson-tab-' + id} aria-controls="lesson-panel" aria-selected={active === id}
     tabIndex={active === id ? 0 : -1} className={active === id ? 'active' : ''}
@@ -19,7 +20,7 @@ export function LessonNavigation({active, onChange, questionCount, onTutor}) {
      event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[next].focus();
     }}>{label}</button>)}
   </div>
-  <button type="button" className="tutor-lesson-button" onClick={onTutor}>🤖 Ask Study Buddy</button>
+  <button type="button" className="tutor-lesson-button" onClick={onTutor}>{tx("🤖 Ask Study Buddy")}</button>
  </div>;
 }
 
@@ -30,7 +31,7 @@ export function LearningMindMap({title, icon, branches}) {
 
  return <section className="learning-mind-map" aria-label={'Mind map for ' + title}>
   <div className="mind-map-centre"><span aria-hidden="true">{icon}</span><strong dir="auto">{title}</strong></div>
-  <p className="mind-map-hint">Tap a branch to explore an idea.</p>
+  <p className="mind-map-hint">{tx("Tap a branch to explore an idea.")}</p>
   <div className="mind-map-branches">
    {branches.map(([label, detail, prompt], index) => {
     const open = active === index;
@@ -42,7 +43,7 @@ export function LearningMindMap({title, icon, branches}) {
      </button>
      <div id={id} className="mind-map-detail" hidden={!open}>
       <p dir="auto">{detail}</p>
-      {prompt && <p dir="auto"><strong>Try it</strong> {prompt}</p>}
+      {prompt && <p dir="auto"><strong>{tx("Try it")}</strong> {prompt}</p>}
      </div>
     </div>;
    })}
@@ -54,8 +55,8 @@ export function SubjectMindMap({subject}) {
  const map = SUBJECT_MAPS[subject];
  if (!map) return null;
  return <details className="subject-mind-map">
-  <summary><span aria-hidden="true">🧠</span> Explore the {subject} mind map</summary>
-  {map.guidedByTeacher && <p>Use this study guide with your teacher’s language materials.</p>}
+  <summary><span aria-hidden="true">🧠</span> {tx('Explore the mind map')}: {subject}</summary>
+  {map.guidedByTeacher && <p>{tx("Use this study guide with your teacher’s language materials.")}</p>}
   <LearningMindMap {...map}/>
  </details>;
 }
@@ -63,11 +64,11 @@ export function SubjectMindMap({subject}) {
 export function LessonQuickCheck({question,onComplete}) {
  const [choice, setChoice] = useState(null);
  const correct = choice === question.answer;
- return <section className="lesson-quick-check" aria-label="Quick lesson challenge">
-  <span className="mini-label">🎮 QUICK CHALLENGE</span>
-  <h2>Give it a go!</h2>
+ return <section className="lesson-quick-check" aria-label={tx("Quick lesson challenge")}>
+  <span className="mini-label">{tx("🎮 QUICK CHALLENGE")}</span>
+  <h2>{tx("Give it a go!")}</h2>
   <p dir="auto">{question.text}</p>
-  <div className="quick-check-choices" role="group" aria-label="Choose an answer">
+  <div className="quick-check-choices" role="group" aria-label={tx("Choose an answer")}>
    {question.options.map(option => <button type="button" key={option} dir="auto"
     aria-pressed={choice === option} disabled={correct}
     onClick={() => {setChoice(option);if(option===question.answer)onComplete?.()}}>{option}</button>)}
@@ -75,6 +76,6 @@ export function LessonQuickCheck({question,onComplete}) {
   {choice !== null && <p role="status" className={correct ? 'quick-check-right' : 'quick-check-retry'}>
    {correct ? '⭐ ' + question.why : '🌱 Good try! Look at the example and pick another answer.'}
   </p>}
-  {correct && <button type="button" onClick={() => setChoice(null)}>Try again</button>}
+  {correct && <button type="button" onClick={() => setChoice(null)}>{tx("Try again")}</button>}
  </section>;
 }

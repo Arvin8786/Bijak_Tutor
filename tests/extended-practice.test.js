@@ -65,7 +65,7 @@ test('18 gameplay choices are integrated and use touch-friendly components',()=>
  assert.match(arcade,/\.\.\.EXTRA_MODES/);
  assert.match(arcade,/EXTRA_MODES\.some/);
  for(const mode of ['add','count','phonics','syllables','spell','wordsearch','life','body','jobs','weather','shapes','patterns','jigsaw','craft'])assert.match(extra,new RegExp("['\"]"+mode+"['\"]"));
- assert.match(extra,/aria-label="Word search letters"/);
+ assert.match(extra,/aria-label=\{tx\("Word search letters"\)\}/);
  assert.match(extra,/role="group"/);
  assert.match(css,/@media\(max-width:440px\)/);
 });

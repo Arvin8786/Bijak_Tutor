@@ -1,14 +1,15 @@
+import {studyCopy} from './studyCopy.js';
+import {tx} from './i18n.js';
 import React,{useEffect,useRef,useState} from 'react';
 import {tutorReply} from './tutorEngine.js';
 
-const EXAMPLES=['Show 28 + 15 step by step','How do fractions work?','Explain why plants need water','What is a noun?','84 ÷ 4'];
 function getSpeechLang(text){
  if(/[\u0B80-\u0BFF]/.test(text))return 'ta-IN';
  if(/[\u4E00-\u9FFF]/.test(text))return 'zh-CN';
  if(/[\u0600-\u06FF]/.test(text))return 'ar-SA';
  return /\b(berapa|mengapa|apakah|pecahan|suku kata|tumbuhan|tolak|tambah|darab|bahagi)\b/i.test(text)?'ms-MY':'en-US';
 }
-export default function StudyBuddy({lessons=[],year=1,subject='',currentLesson=null,askOnline=null}){
+export default function StudyBuddy({language='en',lessons=[],year=1,subject='',currentLesson=null,askOnline=null}){
  const [question,setQuestion]=useState('');
  const [response,setResponse]=useState(null);
  const [busy,setBusy]=useState(false);
@@ -48,17 +49,18 @@ export default function StudyBuddy({lessons=[],year=1,subject='',currentLesson=n
      if(mounted.current&&requestRef.current===request)setResponse(result);
    }finally{if(mounted.current&&requestRef.current===request)setBusy(false)}
  };
+ const copy=studyCopy(language,subject);
  const context=currentLesson?.title||subject||'All subjects';
- return <section className="tutor-page" aria-label="Interactive Study Buddy">
-  <div className="tutor-hero"><div><span className="mini-label">🧠 STUDY BUDDY • ASK & LEARN</span><h1>Ask a question, understand each step!</h1><p>Try a calculation, ask about a topic or listen to a short explanation. Learn at your own pace.</p></div><span className="tutor-mascot" aria-hidden="true">🤖</span></div>
+ return <section className="tutor-page" aria-label={tx("Interactive Study Buddy")}>
+  <div className="tutor-hero"><div><span className="mini-label">🧠 STUDY BUDDY • ASK & LEARN</span><h1>{copy.title}</h1><p>{copy.intro}</p></div><span className="tutor-mascot" aria-hidden="true">🤖</span></div>
   <div className="tutor-box">
-   <div className="tutor-context">📘 Current learning area: <strong>{context}</strong> · Tahun {year}</div>
-   <div className="tutor-quick">{EXAMPLES.map(q=><button type="button" key={q} disabled={busy} onClick={()=>ask(q)}>{q}</button>)}{currentLesson&&<button type="button" onClick={()=>ask('Explain '+currentLesson.title)}>Explain this lesson</button>}</div>
-   <label htmlFor="study-buddy-question">What would you like to learn?</label>
-   <textarea id="study-buddy-question" maxLength={500} value={question} onChange={e=>setQuestion(e.target.value)} placeholder="Example: Please show me how to calculate 28 + 15, step by step." onKeyDown={e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();ask()}}}/>
-   <div className="tutor-actions"><button type="button" className="primary" disabled={busy||!question.trim()} onClick={()=>ask()}>{busy?'Thinking…':'✨ Explain to me'}</button><button type="button" onClick={listen} aria-label="Speak your question">🎙️ Ask by voice</button>{response&&<><button type="button" onClick={()=>speak([response.title,...response.steps].join('. '))}>🔊 Read answer</button><button type="button" onClick={stopSpeech}>⏹ Stop</button></>}</div>
+   <div className="tutor-context">{tx("📘 Current learning area:")} <strong>{context}</strong> · Tahun {year}</div>
+   <div className="tutor-quick">{copy.examples.map(q=><button type="button" key={q} disabled={busy} onClick={()=>ask(q)}>{q}</button>)}{currentLesson&&<button type="button" onClick={()=>ask('Explain '+currentLesson.title)}>{tx("Explain this lesson")}</button>}</div>
+   <label htmlFor="study-buddy-question">{tx("What would you like to learn?")}</label>
+   <textarea id="study-buddy-question" maxLength={500} value={question} onChange={e=>setQuestion(e.target.value)} placeholder={copy.placeholder} onKeyDown={e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();ask()}}}/>
+   <div className="tutor-actions"><button type="button" className="primary" disabled={busy||!question.trim()} onClick={()=>ask()}>{busy?'Thinking…':'✨ Explain to me'}</button><button type="button" onClick={listen} aria-label={tx("Speak your question")}>{tx("🎙️ Ask by voice")}</button>{response&&<><button type="button" onClick={()=>speak([response.title,...response.steps].join('. '))}>{tx("🔊 Read answer")}</button><button type="button" onClick={stopSpeech}>{tx("⏹ Stop")}</button></>}</div>
    {status&&<p role="status" className="tutor-status">{status}</p>}
-   {response&&<section className="tutor-answer" aria-live="polite"><span className="mini-label">{response.kind==='math'?'🧮 WORKED METHOD':response.kind==='lesson'?'📚 EXPLAIN A CONCEPT':'💡 STUDY GUIDANCE'}</span><h2>{response.title}</h2><ol>{response.steps.map((step,i)=><li key={i}>{step}</li>)}</ol>{response.source&&<p className="tutor-answer-note">Source: {response.source}</p>}{response.lessonId&&<p className="tutor-answer-note">You can open the matching topic in the subject library for its practice activities.</p>}</section>}
+   {response&&<section className="tutor-answer" aria-live="polite"><span className="mini-label">{response.kind==='math'?'🧮 WORKED METHOD':response.kind==='lesson'?'📚 EXPLAIN A CONCEPT':'💡 STUDY GUIDANCE'}</span><h2>{response.title}</h2><ol>{response.steps.map((step,i)=><li key={i}>{step}</li>)}</ol>{response.source&&<p className="tutor-answer-note">Source: {response.source}</p>}{response.lessonId&&<p className="tutor-answer-note">{tx("You can open the matching topic in the subject library for its practice activities.")}</p>}</section>}
    <p className="tutor-footnote">This on-device helper explains checked arithmetic and retrieves explanations from available lessons. It is not a live generative AI chatbot on the public site. Speech recognition and text-to-speech depend on browser permissions and installed voices; responses may contain mistakes and should be checked with a teacher.</p>
   </div>
  </section>;

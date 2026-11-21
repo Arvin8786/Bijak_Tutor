@@ -33,7 +33,7 @@ test('Word Tiles is accessible on home screen and navigation and no external AI 
  assert.match(code,/WordTilesGame/);
  assert.match(code,/label=\{say\(uiLanguage,'wordGame'\)\}/);
  assert.match(fs.readFileSync('src/shellCopy.js','utf8'),/wordGame:'Word Tiles vs Bot'/);
- assert.match(game,/aria-label="Available letter tiles"/);
+ assert.match(game,/aria-label=\{tx\("Available letter tiles"\)\}/);
  assert.match(game,/word-bot-score/);
  assert.match(game,/checkTileWord/);
  assert.ok(!game.includes('fetch('));

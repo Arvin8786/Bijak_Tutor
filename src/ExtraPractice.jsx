@@ -1,4 +1,5 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
+import {tx} from './i18n.js';
 import {DrawingPad} from './PreschoolStudio.jsx';
 import SketchStudio from './SketchStudio.jsx';
 import {BODY_PARTS,JOBS,WEATHER,LIFE_CYCLES,PHONICS,SYLLABLE_WORDS,SHAPES,CRAFTS,SEQUENCE_PATTERNS,arithmeticChallenge,getPattern,buildWordSearch} from './extendedPracticeData.js';
@@ -54,10 +55,10 @@ function WordSearch({round,onWin}){
   }
   if(terms.some(w=>w.startsWith(value)))setSelection(cells);else setSelection([[r,c]]);
  };
- return <><h2>🔎 Weather & Word Search</h2><p>Tap letters <strong>from left to right</strong> in a single row to find each hidden word.</p>
- <div className="extra-word-grid" role="group" aria-label="Word search letters">{grid.map((row,r)=>row.map((letter,c)=><button type="button" key={r+'-'+c} aria-label={`Row ${r+1} column ${c+1} letter ${letter}`} aria-pressed={selection.some(([x,y])=>x===r&&y===c)} className={selection.some(([x,y])=>x===r&&y===c)?'selected':''} onClick={()=>mark(r,c)}>{letter}</button>))}</div>
+ return <><h2>🔎 Weather & Word Search</h2><p>{tx("Tap letters")} <strong>{tx("from left to right")}</strong> {tx("in a single row to find each hidden word.")}</p>
+ <div className="extra-word-grid" role="group" aria-label={tx("Word search letters")}>{grid.map((row,r)=>row.map((letter,c)=><button type="button" key={r+'-'+c} aria-label={`Row ${r+1} column ${c+1} letter ${letter}`} aria-pressed={selection.some(([x,y])=>x===r&&y===c)} className={selection.some(([x,y])=>x===r&&y===c)?'selected':''} onClick={()=>mark(r,c)}>{letter}</button>))}</div>
  <div className="extra-word-bank">{terms.map(word=><span key={word} className={found.includes(word)?'found':''}>{found.includes(word)?'✅ ':''}{word}</span>)}</div><p className="extra-note" role="status">{found.length} of {terms.length} words found {letters&&' · Selecting: '+letters}</p>
- <button type="button" onClick={()=>setSelection([])}>↶ Clear selected letters</button></>;
+ <button type="button" onClick={()=>setSelection([])}>{tx("↶ Clear selected letters")}</button></>;
 }
 const PUZZLE_EMOJI=['🐬','🦋','🐘','🐠','🌺','🚒','🐢','🦁','🐳','🦉'];
 function PicturePuzzle({index,onWin}){
@@ -73,9 +74,9 @@ function PicturePuzzle({index,onWin}){
   setPieces(copy);setFirst(null);
   if(copy.every((p,i)=>p===i)){setDone(true);onWin()}
  };
- return <><h2>🧩 Picture Puzzle</h2><p>Tap one tile, then another tile to swap them. Rebuild the picture.</p>
- <div className="extra-jigsaw" role="group" aria-label="Four picture pieces">{pieces.map((piece,i)=><button key={i} type="button" onClick={()=>swap(i)} aria-pressed={first===i} aria-label={'Piece '+(i+1)} className={first===i?'selected':''}><span className="extra-puzzle-viewport"><span style={{left:piece%2===0?'0%':'-100%',top:piece<2?'0%':'-100%'}}>{picture}</span></span></button>)}</div>
- <p className="extra-note">{done?'🎉 Picture complete!':first===null?'Select two tiles to exchange their places.':'Now tap a different tile to swap.'}</p><button type="button" onClick={()=>{setPieces(shuffle());setFirst(null);setDone(false)}}>↻ Mix pieces</button></>;
+ return <><h2>{tx("🧩 Picture Puzzle")}</h2><p>{tx("Tap one tile, then another tile to swap them. Rebuild the picture.")}</p>
+ <div className="extra-jigsaw" role="group" aria-label={tx("Four picture pieces")}>{pieces.map((piece,i)=><button key={i} type="button" onClick={()=>swap(i)} aria-pressed={first===i} aria-label={'Piece '+(i+1)} className={first===i?'selected':''}><span className="extra-puzzle-viewport"><span style={{left:piece%2===0?'0%':'-100%',top:piece<2?'0%':'-100%'}}>{picture}</span></span></button>)}</div>
+ <p className="extra-note">{done?'🎉 Picture complete!':first===null?'Select two tiles to exchange their places.':'Now tap a different tile to swap.'}</p><button type="button" onClick={()=>{setPieces(shuffle());setFirst(null);setDone(false)}}>{tx("↻ Mix pieces")}</button></>;
 }
 function SpellingTiles({index,onWin}){
  const entry=PHONICS[index%PHONICS.length],word=entry[1].toUpperCase(),letters=[...word];
@@ -85,10 +86,10 @@ function SpellingTiles({index,onWin}){
  const solved=chosen.length===letters.length&&built===word;
  const feedback=solved?'⭐ Correct spelling!':chosen.length===letters.length?'That is not quite right. Undo a letter and try again.':'';
  useEffect(()=>{if(solved)onWin()},[solved,onWin]);
- return <><h2>✏️ Spell the word</h2><div className="extra-pictured">{entry[2]}</div><p>Choose the tiles to spell <strong>{entry[1]}</strong> correctly.</p>
+ return <><h2>{tx("✏️ Spell the word")}</h2><div className="extra-pictured">{entry[2]}</div><p>{tx("Choose the tiles to spell")} <strong>{entry[1]}</strong> {tx("correctly.")}</p>
  <div className="extra-spell-slots" aria-live="polite">{letters.map((_,i)=><span key={i}>{built[i]||'_'}</span>)}</div>
  <div className="extra-spell-tiles">{scrambled.filter(x=>!chosen.includes(x.id)).map(x=><button key={x.id} disabled={solved} type="button" onClick={()=>setChosen(s=>[...s,x.id])}>{x.letter}</button>)}</div>
- <div className="extra-ctrls"><button type="button" onClick={()=>setChosen(s=>s.slice(0,-1))}>↶ Undo</button><button type="button" onClick={()=>setChosen([])}>↻ Reset</button><button type="button" onClick={()=>say(entry[1])}>🔊 Say it</button></div><p className="extra-note" role="status">{feedback}</p></>;
+ <div className="extra-ctrls"><button type="button" onClick={()=>setChosen(s=>s.slice(0,-1))}>{tx("↶ Undo")}</button><button type="button" onClick={()=>setChosen([])}>{tx("↻ Reset")}</button><button type="button" onClick={()=>say(entry[1])}>{tx("🔊 Say it")}</button></div><p className="extra-note" role="status">{feedback}</p></>;
 }
 function LifeCycle({index,onWin}){
  const item=LIFE_CYCLES[index%LIFE_CYCLES.length],len=item.steps.length;
@@ -96,7 +97,7 @@ function LifeCycle({index,onWin}){
  useEffect(()=>{setPlaced([]);setFeedback('')},[index]);
  const options=item.steps.map((stage,i)=>({stage,i})).sort((a,b)=>((a.i+index+1)%len)-((b.i+index+1)%len));
  const choose=(stage,i)=>{if(i===placed.length){const next=[...placed,stage];setPlaced(next);setFeedback('✓ Well done — '+stage[0]);if(next.length===len)onWin()}else setFeedback('Look for the stage that comes next in the life cycle.')};
- return <><h2>{item.emoji} Life Cycle: {item.name}</h2><p>Build the life cycle by choosing its stages in the right order.</p><div className="extra-life-steps">{placed.map(([name,emoji],i)=><span key={i}>{emoji}<small>{name}</small></span>)}{placed.length<len&&<span className="waiting">❓<small>Stage {placed.length+1}</small></span>}</div>
+ return <><h2>{item.emoji} Life Cycle: {item.name}</h2><p>{tx("Build the life cycle by choosing its stages in the right order.")}</p><div className="extra-life-steps">{placed.map(([name,emoji],i)=><span key={i}>{emoji}<small>{name}</small></span>)}{placed.length<len&&<span className="waiting">❓<small>Stage {placed.length+1}</small></span>}</div>
  {placed.length<len?<div className="extra-answer-grid">{options.filter(({i})=>i>=placed.length).map(({stage,i})=><button type="button" key={i} onClick={()=>choose(stage,i)}>{stage[1]} {stage[0]}</button>)}</div>:<p className="extra-fact">🌟 {item.fact}</p>}
  <p className="extra-note" role="status">{feedback}</p></>;
 }
@@ -123,14 +124,14 @@ export default function ExtraPractice({mode,index,level,onStar}){
  const options=source.length?chooseAlternatives(source,index,language==='ms'?1:0):[];
  const currentLanguage=language==='ms'?'ms-MY':'en-GB';
  return <div className="extra-practice">
-  {['body','jobs','weather','shapes'].includes(mode)&&<div className="extra-language"><label>Word language <select value={language} onChange={e=>{setLanguage(e.target.value);setAnswered(null);setDetail('')}}><option value="en">English</option><option value="ms">Bahasa Melayu</option></select></label></div>}
-  {mode==='add'&&<><h2>➕ Picture addition</h2><p>Count both groups, then find the total.</p><div className="extra-picture-numbers"><span>{number.first>20?<strong>🍎 × {number.first}</strong>:Array.from({length:number.first},(_,i)=><b key={i}>🍎</b>)}</span><strong>+</strong><span>{number.second>20?<strong>🍌 × {number.second}</strong>:Array.from({length:number.second},(_,i)=><b key={i}>🍌</b>)}</span></div>
+  {['body','jobs','weather','shapes'].includes(mode)&&<div className="extra-language"><label>{tx("Word language")} <select value={language} onChange={e=>{setLanguage(e.target.value);setAnswered(null);setDetail('')}}><option value="en">English</option><option value="ms">Bahasa Melayu</option></select></label></div>}
+  {mode==='add'&&<><h2>{tx("➕ Picture addition")}</h2><p>{tx("Count both groups, then find the total.")}</p><div className="extra-picture-numbers"><span>{number.first>20?<strong>🍎 × {number.first}</strong>:Array.from({length:number.first},(_,i)=><b key={i}>🍎</b>)}</span><strong>+</strong><span>{number.second>20?<strong>🍌 × {number.second}</strong>:Array.from({length:number.second},(_,i)=><b key={i}>🍌</b>)}</span></div>
    <div className="extra-expression">{number.first} + {number.second} = ?</div><QuickOptions options={number.options} expected={number.answer} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,`${number.first} plus ${number.second} is ${a}.`)}/></>}
   {mode==='count'&&<><h2>🔢 Count & Compare</h2>
-   {index%2===0?<><p>How many stars are there?</p>
+   {index%2===0?<><p>{tx("How many stars are there?")}</p>
     <div className="extra-counting">{Array.from({length:count},(_,i)=><span key={i}>⭐</span>)}</div>
     <QuickOptions options={[count,count+1,count-1].sort((a,b)=>((a+index*3)%5)-((b+index*3)%5))} expected={count} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,'Count one at a time.')}/>
-   </>:<><p>Which group has more objects?</p>
+   </>:<><p>{tx("Which group has more objects?")}</p>
     <div className="extra-picture-numbers">
      <span role="img" aria-label={number.first+' stars'}>{number.first>20?<strong>⭐ × {number.first}</strong>:Array.from({length:number.first},(_,i)=><b key={i}>⭐</b>)}</span>
      <span role="img" aria-label={number.second+' flowers'}>{number.second>20?<strong>🌷 × {number.second}</strong>:Array.from({length:number.second},(_,i)=><b key={i}>🌷</b>)}</span>
@@ -138,7 +139,7 @@ export default function ExtraPractice({mode,index,level,onStar}){
     <QuickOptions options={['Stars','Flowers','Same number']} expected={number.first===number.second?'Same number':number.first>number.second?'Stars':'Flowers'} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,`There are ${number.first} stars and ${number.second} flowers.`)}/>
    </>}
   </>}
-  {mode==='phonics'&&<><h2>🔤 Alphabet Sounds</h2><div className="extra-pictured">{pair[2]}</div><p><strong>{pair[1]}</strong> begins with which letter?</p>
+  {mode==='phonics'&&<><h2>{tx("🔤 Alphabet Sounds")}</h2><div className="extra-pictured">{pair[2]}</div><p><strong>{pair[1]}</strong> {tx("begins with which letter?")}</p>
    <QuickOptions options={[pair[0],PHONICS[(index+5)%26][0],PHONICS[(index+11)%26][0]].sort()} expected={pair[0]} onAnswer={(v,a)=>respond(v,a,pair[0]+' is the first letter in '+pair[1]+'.')} answered={answered!==null}/>
    <button type="button" onClick={()=>say(pair[1])}>🔊 Listen to {pair[1]}</button><div className="extra-trace"><DrawingPad letter={pair[0]}/></div></>}
   {mode==='syllables'&&<><h2>🗣️ Membaca Suku Kata</h2><div className="extra-pictured">{syllable[3]}</div><p>Lengkapkan perkataan: <strong>{syllable[1]} + ___</strong></p>
@@ -151,14 +152,14 @@ export default function ExtraPractice({mode,index,level,onStar}){
    <div className="extra-pictured">{mode==='shapes'?shape[2]:item[2]}</div>
    <p>Choose the correct {language==='ms'?'Bahasa Melayu':'English'} word.</p>
    <QuickOptions options={options} expected={answer} answered={answered!==null} onAnswer={(v,a)=>respond(v,a,mode==='jobs'?item[3]:mode==='weather'?item[3]:mode==='shapes'?`It has ${shape[3]} corners in this simple classification.`:`In Bahasa Melayu: ${item[1]}.`)}/>
-   <button type="button" onClick={()=>say(answer,currentLanguage)}>🔊 Hear the word</button></>}
-  {mode==='patterns'&&<><h2>🧠 Complete the Pattern</h2><p>What should come next?</p><div className="extra-pattern">{pattern.shown.map((s,i)=><span key={i}>{s}</span>)}<strong>?</strong></div>
+   <button type="button" onClick={()=>say(answer,currentLanguage)}>{tx("🔊 Hear the word")}</button></>}
+  {mode==='patterns'&&<><h2>{tx("🧠 Complete the Pattern")}</h2><p>{tx("What should come next?")}</p><div className="extra-pattern">{pattern.shown.map((s,i)=><span key={i}>{s}</span>)}<strong>?</strong></div>
    <div className="extra-answer-grid">{pattern.options.map(v=><button type="button" key={v} disabled={answered!==null} onClick={()=>respond(v,pattern.answer,'Look for the repeating or growing rule.')}>{v}</button>)}</div></>}
   {mode==='jigsaw'&&<PicturePuzzle index={index} onWin={award}/>}
   {mode==='sketch'&&<SketchStudio key={index} index={index} onStar={award}/>}
-  {mode==='craft'&&<><h2>{craft[1]} {craft[0]}</h2><p>Follow these original instructions with appropriate adult help.</p><ol className="extra-craft-steps">{craft[2].map((s,i)=><li key={i}>{s}</li>)}</ol><p className="extra-fact">🛡️ {craft[3]}</p>
-   <button type="button" onClick={()=>say(craft[2].join('. '))}>🔊 Read the instructions</button><button type="button" onClick={()=>{setAnswered({yes:true});setDetail('🌟 Great effort!');award()}}>{answered?.yes?'✓ Tried this activity':'⭐ I tried this activity'}</button></>}
+  {mode==='craft'&&<><h2>{craft[1]} {craft[0]}</h2><p>{tx("Follow these original instructions with appropriate adult help.")}</p><ol className="extra-craft-steps">{craft[2].map((s,i)=><li key={i}>{s}</li>)}</ol><p className="extra-fact">🛡️ {craft[3]}</p>
+   <button type="button" onClick={()=>say(craft[2].join('. '))}>{tx("🔊 Read the instructions")}</button><button type="button" onClick={()=>{setAnswered({yes:true});setDetail('🌟 Great effort!');award()}}>{answered?.yes?'✓ Tried this activity':'⭐ I tried this activity'}</button></>}
   {detail&&<div className={'extra-feedback '+(answered?.yes?'success':'review')} role="status" aria-live="polite">{detail}</div>}
-  <p className="extra-footer-note">Practice is not a formal examination. Answers and drawings are learning aids, and adults should supervise physical activities.</p>
+  <p className="extra-footer-note">{tx("Practice is not a formal examination. Answers and drawings are learning aids, and adults should supervise physical activities.")}</p>
  </div>;
 }

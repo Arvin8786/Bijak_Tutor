@@ -18,17 +18,15 @@ export function applyActivity(state,today,stars=0){
  return {streak,best:Math.max(current.best,streak),last:today,stars:Math.max(0,current.stars+Math.max(0,Math.floor(stars)))};
 }
 
-export function readStreak(storage){
+export function readStreak(storage=typeof window!=='undefined'?window.localStorage:null){
  try{
-  storage=storage===undefined&&typeof window!=='undefined'?window.localStorage:storage;
   const value=JSON.parse(storage?.getItem(STREAK_KEY)||'null');
   if(value&&Number.isFinite(value.streak)&&Number.isFinite(value.stars))return {...EMPTY_STREAK,...value};
  }catch{}
  return {...EMPTY_STREAK};
 }
 
-export function recordActivity(stars=0,{storage,date=new Date()}={}){
- try{storage=storage===undefined&&typeof window!=='undefined'?window.localStorage:storage}catch{storage=null}
+export function recordActivity(stars=0,{storage=typeof window!=='undefined'?window.localStorage:null,date=new Date()}={}){
  const next=applyActivity(readStreak(storage),dayKey(date),stars);
  try{storage?.setItem(STREAK_KEY,JSON.stringify(next))}catch{}
  try{if(typeof window!=='undefined')window.dispatchEvent(new Event('bijak-streak'))}catch{}
