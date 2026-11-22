@@ -3,6 +3,8 @@
  * In Script Properties set GOOGLE_CLIENT_ID and SPREADSHEET_ID. Never publish the sheet.
  */
 const TABLES = {
+ TutorCache:['keyHash','answerJson','createdAt'],
+ Videos:['videoId','youtubeId','title','description','subject','year','sequence','status','addedAt','addedBy','updatedAt'],
  CommerceSettings:['key','value','updatedAt','updatedBy'],
  DiscountCampaigns:['campaignId','code','percent','startsAt','endsAt','maxUses','enabled','createdAt','createdBy'],
  Orders:['orderId','parentSub','kind','slots','listCents','discountCents','totalCents','discountId','referrerSub','commissionBps','commissionCents','status','createdAt','expiresAt','submittedAt','reference','proofId','reviewedAt','reviewedBy','note'],
@@ -33,64 +35,58 @@ const TABLES = {
  SkillMap:['skillId','lessonId','versionId','year','subject','school','skillTitle','prerequisiteIdsJson','standardCodesJson','contentStatus','reviewedBy','reviewedAt'],
  Audit:['timestamp','actor','action','reference']
 };
+/** Columns that must stay exact text: Google IDs are 21 digits, answers may look like fractions/dates, references may look like numbers. */
 const TEXT_COLUMNS_ = {
  Parents:['googleSub','parentPinHash','pinSalt'],Subscriptions:['googleSub'],Payments:['googleSub','reference'],
  Orders:['parentSub','referrerSub','reference'],Referrals:['referredSub','referrerSub','code'],Affiliates:['parentSub','code'],
  CommissionPayouts:['referrerSub','reference'],UsageEvents:['googleSub'],Enrolments:['parentSub'],ParentFeedback:['parentSub'],
- StudentAccounts:['googleSub','parentSub'],Children:['parentSub'],Attempts:['googleSub','answer'],Scholarships:['googleSub'],
- Uploads:['parentSub'],DiscountCampaigns:['code'],Questions:['correctAnswer']
+ StudentAccounts:['googleSub','parentSub'],Children:['parentSub'],Attempts:['googleSub'],Scholarships:['googleSub'],
+ Uploads:['parentSub'],DiscountCampaigns:['code'],Questions:['correctAnswer'],TutorCache:['keyHash'],Videos:['youtubeId']
 };
-// Format by the actual column headings so manual column moves remain supported.
-function prepareTextColumns_(sheet,name,headers){
- const columns=(TEXT_COLUMNS_[name]||[]).map(key=>headers.indexOf(key)).filter(col=>col>=0);
- if(!columns.length)return;
- const rows=Math.max(1,sheet.getMaxRows()-1);
- const cache=typeof CacheService==='undefined'?null:CacheService.getScriptCache();
- // Include physical column positions and grid size so a reordered or expanded sheet is reformatted.
- const sheetId=typeof sheet.getSheetId==='function'?sheet.getSheetId():name;
- const cacheKey=['text-format-v2',sheetId,rows,...columns].join(':');
- if(cache?.get(cacheKey))return;
- for(const column of columns)sheet.getRange(2,column+1,rows,1).setNumberFormat('@');
- cache?.put(cacheKey,'1',21600);
-}
-function sheetCell_(name,key,value){
- if(!(TEXT_COLUMNS_[name]||[]).includes(key))return cell_(value);
- const text=String(value??'');
- // Preserve ordinary signed answers, while neutralising formula-like input.
- return /^-\d+(?:[./]\d+)?$/.test(text)?text:cell_(text);
-}
+const STATIC_TABLES_ = ['Lessons','Questions','ModuleAccess','ModuleCatalog','ModuleLessons'];
+let staticRows_ = {};
+let textReady_ = {};
 function props_(){return PropertiesService.getScriptProperties()}
-// Request-local only: never reuse private rows across authenticated RPC calls.
-let RPC_DATABASE_=null,RPC_ROWS_=null;
-function database_(){if(typeof RPC_DATABASE_!=='undefined'&&RPC_DATABASE_)return RPC_DATABASE_;let active=null;try{active=SpreadsheetApp.getActiveSpreadsheet()}catch{}const configured=props_().getProperty('SPREADSHEET_ID');const db=active&&(!configured||active.getId()===configured)?active:configured?SpreadsheetApp.openById(configured):null;if(!db)throw Error('Spreadsheet is not configured. Run setup from the linked Google Sheet.');if(typeof RPC_ROWS_!=='undefined'&&RPC_ROWS_)RPC_DATABASE_=db;return db}
-function sheet_(name){const s=database_().getSheetByName(name);if(!s)throw Error('Missing sheet '+name+'. Run setup from the linked Sheet.');return s}
-function tableColumns_(name,values){const headers=(values[0]||[]).map(v=>String(v).trim()),keys=TABLES[name];if(!keys)throw Error('Unknown database table');const columns=keys.map(key=>headers.indexOf(key));if(columns[0]<0||new Set(headers.filter(Boolean)).size!==headers.filter(Boolean).length)throw Error('Invalid headers in '+name+'. Restore the column names.');return {headers,keys,columns}}
-function rows_(name){if(RPC_ROWS_?.has(name))return RPC_ROWS_.get(name);const values=sheet_(name).getDataRange().getValues(),{keys,columns}=tableColumns_(name,values);const rows=values.slice(1).filter(r=>r.some(x=>x!=='')).map(row=>Object.fromEntries(keys.map((key,i)=>{const value=columns[i]<0?'':row[columns[i]];return [key,value instanceof Date?value.toISOString():value]})));if(RPC_ROWS_)RPC_ROWS_.set(name,rows);return rows}
-function cell_(v){if(v===undefined||v===null)return '';if(typeof v==='string'&&/^[\s]*[=+\-@]/.test(v))return "'"+v;return v;}
-function append_(name,row){const s=sheet_(name),values=s.getDataRange().getValues(),{headers}=tableColumns_(name,values);prepareTextColumns_(s,name,headers);s.appendRow(headers.map(k=>sheetCell_(name,k,row[k])));RPC_ROWS_?.delete(name)}
-function update_(name,key,value,patch){const s=sheet_(name),values=s.getDataRange().getValues(),{headers}=tableColumns_(name,values),ix=headers.indexOf(key);if(ix<0)throw Error('Invalid key');if(Object.keys(patch).some(k=>(TEXT_COLUMNS_[name]||[]).includes(k)))prepareTextColumns_(s,name,headers);for(let i=1;i<values.length;i++){if(String(values[i][ix])===String(value)){Object.keys(patch).forEach(k=>{const col=headers.indexOf(k);if(col<0)throw Error('Missing column '+k+' in '+name);s.getRange(i+1,col+1).setValue(sheetCell_(name,k,patch[k]))});RPC_ROWS_?.delete(name);return true}}return false}
+function applyTextColumns_(name,sheet){
+ const keys=TABLES[name],columns=TEXT_COLUMNS_[name]||[];
+ columns.forEach(key=>{const index=keys.indexOf(key);if(index>=0)sheet.getRange(2,index+1,Math.max(1,sheet.getMaxRows()-1),1).setNumberFormat('@')});
+}
+/** Idempotent; remembered for six hours so normal writes stay fast. */
+function ensureTextColumns_(name,sheet){
+ if(!(TEXT_COLUMNS_[name]||[]).length||textReady_[name]!==undefined)return textReady_[name]===true;
+ let ready=false;
+ try{
+  const cache=CacheService.getScriptCache(),key='textcols1:'+name;
+  if(cache.get(key))ready=true;else{applyTextColumns_(name,sheet);cache.put(key,'1',21600);ready=true}
+ }catch(error){ready=false}
+ textReady_[name]=ready;return ready;
+}
+/** Text columns keep exact strings (no apostrophe); everything else escapes spreadsheet formulas. */
+function cellFor_(name,key,value,textReady){
+ if(textReady&&(TEXT_COLUMNS_[name]||[]).includes(key))return value===undefined||value===null?'':String(value);
+ return cell_(value);
+}
+function database_(){let active=null;try{active=SpreadsheetApp.getActiveSpreadsheet()}catch{}const configured=props_().getProperty('SPREADSHEET_ID');if(active&&(!configured||active.getId()===configured))return active;if(!configured)throw Error('Spreadsheet is not configured. Run setup from the linked Google Sheet.');return SpreadsheetApp.openById(configured)}
+function sheet_(name){const ss=database_();let s=ss.getSheetByName(name);if(!s)throw Error('Missing sheet '+name+'. Run setupBijakLearn_ from the editor.');return s}
+function rows_(name){if(STATIC_TABLES_.includes(name)&&staticRows_[name])return staticRows_[name];const values=sheet_(name).getDataRange().getValues();const keys=TABLES[name];const result=values.slice(1).filter(r=>r.some(x=>x!=='')) .map(row=>Object.fromEntries(keys.map((k,i)=>[k,row[i] instanceof Date?row[i].toISOString():row[i]])));if(STATIC_TABLES_.includes(name))staticRows_[name]=result;return result}
+/** Cheap read of only the newest rows of a large append-only table. */
+function tailRows_(name,limit){const s=sheet_(name),keys=TABLES[name],last=s.getLastRow();if(last<2)return [];const first=Math.max(2,last-limit+1);return s.getRange(first,1,last-first+1,keys.length).getValues().filter(r=>r.some(x=>x!=='')).map(row=>Object.fromEntries(keys.map((k,i)=>[k,row[i] instanceof Date?row[i].toISOString():row[i]])))}
+function cell_(v){if(v===undefined||v===null)return '';if(typeof v==='string'&&/^[\s]*[=+\-@]/.test(v))return '\''+v;return v;}
+function append_(name,row){const s=sheet_(name),ready=ensureTextColumns_(name,s);delete staticRows_[name];s.appendRow(TABLES[name].map(k=>cellFor_(name,k,row[k],ready)));}
+function update_(name,key,value,patch){const s=sheet_(name),v=s.getDataRange().getValues(),keys=TABLES[name],ix=keys.indexOf(key);if(ix<0)throw Error('Invalid key');const ready=ensureTextColumns_(name,s);delete staticRows_[name];for(let i=1;i<v.length;i++){if(String(v[i][ix])===String(value)){Object.keys(patch).forEach(k=>{const col=keys.indexOf(k);if(col>=0)s.getRange(i+1,col+1).setValue(cellFor_(name,k,patch[k],ready));});return true}}return false}
 function initializeDatabase_(){const ss=database_();Object.entries(TABLES).forEach(([name,keys])=>{let s=ss.getSheetByName(name);if(!s)s=ss.insertSheet(name);if(s.getLastRow()===0){s.appendRow(keys);s.setFrozenRows(1)}else{
   // Additive schema migration: preserve all existing columns and learning data.
   const headers=s.getRange(1,1,1,s.getLastColumn()).getValues()[0].map(String);
   const missing=keys.slice(headers.length);
   if(keys.slice(0,headers.length).some((k,i)=>k!==headers[i]))throw Error('Unexpected schema for '+name+'; restore or migrate headers before importing');
   if(missing.length){if(s.getMaxColumns()<keys.length)s.insertColumnsAfter(s.getMaxColumns(),keys.length-s.getMaxColumns());s.getRange(1,headers.length+1,1,missing.length).setValues([missing]);}
- }});if(rows_('Lessons').length===0){SEED_LESSONS.forEach(l=>{append_('Lessons',{lessonId:l.id,year:l.year,subject:l.subject,title:l.title,summary:l.summary,icon:l.icon,mindJson:JSON.stringify(l.mind),stepsJson:JSON.stringify(l.steps),premium:'FALSE'});(l.check||[]).forEach(q=>append_('Questions',{questionId:q.id,lessonId:l.id,mode:q.mode,text:q.text,optionsJson:JSON.stringify(q.options||[]),correctAnswer:q.answer,why:q.why,transfer:q.transfer?'TRUE':'FALSE',misconceptionsJson:JSON.stringify(l.misconceptions||{})}));});}seedSkillMap_();return 'Sheets initialized';}
+ }
+  applyTextColumns_(name,s);});textReady_={};staticRows_={};if(rows_('Lessons').length===0){SEED_LESSONS.forEach(l=>{append_('Lessons',{lessonId:l.id,year:l.year,subject:l.subject,title:l.title,summary:l.summary,icon:l.icon,mindJson:JSON.stringify(l.mind),stepsJson:JSON.stringify(l.steps),premium:'FALSE'});(l.check||[]).forEach(q=>append_('Questions',{questionId:q.id,lessonId:l.id,mode:q.mode,text:q.text,optionsJson:JSON.stringify(q.options||[]),correctAnswer:q.answer,why:q.why,transfer:q.transfer?'TRUE':'FALSE',misconceptionsJson:JSON.stringify(l.misconceptions||{})}));});}seedSkillMap_();return 'Sheets initialized';}
 function doGet(e){if(e?.parameter?.transport==='1'){const bridge=HtmlService.createTemplateFromFile('Transport');bridge.channel=/^[a-f0-9-]{36}$/.test(e.parameter.channel||'')?e.parameter.channel:'';return bridge.evaluate().setTitle('BijakLearn account service').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);}const t=HtmlService.createTemplateFromFile('App');t.clientId=props_().getProperty('GOOGLE_CLIENT_ID')||'';t.loginRole=['parent','student','admin'].includes(e?.parameter?.role)?e.parameter.role:'parent';return t.evaluate().setTitle('BijakLearn Junior').addMetaTag('viewport','width=device-width, initial-scale=1')}
-function verify_(input){const context=input&&typeof input==='object'&&!Array.isArray(input)?input:null;const idToken=context?context.idToken:input;const verified=verifiedGoogleAccount_(idToken);if(context){if(typeof context.role!=='string'||typeof context.childId!=='string'||context.childId.length>140)throw Error('Invalid role session');return ownerRoleIdentity_(verified,context.role,context.childId,false)}return verified;}
-function verifiedGoogleAccount_(idToken){if(typeof idToken!=='string'||idToken.length>5000||idToken.length<50)throw Error('Sign in with your Google account');const clientId=props_().getProperty('GOOGLE_CLIENT_ID');if(!clientId)throw Error('Google Sign-In not configured');let cache=null,cacheKey='';try{cache=CacheService.getScriptCache();cacheKey='idt:'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,idToken)).slice(0,40)}catch(error){cache=null}try{const hit=cache?JSON.parse(cache.get(cacheKey)||'null'):null;if(hit&&hit.sub&&Number(hit.exp)*1000>Date.now()+5000&&hit.aud===clientId)return {sub:String(hit.sub),email:String(hit.email||''),name:String(hit.name||'Parent').slice(0,80)}}catch(error){}const response=UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token='+encodeURIComponent(idToken),{muteHttpExceptions:true});if(response.getResponseCode()!==200)throw Error('Google identity verification failed');let payload;try{payload=JSON.parse(response.getContentText())}catch(error){throw Error('Google identity verification failed')}if(payload.aud!==clientId||!['accounts.google.com','https://accounts.google.com'].includes(payload.iss)||String(payload.email_verified)!=='true'||!Number.isFinite(Number(payload.exp))||Number(payload.exp)*1000<=Date.now()||!payload.sub)throw Error('Invalid Google identity');const seconds=Math.floor(Number(payload.exp)-Date.now()/1000);try{if(cache&&seconds>10)cache.put(cacheKey,JSON.stringify({sub:String(payload.sub),email:String(payload.email||''),name:String(payload.name||''),exp:Number(payload.exp),aud:payload.aud}),Math.min(300,seconds-5))}catch(error){}return {sub:String(payload.sub),email:String(payload.email||''),name:String(payload.name||'Parent').slice(0,80)};}
-function upsertParent_(u){
- const exists=()=>rows_('Parents').some(p=>String(p.googleSub)===u.sub);
- if(exists())return;
- const lock=LockService.getScriptLock();lock.waitLock(10000);
- try{
-  RPC_ROWS_?.delete('Parents');
-  if(!exists())append_('Parents',{googleSub:u.sub,email:u.email,displayName:u.name,createdAt:new Date().toISOString()});
- }finally{SpreadsheetApp.flush();lock.releaseLock()}
-}
+function verify_(idToken){if(typeof idToken!=='string'||idToken.length>5000||idToken.length<50)throw Error('Sign in with your Google account');const clientId=props_().getProperty('GOOGLE_CLIENT_ID');if(!clientId)throw Error('Google Sign-In not configured');let cache=null,cacheKey='';try{cache=CacheService.getScriptCache();cacheKey='idt:'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,idToken)).slice(0,40)}catch(error){cache=null}try{const hit=cache?JSON.parse(cache.get(cacheKey)||'null'):null;if(hit&&hit.sub&&Number(hit.exp)*1000>Date.now()+5000&&hit.aud===clientId)return {sub:String(hit.sub),email:String(hit.email||''),name:String(hit.name||'Parent').slice(0,80)}}catch(error){}const response=UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token='+encodeURIComponent(idToken),{muteHttpExceptions:true});if(response.getResponseCode()!==200)throw Error('Google identity verification failed');let payload;try{payload=JSON.parse(response.getContentText())}catch(error){throw Error('Google identity verification failed')}if(payload.aud!==clientId||!['accounts.google.com','https://accounts.google.com'].includes(payload.iss)||String(payload.email_verified)!=='true'||!Number.isFinite(Number(payload.exp))||Number(payload.exp)*1000<=Date.now()||!payload.sub)throw Error('Invalid Google identity');const seconds=Math.floor(Number(payload.exp)-Date.now()/1000);try{if(cache&&seconds>10)cache.put(cacheKey,JSON.stringify({sub:String(payload.sub),email:String(payload.email||''),name:String(payload.name||''),exp:Number(payload.exp),aud:payload.aud}),Math.min(300,seconds-5))}catch(error){}return {sub:String(payload.sub),email:String(payload.email||''),name:String(payload.name||'Parent').slice(0,80)};}
+function upsertParent_(u){if(rows_('Parents').some(p=>String(p.googleSub)===u.sub))return;const lock=LockService.getScriptLock();lock.waitLock(10000);try{if(!rows_('Parents').some(p=>String(p.googleSub)===u.sub))append_('Parents',{googleSub:u.sub,email:u.email,displayName:u.name,createdAt:new Date().toISOString()})}finally{lock.releaseLock()}}
 function withAuth_(token,fn,requestOnSignIn=false){
  let user=verify_(token);
- if(user.ownerRoleAccess){if(user.role==='STUDENT')requireChild_(user,user.studentChildId);return fn(user)}
  const link=studentLink_(user);
  if(link){user=studentIdentity_(user,link);if(!link.googleSub)throw Error('[STUDENT_ONLY] Use Student sign-in to activate your linked profile.');return fn(user)}
  user={...user,role:'PARENT'};
@@ -101,7 +97,6 @@ function withAuth_(token,fn,requestOnSignIn=false){
 function requireChild_(u,childId){const family=u.role==='STUDENT'?u.familySub:u.sub;const child=rows_('Children').find(c=>String(c.childId)===childId&&String(c.parentSub)===family);if(!child||child.status==='REMOVED'||(u.role==='STUDENT'&&childId!==u.studentChildId))throw Error('Child not linked to this account');return child}
 
 function access_(u){
- if(u.ownerRoleAccess&&u.role==='STUDENT')return {active:true,plan:'PREMIUM',expiresAt:null,ownerAccess:true};
  // The latest membership event is authoritative, including revocation or expiry.
  const r=rows_('Subscriptions').filter(row=>String(row.googleSub)===(u.role==='STUDENT'?u.familySub:u.sub)).slice(-1)[0];
  const pendingKasih=r&&r.plan==='PREMIUM_KASIH'&&String(r.adminNote).startsWith('Kasih application ')&&!rows_('Scholarships').some(row=>String(row.requestId)===String(r.adminNote).slice(18)&&row.status==='APPROVED');
@@ -111,7 +106,7 @@ function access_(u){
 }
 function getBootstrap(token){return withAuth_(token,u=>{if(u.role==='STUDENT')throw Error('[STUDENT_ONLY] Use Student sign-in for your linked learner profile.');return {role:'PARENT',parent:{name:u.name,email:u.email},canManageAccounts:isAccountAdmin_(u),children:rows_('Children').filter(c=>String(c.parentSub)===u.sub&&c.status!=='REMOVED').map(c=>({id:c.childId,name:c.nickname,year:Number(c.year),school:c.school,language:c.language})),access:access_(u),modules:moduleSummary_(u),lessons:lessonCatalogue_(),scholarship:rows_('Scholarships').filter(r=>String(r.googleSub)===u.sub).slice(-1)[0]?.status||null}},true);}
 
-function addChild(token,details){if(typeof linkParentChild==='function')return linkParentChild(token,details);return withAuth_(token,u=>{requireParent_(u);const name=String(details.name||'').trim().slice(0,40);const year=Number(details.year);if(!name||!Number.isInteger(year)||year<1||year>6)throw Error('Provide a child nickname and school year 1–6');const id=Utilities.getUuid();append_('Children',{childId:id,parentSub:u.sub,nickname:name,year,school:['SK','SJKC','SJKT'].includes(details.school)?details.school:'SK',language:['ms','en','ta','zh'].includes(details.language)?details.language:'ms',createdAt:new Date().toISOString()});return {id,name,year};});}
+function addChild(token,details){if(typeof linkParentChild==='function')return linkParentChild(token,details);return withAuth_(token,u=>{requireParent_(u);const children=rows_('Children').filter(c=>String(c.parentSub)===u.sub&&c.status!=='REMOVED');if(children.length>=5)throw Error('Maximum five children per parent account');const name=String(details.name||'').trim().slice(0,40);const year=Number(details.year);if(!name||!Number.isInteger(year)||year<1||year>6)throw Error('Provide a child nickname and school year 1–6');const id=Utilities.getUuid();append_('Children',{childId:id,parentSub:u.sub,nickname:name,year,school:['SK','SJKC','SJKT'].includes(details.school)?details.school:'SK',language:['ms','en','ta','zh'].includes(details.language)?details.language:'ms',createdAt:new Date().toISOString()});return {id,name,year};});}
 function getLesson(token,childId,lessonId){return withAuth_(token,u=>{requireChild_(u,childId);const l=rows_('Lessons').find(x=>x.lessonId===lessonId);if(!l)throw Error('Lesson not found');requireLessonAccess_(u,l);const questions=rows_('Questions').filter(q=>q.lessonId===lessonId).map(q=>({id:q.questionId,mode:q.mode,text:q.text,options:JSON.parse(q.optionsJson||'[]'),transfer:String(q.transfer).toUpperCase()==='TRUE'}));return {id:l.lessonId,title:l.title,year:Number(l.year),subject:l.subject,icon:l.icon,summary:l.summary,visual:l.visual||'',chapter:l.chapter||'',school:l.school||'ALL',status:l.contentStatus||'DRAFT_TEACHER_REVIEW',mind:JSON.parse(l.mindJson||'[]'),steps:JSON.parse(l.stepsJson||'[]'),questions};});}
 function computeMastery_(attempts){
   // Self-reported hints are not strong identity-proof, so this remains
@@ -124,8 +119,9 @@ function computeMastery_(attempts){
   const transfer=independent.some(a=>a.transfer===true);
   return {mastered:recentIndependent&&variedQuestions&&unique.size>=3&&transfer,independent:unique.size,formats:new Set(independent.map(a=>a.mode)).size,transfer,verified:false};
 }
+/** At most 60 answers a minute per signed-in account; skipped quietly where no cache exists. */
 function attemptRateLimit_(u){let cache;try{cache=CacheService.getScriptCache()}catch(error){return}const key='att_'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,u.sub)).slice(0,20)+'_'+Math.floor(Date.now()/60000),used=Number(cache.get(key)||0);if(used>=60)throw Error('Please slow down and try again in a minute');cache.put(key,String(used+1),90)}
-function submitAttempt(token,childId,lessonId,questionId,answer,hints){return withAuth_(token,u=>{requireChild_(u,childId);const lesson=rows_('Lessons').find(l=>l.lessonId===lessonId);if(!lesson)throw Error('Lesson not found');requireLessonAccess_(u,lesson);const q=rows_('Questions').find(x=>x.lessonId===lessonId&&x.questionId===questionId);if(!q)throw Error('Question not found');const provided=String(answer??'').trim().slice(0,150),usedHints=Math.max(0,Math.min(10,Math.floor(Number(hints)||0)));if(!provided)throw Error('Answer required');const correct=markPractice_({mode:q.mode,answer:q.correctAnswer,options:JSON.parse(q.optionsJson||'[]'),answerFormat:q.answerFormat||''},provided);const now=new Date().toISOString(),attemptId=Utilities.getUuid();const lock=LockService.getScriptLock();lock.waitLock(10000);try{attemptRateLimit_(u);append_('Attempts',{attemptId,childId,googleSub:u.sub,lessonId,questionId,mode:q.mode,correct,transfer:String(q.transfer).toUpperCase()==='TRUE',hints:usedHints,answer:provided,createdAt:now});const a=rows_('Attempts').filter(r=>r.childId===childId&&r.lessonId===lessonId).slice(-60).map(x=>({correct:String(x.correct)==='true'||x.correct===true,hints:Number(x.hints),mode:x.mode,transfer:String(x.transfer)==='true'||x.transfer===true,questionId:x.questionId}));const result=computeMastery_(a);const old=rows_('Mastery').find(x=>x.childId===childId&&x.lessonId===lessonId);const row={childId,lessonId,mastered:result.mastered,independent:result.independent,formats:result.formats,transfer:result.transfer,lastAttemptAt:now,reviewDue:result.mastered?new Date(Date.now()+86400000).toISOString():''};
+function submitAttempt(token,childId,lessonId,questionId,answer,hints){return withAuth_(token,u=>{requireChild_(u,childId);const lesson=rows_('Lessons').find(l=>l.lessonId===lessonId);if(!lesson)throw Error('Lesson not found');requireLessonAccess_(u,lesson);const q=rows_('Questions').find(x=>x.lessonId===lessonId&&x.questionId===questionId);if(!q)throw Error('Question not found');attemptRateLimit_(u);const provided=String(answer||'').trim().slice(0,150),usedHints=Math.max(0,Math.min(10,Math.floor(Number(hints)||0)));if(!provided)throw Error('Answer required');const correct=markPractice_({mode:q.mode,answer:q.correctAnswer,options:JSON.parse(q.optionsJson||'[]'),answerFormat:q.answerFormat||''},provided);const now=new Date().toISOString(),attemptId=Utilities.getUuid();const lock=LockService.getScriptLock();lock.waitLock(10000);try{append_('Attempts',{attemptId,childId,googleSub:u.sub,lessonId,questionId,mode:q.mode,correct,transfer:String(q.transfer).toUpperCase()==='TRUE',hints:usedHints,answer:provided,createdAt:now});const a=rows_('Attempts').filter(r=>r.childId===childId&&r.lessonId===lessonId).slice(-60).map(x=>({correct:String(x.correct)==='true'||x.correct===true,hints:Number(x.hints),mode:x.mode,transfer:String(x.transfer)==='true'||x.transfer===true,questionId:x.questionId}));const result=computeMastery_(a);const old=rows_('Mastery').find(x=>x.childId===childId&&x.lessonId===lessonId);const row={childId,lessonId,mastered:result.mastered,independent:result.independent,formats:result.formats,transfer:result.transfer,lastAttemptAt:now,reviewDue:result.mastered?new Date(Date.now()+86400000).toISOString():''};
 const ms=sheet_('Mastery'),vals=ms.getDataRange().getValues();let pos=-1;for(let i=1;i<vals.length;i++){if(String(vals[i][0])===childId&&String(vals[i][1])===lessonId){pos=i+1;break}}if(pos<0)append_('Mastery',row);else ms.getRange(pos,1,1,TABLES.Mastery.length).setValues([TABLES.Mastery.map(k=>cell_(row[k]))]);return {correct,feedback:correct?q.why:(JSON.parse(q.misconceptionsJson||'{}')[provided]||q.why),suggestedAnswer:correct?undefined:q.correctAnswer,mastery:result};}finally{lock.releaseLock()}});}
 function getParentReport(token,childId,pin){return withAuth_(token,u=>{requireParent_(u);requireModule_(u,'parent-reports');requireChild_(u,childId);const parent=rows_('Parents').find(p=>String(p.googleSub)===u.sub);if(!parent?.parentPinHash)throw Error('Set a parent PIN first');const failedKey='pin_fail_'+u.sub;const cache=CacheService.getScriptCache();if(Number(cache.get(failedKey)||0)>=5)throw Error('Too many attempts. Try again later.');if(hashPin_(pin,String(parent.pinSalt))!==String(parent.parentPinHash)){cache.put(failedKey,String(Number(cache.get(failedKey)||0)+1),900);throw Error('Incorrect parent PIN');}cache.remove(failedKey);const attempts=rows_('Attempts').filter(r=>r.childId===childId),mastery=rows_('Mastery').filter(r=>r.childId===childId);return {attempts:attempts.length,errors:attempts.filter(a=>String(a.correct)!=='true').length,independent:attempts.filter(a=>String(a.correct)==='true'&&Number(a.hints)===0&&['number','text','written'].includes(a.mode)).length,mastered:mastery.filter(m=>String(m.mastered)==='true').length,topics:mastery.map(x=>({lessonId:x.lessonId,mastered:String(x.mastered)==='true',independent:Number(x.independent),formats:Number(x.formats),lastAttemptAt:x.lastAttemptAt})),recent:attempts.slice(-20).map(a=>({lessonId:a.lessonId,mode:a.mode,correct:String(a.correct)==='true',hints:Number(a.hints),createdAt:a.createdAt}))};});}
 function hashPin_(pin,salt){const val=String(pin||'');if(!/^\d{6}$/.test(val))throw Error('Use a six-digit parent PIN');const secret=props_().getProperty('PIN_PEPPER');if(!secret)throw Error('PIN_PEPPER script property is required');const bytes=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,salt+':'+val+':'+secret);return Utilities.base64Encode(bytes)}
@@ -170,7 +166,7 @@ function importCurriculumV6_(){
   const skillId='Y1-MATH-'+l.id.split('-').slice(-1)[0].toUpperCase();
   if(!existingSkills.has(skillId))sRows.push({skillId,lessonId:l.id,versionId:'KSSR-SEMAKAN-2017',year:1,subject:'Matematik',school:'SK',skillTitle:l.title,prerequisiteIdsJson:'[]',standardCodesJson:JSON.stringify(l.standards),contentStatus:'DRAFT_TEACHER_REVIEW',reviewedBy:'',reviewedAt:''});
  });
- const write=(name,items)=>{if(!items.length)return;const sheet=sheet_(name),keys=TABLES[name],start=sheet.getLastRow()+1;prepareTextColumns_(sheet,name,keys);sheet.getRange(start,1,items.length,keys.length).setValues(items.map(o=>keys.map(k=>sheetCell_(name,k,o[k]))));};
+ const write=(name,items)=>{if(!items.length)return;const sheet=sheet_(name),keys=TABLES[name],start=sheet.getLastRow()+1;sheet.getRange(start,1,items.length,keys.length).setValues(items.map(o=>keys.map(k=>cellFor_(name,k,o[k],ensureTextColumns_(name,sheet)))));delete staticRows_[name];};
  const lock=LockService.getScriptLock();lock.waitLock(30000);
  try {write('Lessons',lRows);write('Questions',qRows);write('SkillMap',sRows);}finally{lock.releaseLock();}
  return {lessons:lRows.length,questions:qRows.length,skills:sRows.length,status:'DRAFT_TEACHER_REVIEW'};

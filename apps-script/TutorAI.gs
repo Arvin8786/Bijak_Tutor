@@ -1,7 +1,7 @@
 /**
  * Authenticated optional live tutor for Apps Script HTML-service only.
- * Never expose GEMINI_API_KEY to frontend code. Not reachable from GitHub Pages.
- * Requires owner deployment and Script Properties: GEMINI_API_KEY and optional GEMINI_MODEL.
+ * The front end already solves checked maths on the device for free; this runs only for questions it could not answer.
+ * Provider keys (AI_API_KEY, GEMINI_API_KEY) stay in Script Properties; see AiGateway.gs. Never expose them to frontend code.
  */
 function askTutor(token,question,context){
  return withAuth_(token,function(user){
@@ -13,9 +13,7 @@ function askTutor(token,question,context){
    const subject=String(info.subject||'').replace(/[\r\n\t]/g,' ').slice(0,75);
    const lessonId=String(info.lessonId||'').slice(0,80);
    // Do not transmit account identity, child identity, or learner records.
-   const settings=props_();
-   const key=settings.getProperty('GEMINI_API_KEY');
-   if(!key)throw Error('AI tutor is not configured. Use the built-in lesson helper.');
+   if(!aiConfigured_())throw Error('AI tutor is not configured. Use the built-in lesson helper.');
    const cache=CacheService.getScriptCache();
    const rateKey='tutor_'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,user.sub)).slice(0,25);
    const minute=Math.floor(Date.now()/60000);
@@ -30,18 +28,21 @@ function askTutor(token,question,context){
    const row=lessonId?rows_('Lessons').find(l=>String(l.lessonId)===lessonId):null;
    if(row)requireLessonAccess_(user,row);
    const contextText=row?('Study topic: '+String(row.title).slice(0,110)+'\nLesson summary: '+String(row.summary).slice(0,600)):'';
-   const model=settings.getProperty('GEMINI_MODEL')||'gemini-3.5-flash-lite';
-   if(!/^gemini-[\w.-]{3,60}$/.test(model))throw Error('Invalid tutor model configuration');
-   const system='You are BijakLearn Study Buddy, a warm Malaysian primary school tutor for ages 6–12. Answer only educational questions. Be accurate and age appropriate. For maths, show clear numbered working steps and check arithmetic. For science, explain cause, evidence and a safe concrete example. Use the language of the question (Malay, English, Chinese or Tamil) when possible. Never request personal details, make medical or legal diagnoses, or instruct unsafe experiments. Never claim you are a human teacher. If uncertain, state uncertainty and suggest asking an educator. Respond with strictly valid JSON: {"title":"short heading","steps":["simple step 1","step 2","step 3"]}. Limit to 6 steps and 150 words.';
-   const payload={systemInstruction:{parts:[{text:system}]},contents:[{role:'user',parts:[{text:'Year: '+year+'\nSubject: '+subject+'\n'+contextText+'\nStudent question: '+q}]}],generationConfig:{responseMimeType:'application/json',temperature:0.2,maxOutputTokens:650}};
-   const url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent';
-   const response=UrlFetchApp.fetch(url,{method:'post',contentType:'application/json',headers:{'x-goog-api-key':key},payload:JSON.stringify(payload),muteHttpExceptions:true});
-   if(response.getResponseCode()!==200)throw Error('Online tutor is temporarily unavailable.');
-   const result=JSON.parse(response.getContentText());
-   const raw=(result.candidates||[]).flatMap(c=>(c.content?.parts||[]).map(p=>p.text||'')).join('').slice(0,7000);
-   let parsed=null;
-   try{parsed=JSON.parse(raw)}catch(error){throw Error('Tutor response could not be read.')}
+   // Shared answers first: the same question from another learner costs nothing.
+   const shareable=!aiQuestionIsPrivate_(q),cacheKey=aiCacheKey_(q,subject,year);
+   if(shareable){const hit=aiCacheGet_(cacheKey);if(hit)return Object.assign({},hit,{cached:true})}
+   const system='You are BijakLearn Study Buddy, a warm Malaysian primary school tutor for ages 6–12. Answer only educational questions. Be accurate and age appropriate. For maths, show clear numbered working steps and check arithmetic. For science, explain cause, evidence and a safe concrete example. Use the language of the question (Malay, English, Chinese or Tamil) when possible. Never request personal details, make medical or legal diagnoses, or instruct unsafe experiments. Never claim you are a human teacher. If uncertain, state uncertainty and suggest asking an educator. Respond with strictly valid JSON: {"title":"short heading","steps":["simple step 1","step 2","step 3"],"answer":"final numeric answer for a maths question, else empty","expression":"for a maths question that reduces to arithmetic: one expression using only digits, + - * / ( ) and . whose value is the final answer, else empty"}. Limit to 7 steps and 170 words.';
+   const outcome=aiJson_(system,'Year: '+year+'\nSubject: '+subject+'\n'+contextText+'\nStudent question: '+q,700);
+   const parsed=outcome.data;
    if(!parsed||typeof parsed.title!=='string'||!Array.isArray(parsed.steps))throw Error('Tutor response could not be read.');
-   return {title:parsed.title.slice(0,180),steps:parsed.steps.slice(0,6).map(s=>String(s).slice(0,750)),kind:'ai',source:'AI-generated explanation; verify important answers with a teacher'};
+   const check=aiVerifyNumeric_(parsed);
+   const steps=parsed.steps.slice(0,7).map(s=>String(s).slice(0,750));
+   const answer={title:parsed.title.slice(0,180),steps,kind:check.status==='verified'?'math':'ai'};
+   if(check.status==='verified'){answer.answer=check.value;answer.source='AI explanation; the final answer was checked by our calculator';}
+   else if(check.status==='mismatch'){steps.push('⚠️ Our calculator got '+check.value+' for this problem, which is different. Please check this answer with a teacher.');answer.source='AI explanation that did NOT pass the calculator check';}
+   else answer.source='AI-generated explanation; verify important answers with a teacher';
+   // Only share answers that are safe to repeat: not private, and not a failed maths check.
+   if(shareable&&check.status!=='mismatch')aiCachePut_(cacheKey,answer);
+   return answer;
  });
 }

@@ -121,9 +121,7 @@ function purgeKasihEvidence_(){
     const file=DriveApp.getFileById(id),parents=file.getParents();let belongs=false;
     while(parents.hasNext())if(parents.next().getId()===folder.getId())belongs=true;
     if(belongs){file.setTrashed(true);removed++}
-   }catch(error){
-    if(!/not found|does not exist/i.test(String(error.message)))throw error;
-   }
+   }catch(error){}
   });
   update_('Scholarships','requestId',row.requestId,{documentIdsJson:'[]',guardianName:'',studentNickname:'',reason:''});
  });

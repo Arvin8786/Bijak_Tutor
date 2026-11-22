@@ -5,6 +5,10 @@ function commerceSettings_(){
  if(!Number.isInteger(out.commissionBps)||out.commissionBps<0||out.commissionBps>10000)out.commissionBps=0;
  return out;
 }
+/** Deployment-specific values come from Script Properties; the defaults keep the current setup working. */
+function adminEmail_(){let owner='';try{owner=Session.getEffectiveUser().getEmail()}catch(error){}return String(props_().getProperty('ACCOUNT_ADMIN_EMAIL')||owner||'arvin8786@gmail.com').trim().toLowerCase()}
+function publicAppUrl_(){return String(props_().getProperty('PUBLIC_APP_URL')||'https://arvin8786.github.io/Bijak_Tutor/').trim().replace(/\?.*$/,'')}
+const MAX_FAMILY_CHILDREN_ = 10;
 function activeFamilyChildren_(sub){return rows_('Children').filter(c=>String(c.parentSub)===sub&&c.status!=='REMOVED')}
 function paidFamilyOrders_(sub){return rows_('Orders').filter(o=>String(o.parentSub)===sub&&o.status==='PAID')}
 function premiumSlots_(sub){const orders=paidFamilyOrders_(sub);return 2+orders.filter(o=>o.kind==='EXTRA_CHILD').reduce((n,o)=>n+Number(o.slots),0)}
@@ -39,17 +43,15 @@ function registerReferralOnboarding_(user,code){
  }finally{lock.releaseLock()}
 }
 function orderSummary_(o,own){return {id:o.orderId,kind:o.kind,slots:Number(o.slots),listCents:Number(o.listCents),discountCents:Number(o.discountCents),totalCents:Number(o.totalCents),status:o.status,createdAt:o.createdAt,expiresAt:o.expiresAt,reference:o.reference||'',proofId:o.proofId||'',note:o.note||'',...(own?{parentSub:o.parentSub,referrerSub:o.referrerSub,commissionBps:Number(o.commissionBps),commissionCents:Number(o.commissionCents),reviewedAt:o.reviewedAt}:{} )}}
-function publicAppUrl_(){return String(props_().getProperty('PUBLIC_APP_URL')||'https://arvin8786.github.io/Bijak_Tutor/').trim().replace(/\?.*$/,'')}
 function getFamilyCommerce(token){
  const user=requirePortalParent_(token),affiliate=affiliateFor_(user),settings=commerceSettings_(),access=access_(user),children=activeFamilyChildren_(user.sub),slots=premiumSlots_(user.sub);
- const orders=rows_('Orders'),payoutItems=paidOutOrderIds_(),payouts=rows_('CommissionPayouts').filter(p=>String(p.referrerSub)===user.sub);
- const allParents=rows_('Parents'),links=latestStudentLinks_();
+ const orders=rows_('Orders'),payoutItems=paidOutOrderIds_(),payouts=rows_('CommissionPayouts').filter(p=>String(p.referrerSub)===user.sub),links=latestStudentLinks_(),allParents=rows_('Parents');
  const referrals=rows_('Referrals').filter(r=>String(r.referrerSub)===user.sub).map(r=>{
   const buyer=allParents.find(p=>String(p.googleSub)===String(r.referredSub));
   const order=orders.find(o=>String(o.parentSub)===String(r.referredSub)&&String(o.referrerSub)===user.sub&&o.kind==='LIFETIME_PREMIUM'&&o.status==='PAID');
   return {name:String(buyer?.displayName||'New parent'),joinedAt:r.createdAt,status:order?'PAID':'ONBOARDED',commissionCents:order?Number(order.commissionCents):0,paidOut:!!order&&payoutItems.has(String(order.orderId)),month:order?malaysiaMonth_(order.reviewedAt):null};
  });
- return {settings,access,children:children.map((c,index)=>({id:String(c.childId),name:c.nickname,email:links.filter(l=>String(l.childId)===String(c.childId)).sort((a,b)=>Number(a.status==='ACTIVE')-Number(b.status==='ACTIVE')).slice(-1)[0]?.email||'',status:links.filter(l=>String(l.childId)===String(c.childId)).sort((a,b)=>Number(a.status==='ACTIVE')-Number(b.status==='ACTIVE')).slice(-1)[0]?.status||'UNLINKED',plan:access.plan==='PREMIUM'&&index>=slots?'FREE':access.plan})),premiumSlots:slots,affiliateUrl:publicAppUrl_()+'?ref='+affiliate.code,referrals,payouts:payouts.map(p=>({month:p.throughMonth,amountCents:Number(p.amountCents),reference:p.reference})),orders:orders.filter(o=>String(o.parentSub)===user.sub).slice(-100).reverse().map(o=>orderSummary_(o,false)),referredBy:rows_('Referrals').find(r=>String(r.referredSub)===user.sub)?.referrerName||null,uploadsConfigured:!!props_().getProperty('KASIH_DOCUMENTS_FOLDER_ID')};
+ return {settings,access,children:children.map((c,index)=>({id:String(c.childId),name:c.nickname,email:links.find(l=>String(l.childId)===String(c.childId))?.email||'',status:links.find(l=>String(l.childId)===String(c.childId))?.status||'UNLINKED',plan:access.plan==='PREMIUM'&&index>=slots?'FREE':access.plan})),premiumSlots:slots,affiliateUrl:publicAppUrl_()+'?ref='+affiliate.code,referrals,payouts:payouts.map(p=>({month:p.throughMonth,amountCents:Number(p.amountCents),reference:p.reference})),orders:orders.filter(o=>String(o.parentSub)===user.sub).slice(-100).reverse().map(o=>orderSummary_(o,false)),referredBy:rows_('Referrals').find(r=>String(r.referredSub)===user.sub)?.referrerName||null,uploadsConfigured:!!props_().getProperty('KASIH_DOCUMENTS_FOLDER_ID')};
 }
 function linkParentChild(token,details){
  const user=requirePortalParent_(token);details=details||{};
@@ -60,13 +62,13 @@ function linkParentChild(token,details){
   const requestId=String(details.requestId||Utilities.getUuid());if(!/^[a-f0-9-]{36}$/.test(requestId))throw Error('Invalid child-link request');
   const existing=rows_('Enrolments').find(r=>String(r.requestId)===requestId);
   if(existing&&(String(existing.parentSub)!==user.sub||String(existing.studentEmail).toLowerCase()!==email||String(existing.nickname)!==name))throw Error('Child-link request conflict');
-  if(existing?.status==='APPROVED'&&!rows_('Children').some(c=>String(c.childId)===String(existing.childId)&&c.status!=='REMOVED'))throw Error('The linked profile was removed. Contact the administrator to restore it.');
   if(existing?.status==='APPROVED')return {id:requestId,childId:String(existing.childId),status:'APPROVED'};
   if(existing&&existing.status!=='LINKING')throw Error('Only an administrator can change this link');
   const linked=latestStudentLinks_().find(l=>String(l.email).toLowerCase()===email);
-  if(rows_('Parents').some(p=>String(p.email).toLowerCase()===email)||String(props_().getProperty('ACCOUNT_ADMIN_EMAIL')||'arvin8786@gmail.com').toLowerCase()===email||linked&&(!existing||String(linked.childId)!==String(existing.childId)||String(linked.parentSub)!==user.sub)||rows_('Enrolments').some(r=>String(r.studentEmail).toLowerCase()===email&&r.status==='PENDING'))throw Error('This account already has a role or link. Only the administrator can change it.');
+  if(rows_('Parents').some(p=>String(p.email).toLowerCase()===email)||adminEmail_()===email||linked&&(!existing||String(linked.childId)!==String(existing.childId)||String(linked.parentSub)!==user.sub)||rows_('Enrolments').some(r=>String(r.studentEmail).toLowerCase()===email&&r.status==='PENDING'))throw Error('This account already has a role or link. Only the administrator can change it.');
+  if(!existing&&activeFamilyChildren_(user.sub).length>=MAX_FAMILY_CHILDREN_)throw Error('This family has reached the learner limit. Contact the administrator.');
   const childId=existing?String(existing.childId):Utilities.getUuid(),now=new Date().toISOString();
-  if(!existing)append_('Enrolments',{requestId,parentSub:user.sub,parentEmail:user.email,studentEmail:email,nickname:name,year,school:['SK','SJKC','SJKT'].includes(details.school)?details.school:'SK',language:['ms','en','zh','ta'].includes(details.language)?details.language:'ms',consentAt:now,status:'LINKING',childId,createdAt:now,reviewedBy:'VERIFIED_PARENT_GOOGLE_ACCOUNT'});
+  if(!existing)append_('Enrolments',{requestId,parentSub:user.sub,parentEmail:user.email,studentEmail:email,nickname:name,year,consentAt:now,status:'LINKING',childId,createdAt:now,reviewedBy:'VERIFIED_PARENT_GOOGLE_ACCOUNT'});
   const child=rows_('Children').find(c=>String(c.childId)===childId);if(child&&String(child.parentSub)!==user.sub)throw Error('Child profile ownership conflict');
   if(!child)append_('Children',{childId,parentSub:user.sub,nickname:name,year,school:['SK','SJKC','SJKT'].includes(details.school)?details.school:'SK',language:['ms','en','zh','ta'].includes(details.language)?details.language:'ms',createdAt:now,status:'ACTIVE'});
   if(!linked)append_('StudentAccounts',{studentKey:'email:'+email,email,googleSub:'',childId,parentSub:user.sub,status:'ACTIVE',linkedAt:now,linkedBy:accountKey_(user.sub)});
@@ -165,13 +167,14 @@ function recordCommissionPayout(token,referrerSub,reference){
 }
 /** Editor-only: additive schema + private owner folder + daily evidence retention. */
 function setupBijakFamilyCommerce(){
- if(Session.getActiveUser().getEmail().toLowerCase()!=='arvin8786@gmail.com')throw Error('Owner only');
+ const active=String(Session.getActiveUser().getEmail()||'').toLowerCase(),owner=String(Session.getEffectiveUser().getEmail()||'').toLowerCase();if(!active||active!==owner)throw Error('Owner only');
  initializeDatabase_();setupKasihFolder_();setupKasihRetention_();
  console.log('Family commerce tables and private upload storage configured. No files or sheets were made public.');return {configured:true};
 }
 
 function setDiscountEnabled(token,id,enabled){const admin=requireAccountAdmin_(token);if(typeof enabled!=='boolean')throw Error('Choose enabled or disabled');if(!update_('DiscountCampaigns','campaignId',id,{enabled:enabled?'TRUE':'FALSE'}))throw Error('Campaign not found');append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'DISCOUNT_'+(enabled?'ENABLED':'DISABLED'),reference:id});return {ok:true}}
 function removeChildLink(token,childId,reason){
- const admin=requireAccountAdmin_(token),note=String(reason||'').trim();if(!note||note.length>250)throw Error('Give a removal reason');const lock=LockService.getScriptLock();lock.waitLock(10000);
- try{const child=rows_('Children').find(c=>String(c.childId)===childId),links=latestStudentLinks_().filter(l=>String(l.childId)===childId);if(!child&&!links.length)throw Error('Child profile not found');links.forEach(l=>append_('StudentAccounts',{...l,status:'REVOKED',linkedAt:new Date().toISOString(),linkedBy:accountKey_(admin.sub)}));if(child)update_('Children','childId',childId,{status:'REMOVED'});rows_('Enrolments').filter(e=>String(e.childId)===childId).forEach(e=>update_('Enrolments','requestId',e.requestId,{status:'REMOVED'}));append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'CHILD_LINK_REMOVED',reference:childId+': '+note});return {ok:true}}finally{if(typeof SpreadsheetApp!=='undefined')SpreadsheetApp.flush();lock.releaseLock()}
+ const admin=requireAccountAdmin_(token),note=String(reason||'').trim();if(!note||note.length>250)throw Error('Give a removal reason');
+ const lock=LockService.getScriptLock();lock.waitLock(10000);
+ try{const child=rows_('Children').find(c=>String(c.childId)===childId);if(!child)throw Error('Child profile not found');latestStudentLinks_().filter(l=>String(l.childId)===childId).forEach(l=>append_('StudentAccounts',{...l,status:'REVOKED',linkedAt:new Date().toISOString(),linkedBy:accountKey_(admin.sub)}));update_('Children','childId',childId,{status:'REMOVED'});append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'CHILD_LINK_REMOVED',reference:childId+': '+note});return {ok:true}}finally{lock.releaseLock()}
 }
