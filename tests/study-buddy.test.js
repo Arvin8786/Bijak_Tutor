@@ -45,7 +45,7 @@ test('Optional server AI key cannot appear in public frontend bundle',()=>{
  const ai=fs.readFileSync('apps-script/TutorAI.gs','utf8');
  const pkg=fs.readFileSync('scripts/package-gas.mjs','utf8');
  assert.match(ai,/withAuth_\(token/);
- assert.match(ai,/getProperty\('GEMINI_API_KEY'\)/);
+ assert.match(fs.readFileSync('apps-script/AiGateway.gs','utf8'),/getProperty\('GEMINI_API_KEY'\)/);
  assert.match(ai,/CacheService/);
  assert.match(pkg,/release\/TutorAI\.gs/);
 });
