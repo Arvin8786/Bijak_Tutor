@@ -21,7 +21,9 @@ export const APP_MODULES = [
 ].map(([moduleId,title,route,free,freeLessonLimit])=>({moduleId,title,route,enabled:true,free,premium:true,premiumKasih:true,freeLessonLimit,notes:moduleId==='study-library'?'Free limit per subject, year and stream. 0 denies free lessons.':'Module access; 0 means no additional lesson-count limit.'}));
 export function moduleForPage(page,audience='junior',kind='ai'){
  if(page==='growth')return `${audience==='adult'?'adult':'junior'}-${kind==='hobby'?'hobby':'ai'}`;
+ if(page==='videos')return 'study-library';
  if(page==='lesson')return 'study-library';
  if(page==='pin')return 'parent-reports';
  return APP_MODULES.find(m=>m.route===page)?.moduleId||null;
 }
+

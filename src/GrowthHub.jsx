@@ -46,7 +46,7 @@ export default function GrowthHub({studentOnly=false,audience='junior',onAudienc
    if(result&&Array.isArray(result.lessons)&&result.lessons.length&&result.lessons.every(l=>l?.quiz&&Array.isArray(l.quiz.options))){
     setServerTrack(result);setSourceNote('Content loaded from the authorised learning library.');
    }else setSourceNote('No reviewed learning activities are currently available for this module.');
-  }).catch(()=>{if(active)setSourceNote('This learning module could not be loaded. Please return to Membership or ask your administrator for access.')});
+  }).catch(()=>{if(active)setSourceNote('This learning module could not be loaded. Please return to Membership or ask your BijakLearn Team for access.')});
   return()=>{active=false};
  },[current,kind,loadTrack]);
  const lesson=track?.lessons?.[lessonIndex];

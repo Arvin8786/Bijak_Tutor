@@ -1,5 +1,8 @@
 /** Account activation for the authenticated web app. Premium plans are checked separately. */
 function isAccountAdmin_(user) {
+ return isOwnerAccount_(user) && (!user.ownerRoleAccess || user.role === 'ADMIN');
+}
+function isOwnerAccount_(user) {
  const adminSub = String(props_().getProperty('ACCOUNT_ADMIN_GOOGLE_SUB') || '').trim();
  return adminSub !== '' && user.sub === adminSub;
 }
@@ -43,7 +46,7 @@ function accountStatus_(user) {
 }
 
 function requireActiveAccount_(user, requestOnSignIn) {
- if (isAccountAdmin_(user)) return;
+ if (isOwnerAccount_(user)) return;
  let status = accountStatus_(user);
  if (status === 'PENDING' && requestOnSignIn) {
   const lock = LockService.getScriptLock();
@@ -77,12 +80,12 @@ function listAccountAccess(token) {
    accounts.set(accountKey, {accountKey, email: parent.email, displayName: parent.displayName, status: 'ACTIVE'});
   }
  }
- accounts.delete(accountKey_(admin.sub));
  return Array.from(accounts.values(), account => ({
   id: account.accountKey,
   email: String(rows_('Parents').find(p=>accountKey_(String(p.googleSub))===account.accountKey)?.email||account.email||''),
   name: String(rows_('Parents').find(p=>accountKey_(String(p.googleSub))===account.accountKey)?.displayName||account.displayName||''),
   status: account.status,
+  owner: account.accountKey === accountKey_(admin.sub),
  })).sort((a, b) => Number(b.status === 'PENDING') - Number(a.status === 'PENDING') || a.email.localeCompare(b.email));
 }
 
