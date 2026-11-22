@@ -1,5 +1,5 @@
 import {useSheetRefresh} from './sheetRefresh.js';
-import Brand,{BrandCredit} from './Brand.jsx';
+import Brand,{BrandCredit,PortalGlyph} from './Brand.jsx';
 import EducationalVideos from './EducationalVideos.jsx';
 // Capture a referral only in this tab; no tracking cookies, email addresses or child data in URLs.
 function getReferralCode(){try{const code=new URL(window.location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('bijaklearn:referral',code);return sessionStorage.getItem('bijaklearn:referral')||''}catch{return ''}}
@@ -141,16 +141,16 @@ function GoogleLogin({onToken,notice}){
   </section>
   <section className="signin-form">
    <div className="signin-tabs" role="group" aria-label="Sign-in type">
-    <button type="button" aria-pressed={loginRole==='parent'} onClick={()=>chooseRole('parent')}>Parent sign-in</button>
-    <button type="button" aria-pressed={student} onClick={()=>chooseRole('student')}>Student sign-in</button>
-    <button type="button" aria-pressed={admin} onClick={()=>chooseRole('admin')}>BijakLearn Team</button>
+    <button type="button" aria-pressed={loginRole==='parent'} onClick={()=>chooseRole('parent')}><PortalGlyph name="accounts"/>Parent sign-in</button>
+    <button type="button" aria-pressed={student} onClick={()=>chooseRole('student')}><PortalGlyph name="tiers"/>Student sign-in</button>
+    <button type="button" aria-pressed={admin} onClick={()=>chooseRole('admin')}><PortalGlyph name="overview"/>BijakLearn Team</button>
    </div>
    <h2>{admin?'BijakLearn Team sign-in':student?'Student sign-in':'Welcome back'}</h2>
    <p>{admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Use your own Google account linked by your parent or BijakLearn Team to your learner profile.':'Your family’s learning journey, all in one place. Sign in to view reports and support your child.'}</p>
    {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin"/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your BijakLearn Team for the private learning app link.</p>}
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
-   <p className="signin-note">{admin?'BijakLearn Team permissions are verified by the server after sign-in.':student?'Your parent or BijakLearn Team must enable your student account first. Use a separate account from your parent.':'New accounts require BijakLearn Team approval. If access is pending, return after your BijakLearn Team approves your request.'}</p>
+   <p className="signin-note">{admin?'BijakLearn Team permissions are verified by the server after sign-in.':student?'Sign in with the Google account linked to your learner profile.':'New accounts require BijakLearn Team approval. Return here after the team approves your request.'}</p>
    {!isLive&&demoEnabled&&<button type="button" onClick={()=>onToken('DEMO')}>Explore learning demo</button>}
    <BrandCredit/>
   </section>

@@ -34,20 +34,22 @@ function registerReferralOnboarding_(user,code){
  try{
   if(rows_('Referrals').some(r=>String(r.referredSub)===user.sub))return;
   if(rows_('Parents').some(p=>String(p.googleSub)===user.sub)||latestAccountEvents_().has(accountKey_(user.sub)))return;
-  const affiliate=typeof code==='string'&&/^[a-f0-9]{32}$/.test(code)?rows_('Affiliates').find(a=>a.code===code&&String(a.parentSub)!==user.sub&&String(a.email).toLowerCase()!==user.email.toLowerCase()):null;
+  const affiliate=typeof code==='string'&&/^[a-f0-9]{32}$/.test(code)?rows_('Affiliates').find(a=>String(a.code)===code&&String(a.parentSub)!==user.sub&&String(a.email).toLowerCase()!==user.email.toLowerCase()):null;
   append_('Referrals',{referredSub:user.sub,referrerSub:affiliate?String(affiliate.parentSub):'',referrerName:affiliate?affiliate.name:'',referrerEmail:affiliate?affiliate.email:'',code:affiliate?affiliate.code:'',createdAt:new Date().toISOString()});
  }finally{lock.releaseLock()}
 }
 function orderSummary_(o,own){return {id:o.orderId,kind:o.kind,slots:Number(o.slots),listCents:Number(o.listCents),discountCents:Number(o.discountCents),totalCents:Number(o.totalCents),status:o.status,createdAt:o.createdAt,expiresAt:o.expiresAt,reference:o.reference||'',proofId:o.proofId||'',note:o.note||'',...(own?{parentSub:o.parentSub,referrerSub:o.referrerSub,commissionBps:Number(o.commissionBps),commissionCents:Number(o.commissionCents),reviewedAt:o.reviewedAt}:{} )}}
+function publicAppUrl_(){return String(props_().getProperty('PUBLIC_APP_URL')||'https://arvin8786.github.io/Bijak_Tutor/').trim().replace(/\?.*$/,'')}
 function getFamilyCommerce(token){
  const user=requirePortalParent_(token),affiliate=affiliateFor_(user),settings=commerceSettings_(),access=access_(user),children=activeFamilyChildren_(user.sub),slots=premiumSlots_(user.sub);
  const orders=rows_('Orders'),payoutItems=paidOutOrderIds_(),payouts=rows_('CommissionPayouts').filter(p=>String(p.referrerSub)===user.sub);
+ const allParents=rows_('Parents'),links=latestStudentLinks_();
  const referrals=rows_('Referrals').filter(r=>String(r.referrerSub)===user.sub).map(r=>{
-  const buyer=rows_('Parents').find(p=>String(p.googleSub)===String(r.referredSub));
+  const buyer=allParents.find(p=>String(p.googleSub)===String(r.referredSub));
   const order=orders.find(o=>String(o.parentSub)===String(r.referredSub)&&String(o.referrerSub)===user.sub&&o.kind==='LIFETIME_PREMIUM'&&o.status==='PAID');
   return {name:String(buyer?.displayName||'New parent'),joinedAt:r.createdAt,status:order?'PAID':'ONBOARDED',commissionCents:order?Number(order.commissionCents):0,paidOut:!!order&&payoutItems.has(String(order.orderId)),month:order?malaysiaMonth_(order.reviewedAt):null};
  });
- return {settings,access,children:children.map((c,index)=>({id:String(c.childId),name:c.nickname,email:latestStudentLinks_().filter(l=>String(l.childId)===String(c.childId)).sort((a,b)=>Number(a.status==='ACTIVE')-Number(b.status==='ACTIVE')).slice(-1)[0]?.email||'',status:latestStudentLinks_().filter(l=>String(l.childId)===String(c.childId)).sort((a,b)=>Number(a.status==='ACTIVE')-Number(b.status==='ACTIVE')).slice(-1)[0]?.status||'UNLINKED',plan:access.plan==='PREMIUM'&&index>=slots?'FREE':access.plan})),premiumSlots:slots,affiliateUrl:'https://arvin8786.github.io/Bijak_Tutor/?ref='+affiliate.code,referrals,payouts:payouts.map(p=>({month:p.throughMonth,amountCents:Number(p.amountCents),reference:p.reference})),orders:orders.filter(o=>String(o.parentSub)===user.sub).slice(-100).reverse().map(o=>orderSummary_(o,false)),referredBy:rows_('Referrals').find(r=>String(r.referredSub)===user.sub)?.referrerName||null,uploadsConfigured:!!props_().getProperty('KASIH_DOCUMENTS_FOLDER_ID')};
+ return {settings,access,children:children.map((c,index)=>({id:String(c.childId),name:c.nickname,email:links.filter(l=>String(l.childId)===String(c.childId)).sort((a,b)=>Number(a.status==='ACTIVE')-Number(b.status==='ACTIVE')).slice(-1)[0]?.email||'',status:links.filter(l=>String(l.childId)===String(c.childId)).sort((a,b)=>Number(a.status==='ACTIVE')-Number(b.status==='ACTIVE')).slice(-1)[0]?.status||'UNLINKED',plan:access.plan==='PREMIUM'&&index>=slots?'FREE':access.plan})),premiumSlots:slots,affiliateUrl:publicAppUrl_()+'?ref='+affiliate.code,referrals,payouts:payouts.map(p=>({month:p.throughMonth,amountCents:Number(p.amountCents),reference:p.reference})),orders:orders.filter(o=>String(o.parentSub)===user.sub).slice(-100).reverse().map(o=>orderSummary_(o,false)),referredBy:rows_('Referrals').find(r=>String(r.referredSub)===user.sub)?.referrerName||null,uploadsConfigured:!!props_().getProperty('KASIH_DOCUMENTS_FOLDER_ID')};
 }
 function linkParentChild(token,details){
  const user=requirePortalParent_(token);details=details||{};
@@ -84,7 +86,7 @@ function saveDiscountCampaign(token,input){
  const admin=requireAccountAdmin_(token),code=String(input?.code||'').trim().toUpperCase(),percent=Number(input?.percent),start=Date.parse(input?.startsAt),end=Date.parse(input?.endsAt),max=Number(input?.maxUses);
  if(!/^[A-Z0-9-]{3,24}$/.test(code)||!Number.isInteger(percent)||percent<1||percent>100||!Number.isFinite(start)||!Number.isFinite(end)||end<=start||end<=Date.now()||!Number.isInteger(max)||max<1||max>100000)throw Error('Provide a unique code, discount 1–100%, valid start/end and usage limit.');
  const lock=LockService.getScriptLock();lock.waitLock(10000);
- try{if(rows_('DiscountCampaigns').some(c=>c.code===code))throw Error('Discount code already exists');const campaignId=Utilities.getUuid();append_('DiscountCampaigns',{campaignId,code,percent,startsAt:new Date(start).toISOString(),endsAt:new Date(end).toISOString(),maxUses:max,enabled:'TRUE',createdAt:new Date().toISOString(),createdBy:accountKey_(admin.sub)});return {id:campaignId}}finally{lock.releaseLock()}
+ try{if(rows_('DiscountCampaigns').some(c=>String(c.code)===code))throw Error('Discount code already exists');const campaignId=Utilities.getUuid();append_('DiscountCampaigns',{campaignId,code,percent,startsAt:new Date(start).toISOString(),endsAt:new Date(end).toISOString(),maxUses:max,enabled:'TRUE',createdAt:new Date().toISOString(),createdBy:accountKey_(admin.sub)});return {id:campaignId}}finally{lock.releaseLock()}
 }
 function createFamilyOrder(token,input){
  const user=requirePortalParent_(token),kind=input?.kind,slots=Number(input?.slots||1),code=String(input?.discountCode||'').trim().toUpperCase();
@@ -94,9 +96,10 @@ function createFamilyOrder(token,input){
   const history=rows_('Orders'),paid=paidFamilyOrders_(user.sub),now=Date.now();
   if(kind==='LIFETIME_PREMIUM'&&paid.some(o=>o.kind==='LIFETIME_PREMIUM'))throw Error('Lifetime Premium is already purchased');
   if(kind==='EXTRA_CHILD'&&!paid.some(o=>o.kind==='LIFETIME_PREMIUM')&&access_(user).plan!=='PREMIUM')throw Error('Activate Premium before purchasing extra child slots');
-  if(history.some(o=>String(o.parentSub)===user.sub&&['QUOTED','SUBMITTED'].includes(o.status)&&Date.parse(o.expiresAt)>now))throw Error('Finish or wait for your current order to expire before creating another');
-  let discount=null;const listCents=kind==='LIFETIME_PREMIUM'?10000:slots*3000;
-  if(code){discount=rows_('DiscountCampaigns').find(c=>c.code===code&&trueCell_(c.enabled)&&Date.parse(c.startsAt)<=now&&Date.parse(c.endsAt)>now);if(!discount)throw Error('Discount is inactive or expired');const reserved=history.filter(o=>o.discountId===discount.campaignId&&(o.status==='PAID'||o.status==='SUBMITTED'||o.status==='QUOTED'&&Date.parse(o.expiresAt)>now)).length;if(reserved>=Number(discount.maxUses))throw Error('Discount usage limit reached')}
+  // A submitted receipt stays pending until an administrator reviews it, however long that takes.
+  if(history.some(o=>String(o.parentSub)===user.sub&&(o.status==='SUBMITTED'||o.status==='QUOTED'&&Date.parse(o.expiresAt)>now)))throw Error('Finish your current order or wait for it to be reviewed or to expire before creating another');
+  let discount=null;const prices=commerceSettings_(),listCents=kind==='LIFETIME_PREMIUM'?prices.baseCents:slots*prices.extraChildCents;
+  if(code){discount=rows_('DiscountCampaigns').find(c=>String(c.code)===code&&trueCell_(c.enabled)&&Date.parse(c.startsAt)<=now&&Date.parse(c.endsAt)>now);if(!discount)throw Error('Discount is inactive or expired');const reserved=history.filter(o=>String(o.discountId)===String(discount.campaignId)&&(o.status==='PAID'||o.status==='SUBMITTED'||o.status==='QUOTED'&&Date.parse(o.expiresAt)>now)).length;if(reserved>=Number(discount.maxUses))throw Error('Discount usage limit reached')}
   const discountCents=discount?Math.round(listCents*Number(discount.percent)/100):0,referral=rows_('Referrals').find(r=>String(r.referredSub)===user.sub),referrer=referral?.referrerSub&&String(referral.referrerSub)!==user.sub?String(referral.referrerSub):'';
   const settings=commerceSettings_(),commissionBps=kind==='LIFETIME_PREMIUM'&&referrer?settings.commissionBps:0,orderId=Utilities.getUuid();
   const order={orderId,parentSub:user.sub,kind,slots,listCents,discountCents,totalCents:listCents-discountCents,discountId:discount?.campaignId||'',referrerSub:referrer,commissionBps,commissionCents:Math.round((listCents-discountCents)*commissionBps/10000),status:'QUOTED',createdAt:new Date(now).toISOString(),expiresAt:new Date(Math.min(now+30*60000,discount?Date.parse(discount.endsAt):Infinity)).toISOString()};
@@ -114,7 +117,7 @@ function submitOrderProof(token,orderId,reference,document){
  try{
   const order=rows_('Orders').find(o=>String(o.orderId)===orderId&&String(o.parentSub)===user.sub);
   if(!order||order.status!=='QUOTED'||Date.parse(order.expiresAt)<=Date.now())throw Error('Order is unavailable or expired. Request a new quote.');
-  if(rows_('Orders').some(o=>o.reference===ref&&['SUBMITTED','PAID'].includes(o.status))||rows_('Payments').some(p=>p.reference===ref))throw Error('Payment reference already submitted');
+  if(rows_('Orders').some(o=>String(o.reference)===ref&&['SUBMITTED','PAID'].includes(o.status))||rows_('Payments').some(p=>String(p.reference)===ref))throw Error('Payment reference already submitted');
   const proofId=Number(order.totalCents)===0&&!document?'':storePrivateUpload_(user,'PAYMENT',orderId,document);
   update_('Orders','orderId',orderId,{reference:ref,proofId,submittedAt:new Date().toISOString()});update_('Orders','orderId',orderId,{status:'SUBMITTED'});return {ok:true};
  }finally{lock.releaseLock()}
@@ -153,7 +156,7 @@ function recordCommissionPayout(token,referrerSub,reference){
  const admin=requireAccountAdmin_(token),ref=String(reference||'').trim();if(ref.length<3||ref.length>100)throw Error('Enter the actual transfer reference');
  const lock=LockService.getScriptLock();lock.waitLock(30000);
  try{
-  if(rows_('CommissionPayouts').some(p=>p.reference===ref))throw Error('Transfer reference already recorded');
+  if(rows_('CommissionPayouts').some(p=>String(p.reference)===ref))throw Error('Transfer reference already recorded');
   const orders=eligibleCommissions_().filter(o=>String(o.referrerSub)===referrerSub);if(!orders.length)throw Error('No unpaid commission from completed months');
   const payoutId=Utilities.getUuid(),amountCents=orders.reduce((n,o)=>n+Number(o.commissionCents),0),throughMonth=orders.map(o=>malaysiaMonth_(o.reviewedAt)).sort().slice(-1)[0];
   append_('CommissionPayouts',{payoutId,referrerSub,throughMonth,amountCents,reference:ref,recordedAt:new Date().toISOString(),recordedBy:accountKey_(admin.sub),orderIdsJson:JSON.stringify(orders.map(o=>String(o.orderId)))});

@@ -5,7 +5,7 @@ function privateKasihFolder_(){
  if(!id)throw Error('Private document storage is not configured. Contact the administrator.');
  const folder=DriveApp.getFolderById(id);
  const owner=folder.getOwner();
- if(!owner||owner.getEmail()!==Session.getEffectiveUser().getEmail())throw Error('Document folder must belong to the deploying owner');
+ if(!owner||String(owner.getEmail()).toLowerCase()!==String(Session.getEffectiveUser().getEmail()).toLowerCase())throw Error('Document folder must belong to the deploying owner');
  const parents=folder.getParents(),rootId=DriveApp.getRootFolder().getId();let atRoot=false;
  while(parents.hasNext()){if(parents.next().getId()!==rootId)throw Error('Use a private top-level Drive folder');atRoot=true}
  if(!atRoot)throw Error('Use a private top-level Drive folder');
@@ -114,11 +114,16 @@ function reviewKasih_(requestId,decision,months,note,actor){
 function purgeKasihEvidence_(){
  const cutoff=Date.now()-90*86400000;let removed=0;
  const folder=privateKasihFolder_();
- rows_('Scholarships').filter(row=>['APPROVED','DECLINED'].includes(row.status)&&Date.parse(row.reviewedAt)<cutoff).forEach(row=>{
+ rows_('Scholarships').filter(row=>['APPROVED','DECLINED'].includes(row.status)&&Date.parse(row.reviewedAt)<cutoff&&(kasihFileIds_(row).length||row.guardianName||row.studentNickname||row.reason)).forEach(row=>{
   kasihFileIds_(row).forEach(id=>{
-   const file=DriveApp.getFileById(id),parents=file.getParents();let belongs=false;
-   while(parents.hasNext())if(parents.next().getId()===folder.getId())belongs=true;
-   if(belongs){file.setTrashed(true);removed++}
+   // A file already deleted by hand must not stop the retention job.
+   try{
+    const file=DriveApp.getFileById(id),parents=file.getParents();let belongs=false;
+    while(parents.hasNext())if(parents.next().getId()===folder.getId())belongs=true;
+    if(belongs){file.setTrashed(true);removed++}
+   }catch(error){
+    if(!/not found|does not exist/i.test(String(error.message)))throw error;
+   }
   });
   update_('Scholarships','requestId',row.requestId,{documentIdsJson:'[]',guardianName:'',studentNickname:'',reason:''});
  });

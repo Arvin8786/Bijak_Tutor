@@ -20,7 +20,7 @@ function askTutor(token,question,context){
    const rateKey='tutor_'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,user.sub)).slice(0,25);
    const minute=Math.floor(Date.now()/60000);
    const day=Math.floor(Date.now()/86400000);
-   for(const [suffix,limit,ttl] of [['m'+minute,8,90],['d'+day,60,90000]]){
+   for(const [suffix,limit,ttl] of [['m'+minute,8,90],['d'+day,60,21600]]){
      const name=rateKey+'_'+suffix;
      const n=Number(cache.get(name)||0);
      if(n>=limit)throw Error('Tutor question limit reached; please try again later.');
@@ -39,7 +39,8 @@ function askTutor(token,question,context){
    if(response.getResponseCode()!==200)throw Error('Online tutor is temporarily unavailable.');
    const result=JSON.parse(response.getContentText());
    const raw=(result.candidates||[]).flatMap(c=>(c.content?.parts||[]).map(p=>p.text||'')).join('').slice(0,7000);
-   const parsed=JSON.parse(raw);
+   let parsed=null;
+   try{parsed=JSON.parse(raw)}catch(error){throw Error('Tutor response could not be read.')}
    if(!parsed||typeof parsed.title!=='string'||!Array.isArray(parsed.steps))throw Error('Tutor response could not be read.');
    return {title:parsed.title.slice(0,180),steps:parsed.steps.slice(0,6).map(s=>String(s).slice(0,750)),kind:'ai',source:'AI-generated explanation; verify important answers with a teacher'};
  });
