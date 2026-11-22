@@ -13,7 +13,7 @@ export async function checkOwnerRolesBrowser(browser,base){
     window.ownerRequests.push({method,role,scoped:typeof credential==='object'});
     if(method==='getPortalBootstrap')return {role:role.toUpperCase(),ownerRoleAccess:true,user:{name:'Owner'},parent:role==='parent'?{name:'Owner',email:'owner@test.invalid'}:null,children:role==='student'?[child]:[],lessons:[],modules:[],canManageAccounts:role==='admin',access:{active:true,plan:'PREMIUM'}};
     if(method==='getAdministrationOverview'&&role==='admin')return {settings:{clientIdConfigured:true},children:1,reportedSeconds7Days:0,parents:[],modules:[],payments:[]};
-    if(method==='getParentDashboard'&&role==='parent')return {parent:{name:'Owner',email:'owner@test.invalid'},access:{plan:'FREE'},children:[{...child,attempts:1,correct:1,accuracy:100,mastered:0,reportedSeconds:0,dailyUsage:[],recent:[]}],enrolments:[],feedback:[]};
+    if(method==='getParentDashboard'&&role==='parent')return {parent:{name:'Owner',email:'owner@test.invalid'},access:{plan:'FREE'},children:[{...child,attempts:0,correct:0,mastered:0,reportedSeconds:0,dailyUsage:[],recent:[]}],enrolments:[],feedback:[]};
     if(method==='authorizeModule'&&role==='student')return {allowed:true,plan:'PREMIUM',title:args[0]};
     if(method==='recordStudentUsage'&&role==='student')return {recorded:true,seconds:0};
     if(method==='getEducationalVideos'&&role==='student')return [];
@@ -27,6 +27,7 @@ export async function checkOwnerRolesBrowser(browser,base){
   for(const [choice,role,heading] of [['BijakLearn Team','admin','Overview & usage'],['Parent sign-in','parent','Child reports'],['Student sign-in','student','Your learning profile']]){
    await page.getByRole('button',{name:choice,exact:true}).click();await page.getByRole('button',{name:'Use my Google account',exact:true}).click();
    await page.getByRole('heading',{name:heading,exact:true}).waitFor();
+   if(role==='parent')await page.getByText('No tests yet',{exact:true}).waitFor();
    if(role==='student'){
     assert.equal(await page.locator('.portal-shell').count(),0);
     assert.equal(await page.locator('.app').evaluate(el=>getComputedStyle(el).display),'grid','learner desktop sidebar theme');
