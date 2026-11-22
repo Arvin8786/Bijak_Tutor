@@ -33,9 +33,11 @@ function importFullJuniorCurriculum_(){
     }
     const write=(name,rows)=>{
       const sheet=sheet_(name),columns=TABLES[name];
+      if(!rows.length)return;
+      prepareTextColumns_(sheet,name,columns);
       for(let i=0;i<rows.length;i+=100){
         const block=rows.slice(i,i+100);
-        sheet.getRange(sheet.getLastRow()+1,1,block.length,columns.length).setValues(block.map(row=>columns.map(k=>cell_(row[k]))));
+        sheet.getRange(sheet.getLastRow()+1,1,block.length,columns.length).setValues(block.map(row=>columns.map(k=>sheetCell_(name,k,row[k]))));
       }
     };
     write('Lessons',pendingLessons);addedLessons=pendingLessons.length;

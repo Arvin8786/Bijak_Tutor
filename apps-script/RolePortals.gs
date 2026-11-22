@@ -34,9 +34,10 @@ function ownerRoleIdentity_(verified,role,childId,createLearner){
  return {...user,familySub:verified.sub,studentChildId:String(child.childId)};
 }
 function ensureOwnerLearner_(user){
+ upsertParent_(user);
  const lock=LockService.getScriptLock();lock.waitLock(10000);
  try{
-  upsertParent_(user);
+  RPC_ROWS_?.clear();
   const links=latestStudentLinks_().filter(l=>l.email===user.email.toLowerCase());
   if(links.some(l=>String(l.parentSub)!==user.sub||(l.googleSub&&String(l.googleSub)!==user.sub)))throw Error('[STUDENT_REVOKED] Resolve the conflicting owner learner link in the BijakLearn Team console.');
   if(links.length)return;
@@ -153,7 +154,7 @@ function recordPaymentReview(token,details){
 /** Explicit RPC allowlist: never dispatch a client-supplied global function name. */
 function portalRequest(method,args){
  if(typeof method!=='string'||!Array.isArray(args)||args.length>8||JSON.stringify(args).length>3000000)throw Error('Invalid account request');
- const operations={getEducationalVideos,setEducationalVideos,updateChildAccount,updateChildDetails,updateParentDetails,requestChildEmailCorrection,removeChildLink,setDiscountEnabled,uploadPaymentQr,getFamilyCommerce,linkParentChild,getCommerceAdministration,setCommerceSettings,saveDiscountCampaign,createFamilyOrder,submitOrderProof,listFamilyOrders,reviewFamilyOrder,getPrivateUpload,recordCommissionPayout,getPortalBootstrap,getParentDashboard,submitParentEnrolment,listEnrolments,reviewEnrolment,submitParentFeedback,listParentFeedback,replyParentFeedback,recordStudentUsage,getAdministrationOverview,setModulePolicy,recordPaymentReview,listAccountAccess,setAccountAccess,listStudentAccounts,listStudentProfiles,setStudentAccount,setMembership,listKasihApplications,getKasihDocument,reviewKasihApplication,submitKasihApplication,getKasihApplication,addChild,getLesson,submitAttempt,getParentReport,setParentPin,getGrowthModule,checkGrowthAnswer,authorizeModule,askTutor};
+ const operations={getBootstrap,getStudentBootstrap,getEducationalVideos,setEducationalVideos,updateChildAccount,updateChildDetails,updateParentDetails,requestChildEmailCorrection,removeChildLink,setDiscountEnabled,uploadPaymentQr,getFamilyCommerce,linkParentChild,getCommerceAdministration,setCommerceSettings,saveDiscountCampaign,createFamilyOrder,submitOrderProof,listFamilyOrders,reviewFamilyOrder,getPrivateUpload,recordCommissionPayout,getPortalBootstrap,getParentDashboard,submitParentEnrolment,listEnrolments,reviewEnrolment,submitParentFeedback,listParentFeedback,replyParentFeedback,recordStudentUsage,getAdministrationOverview,setModulePolicy,recordPaymentReview,listAccountAccess,setAccountAccess,listStudentAccounts,listStudentProfiles,setStudentAccount,setMembership,listKasihApplications,getKasihDocument,reviewKasihApplication,submitKasihApplication,getKasihApplication,addChild,getLesson,submitAttempt,getParentReport,setParentPin,getGrowthModule,checkGrowthAnswer,authorizeModule,askTutor};
  if(!Object.prototype.hasOwnProperty.call(operations,method))throw Error('Unsupported account request');
  RPC_ROWS_=new Map();RPC_DATABASE_=null;
  try{return operations[method].apply(null,args)}finally{SpreadsheetApp.flush();RPC_ROWS_=null;RPC_DATABASE_=null}

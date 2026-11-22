@@ -6,8 +6,8 @@
 function getGrowthModule(token,moduleId){
  return withAuth_(token,user=>{
   const id=String(moduleId||'').trim().slice(0,70);
-  requireModule_(user,id);
   if(!/^(junior|adult)-(ai|hobby)$/.test(id))throw Error('Unknown learning module');
+  requireModule_(user,id);
   const module=rows_('ModuleCatalog').find(row=>String(row.moduleId)===id);
   if(!module)throw Error('This learning module is not available yet');
   if(String(module.visibility)==='HIDDEN')throw Error('Module is not published');
@@ -50,7 +50,8 @@ function checkGrowthAnswer(token,lessonId,answerIndex){
   if(!['PUBLIC_PREVIEW','PRIVATE'].includes(String(lesson.visibility))||(String(lesson.visibility)==='PRIVATE'&&!access_(user).active))throw Error('Activity unavailable');
   if((tier!=='FREE'||String(lesson.visibility)==='PRIVATE')&&
      (String(lesson.contentStatus)!=='TEACHER_APPROVED'||String(lesson.reviewStatus)!=='APPROVED'))throw Error('Activity is awaiting educational review');
-  const quiz=JSON.parse(String(lesson.questionJson||'null'));
+  let quiz=null;
+  try{quiz=JSON.parse(String(lesson.questionJson||'null'))}catch(error){}
   if(!quiz||!Array.isArray(quiz.options)||answer>=quiz.options.length)throw Error('Invalid activity');
   const cache=CacheService.getScriptCache();
   const prefix='growth-'+Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,user.sub)).slice(0,20);
