@@ -136,7 +136,7 @@ function GoogleLogin({onToken,notice}){
   <section className="signin-intro">
    <Brand subtitle="A world of little discoveries"/>
    <h1>Little steps.<br/><span>Wonderful possibilities.</span></h1>
-   <p>A happy place to discover, practise and grow. Every learner has a bright story waiting to unfold.</p><div className="signin-discoveries" aria-hidden="true"><span>✦ Curious minds</span><span>↗ Everyday progress</span><span>♡ Growing together</span></div>
+   <p>A happy place to discover, practise and grow. Every learner has a bright story waiting to unfold.</p><div className="book-abacus" aria-hidden="true"><span><i/></span><span><i/></span><span><i/></span></div>
    <span className="signin-kicker">Preschool · Primary years 1–6</span>
   </section>
   <section className="signin-form">
