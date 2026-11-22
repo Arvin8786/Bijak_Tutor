@@ -56,23 +56,29 @@ function getFamilyCommerce(token){
 function linkParentChild(token,details){
  const user=requirePortalParent_(token);details=details||{};
  const email=String(details.studentEmail||'').trim().toLowerCase(),name=String(details.name||'').trim(),year=Number(details.year);
- if(!/^\S+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254||email===user.email.toLowerCase()||!name||name.length>40||!Number.isInteger(year)||year<0||year>6||details.consent!==true)throw Error('Provide a separate student Google email, nickname, school year and guardian consent');
+ const school=['SK','SJKC','SJKT'].includes(details.school)?details.school:'SK';
+ const language=['ms','en','zh','ta'].includes(details.language)?details.language:'ms';
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254||email===user.email.toLowerCase()||!name||name.length>40||!Number.isInteger(year)||details.year==null||details.year===''||year<0||year>6||details.consent!==true)throw Error('Provide a separate student Google email, nickname, school year and guardian consent');
  const lock=LockService.getScriptLock();lock.waitLock(10000);
  try{
   const requestId=String(details.requestId||Utilities.getUuid());if(!/^[a-f0-9-]{36}$/.test(requestId))throw Error('Invalid child-link request');
   const existing=rows_('Enrolments').find(r=>String(r.requestId)===requestId);
   if(existing&&(String(existing.parentSub)!==user.sub||String(existing.studentEmail).toLowerCase()!==email||String(existing.nickname)!==name))throw Error('Child-link request conflict');
-  if(existing?.status==='APPROVED')return {id:requestId,childId:String(existing.childId),status:'APPROVED'};
+  const linked=latestStudentLinks_().find(l=>String(l.email).trim().toLowerCase()===email);
+  if(existing?.status==='APPROVED'&&linked?.status==='ACTIVE'&&String(linked.childId)===String(existing.childId)&&String(linked.parentSub)===user.sub&&activeFamilyChildren_(user.sub).some(child=>String(child.childId)===String(existing.childId))){
+   return {id:requestId,childId:String(existing.childId),status:'APPROVED'};
+  }
   if(existing&&existing.status!=='LINKING')throw Error('Only an administrator can change this link');
-  const linked=latestStudentLinks_().find(l=>String(l.email).toLowerCase()===email);
-  if(rows_('Parents').some(p=>String(p.email).toLowerCase()===email)||adminEmail_()===email||linked&&(!existing||String(linked.childId)!==String(existing.childId)||String(linked.parentSub)!==user.sub)||rows_('Enrolments').some(r=>String(r.studentEmail).toLowerCase()===email&&r.status==='PENDING'))throw Error('This account already has a role or link. Only the administrator can change it.');
+  const hasParentAccess=Array.from(latestAccountEvents_().values()).some(event=>event.status==='ACTIVE'&&String(event.email).trim().toLowerCase()===email);
+  const hasReservedEnrolment=rows_('Enrolments').some(r=>String(r.requestId)!==requestId&&String(r.studentEmail).toLowerCase()===email&&['PENDING','LINKING','APPROVED'].includes(r.status));
+  if(rows_('Parents').some(p=>String(p.email).toLowerCase()===email)||adminEmail_()===email||linked&&(linked.status!=='ACTIVE'||!existing||String(linked.childId)!==String(existing.childId)||String(linked.parentSub)!==user.sub)||hasParentAccess||hasReservedEnrolment)throw Error('This account already has a role or link. Only the administrator can change it.');
   if(!existing&&activeFamilyChildren_(user.sub).length>=MAX_FAMILY_CHILDREN_)throw Error('This family has reached the learner limit. Contact the administrator.');
   const childId=existing?String(existing.childId):Utilities.getUuid(),now=new Date().toISOString();
-  if(!existing)append_('Enrolments',{requestId,parentSub:user.sub,parentEmail:user.email,studentEmail:email,nickname:name,year,consentAt:now,status:'LINKING',childId,createdAt:now,reviewedBy:'VERIFIED_PARENT_GOOGLE_ACCOUNT'});
+  if(!existing)append_('Enrolments',{requestId,parentSub:user.sub,parentEmail:user.email,studentEmail:email,nickname:name,year,school,language,consentAt:now,status:'LINKING',childId,createdAt:now,reviewedBy:'VERIFIED_PARENT_GOOGLE_ACCOUNT'});
   const child=rows_('Children').find(c=>String(c.childId)===childId);if(child&&String(child.parentSub)!==user.sub)throw Error('Child profile ownership conflict');
-  if(!child)append_('Children',{childId,parentSub:user.sub,nickname:name,year,school:['SK','SJKC','SJKT'].includes(details.school)?details.school:'SK',language:['ms','en','zh','ta'].includes(details.language)?details.language:'ms',createdAt:now,status:'ACTIVE'});
+  if(!child)append_('Children',{childId,parentSub:user.sub,nickname:name,year:existing?.year??year,school:existing?.school||school,language:existing?.language||language,createdAt:now,status:'ACTIVE'});
   if(!linked)append_('StudentAccounts',{studentKey:'email:'+email,email,googleSub:'',childId,parentSub:user.sub,status:'ACTIVE',linkedAt:now,linkedBy:accountKey_(user.sub)});
-  update_('Enrolments','requestId',requestId,{reviewedAt:now,status:'APPROVED'});
+  update_('Enrolments','requestId',requestId,{school:existing?.school||school,language:existing?.language||language,reviewedAt:now,status:'APPROVED'});
   append_('Audit',{timestamp:now,actor:accountKey_(user.sub),action:'PARENT_LINKED_CHILD',reference:childId});
   return {id:requestId,childId,status:'APPROVED'};
  }finally{lock.releaseLock()}

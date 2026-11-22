@@ -126,7 +126,7 @@ function GoogleLogin({onToken,notice}){
     clearInterval(timer);
     try{
      window.google.accounts.id.initialize({client_id:id,callback:res=>onToken(res.credential,modeRef.current),ux_mode:'popup'});
-     window.google.accounts.id.renderButton(document.getElementById('google-signin'),{theme:'outline',size:'large',shape:'rectangular',text:'signin_with',width:260});
+     window.google.accounts.id.renderButton(document.getElementById('google-signin'),{theme:'outline',size:'medium',shape:'rectangular',text:'signin_with',width:260});
     }catch{setIssue('Google sign-in could not be initialized. Please try again.')}
    }else if(++tries>80){clearInterval(timer);setIssue('Google sign-in could not load on this browser. Please reload to try again.')}
   },250);

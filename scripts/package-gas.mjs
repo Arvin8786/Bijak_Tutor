@@ -25,7 +25,7 @@ fs.writeFileSync('release/CurriculumData.gs',`const BIJAK_CURRICULUM_BUNDLE = ${
 
 fs.writeFileSync('release/AnswerMarking.gs',fs.readFileSync('src/answerMarking.js','utf8').replaceAll('export ','').replace(/\b(markPractice|normalizedAnswer|numericValue)\b/g,'$1_'));
 
-for(const name of ['TierAccess','PremiumKasih','StudentAccess'])fs.copyFileSync('apps-script/'+name+'.gs','release/'+name+'.gs');
+for(const name of ['TierAccess','PremiumKasih','StudentAccess','AiGateway','VideoLibrary'])fs.copyFileSync('apps-script/'+name+'.gs','release/'+name+'.gs');
 fs.writeFileSync('release/ModuleData.gs','const BIJAK_APP_MODULES = '+JSON.stringify(APP_MODULES)+';\nconst BIJAK_GROWTH_TRACKS = '+JSON.stringify(GROWTH_TRACKS)+';\n');
 fs.writeFileSync('release/ModuleAccess.csv',Object.keys(APP_MODULES[0]).join(',')+'\n'+APP_MODULES.map(m=>Object.values(m).map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n')+'\n');
 
@@ -33,6 +33,7 @@ fs.writeFileSync('release/ModuleAccess.csv',Object.keys(APP_MODULES[0]).join(','
 for(const name of ['RolePortals.gs','Transport.html','EducationalVideos.gs'])fs.copyFileSync('apps-script/'+name,'release/'+name);
 
 fs.copyFileSync('apps-script/Commerce.gs','release/Commerce.gs');
+fs.writeFileSync('release/ArithmeticCheck.gs',fs.readFileSync('src/arithmetic.js','utf8').replaceAll('export ','').replace(/\b(arithmeticExpression|calculateExpression)\b/g,'$1_'));
 
 // Complete Sheet-bound maintenance source, with a separate least-privilege manifest.
 const sheetDir='release/sheet-bound';fs.mkdirSync(sheetDir,{recursive:true});

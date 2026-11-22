@@ -45,3 +45,20 @@ test('retrying the same parent link request is idempotent and does not consume a
  const {api,tables}=setup(),details={requestId:'12345678-1234-4000-8000-123456789012',name:'Child',studentEmail:'unique@test.invalid',year:1,consent:true};
  const a=api.linkParentChild('parent',details),b=api.linkParentChild('parent',details);assert.equal(a.childId,b.childId);assert.equal(tables.Children.length,1);assert.equal(tables.StudentAccounts.length,1);assert.throws(()=>api.linkParentChild('other',details),/conflict/);
 });
+
+
+test('parent linking keeps enrolment details and rejects competing reservations or revoked links',()=>{
+ const {api,tables}=setup();
+ const details={requestId:'12345678-1234-4000-8000-123456789012',name:'Child',studentEmail:' Student@Test.Invalid ',year:2,school:'SJKT',language:'ta',consent:true};
+ assert.throws(()=>api.linkParentChild('parent',{...details,studentEmail:'one@two@test.invalid'}),/consent/);
+ tables.Enrolments=[{requestId:'earlier',studentEmail:'student@test.invalid',status:'LINKING',parentSub:'q'}];
+ assert.throws(()=>api.linkParentChild('parent',details),/already/);
+ tables.Enrolments=[];
+ const linked=api.linkParentChild('parent',details);
+ assert.equal(tables.Enrolments[0].parentEmail,'parent@test.invalid');
+ assert.equal(tables.Enrolments[0].school,'SJKT');
+ assert.equal(tables.Enrolments[0].language,'ta');
+ assert.equal(tables.Children[0].childId,linked.childId);
+ tables.StudentAccounts[0].status='REVOKED';
+ assert.throws(()=>api.linkParentChild('parent',details),/administrator/);
+});

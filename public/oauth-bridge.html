@@ -11,7 +11,7 @@ function initializeGoogle(){
   window.opener.postMessage({type:'bijak-google-credential',nonce,credential:result.credential},RETURN_ORIGIN);
   message.textContent='Sign-in sent securely. Return to BijakLearn.';
  }});
- google.accounts.id.renderButton(document.getElementById('google-signin'),{theme:'outline',size:'large',shape:'pill',width:280});
+ google.accounts.id.renderButton(document.getElementById('google-signin'),{theme:'outline',size:'medium',shape:'pill',width:280});
  message.textContent='Choose your Google account. Access is checked by the BijakLearn administrator.';
 }
 </script><script src="https://accounts.google.com/gsi/client" async defer onload="initializeGoogle()" onerror="document.getElementById('message').textContent='Google sign-in could not load. Please close this window and try again.'"></script></body></html>
