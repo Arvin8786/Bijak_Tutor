@@ -24,18 +24,23 @@ export async function checkOwnerRolesBrowser(browser,base){
   await page.goto(base);const welcome=page.locator('.welcome-gate');if(await welcome.count()){await welcome.getByRole('button',{name:'English',exact:true}).click();await welcome.getByRole('button',{name:'Continue',exact:true}).click()}await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   const signInLayout=await page.locator('.signin-tabs').evaluate(el=>getComputedStyle(el).display);
   assert.equal(signInLayout,'grid','the published sign-in theme must load');
+  const background=selector=>page.locator(selector).evaluate(el=>getComputedStyle(el).backgroundColor);
+  assert.equal(await background('.signin-form'),'rgb(255, 253, 247)','paper sign-in form');
+  assert.equal(await page.locator('.book-abacus span').count(),3);
   for(const [choice,role,heading] of [['BijakLearn Team','admin','Overview & usage'],['Parent sign-in','parent','Child reports'],['Student sign-in','student','Your learning profile']]){
    await page.getByRole('button',{name:choice,exact:true}).click();await page.getByRole('button',{name:'Use my Google account',exact:true}).click();
    await page.getByRole('heading',{name:heading,exact:true}).waitFor();
    if(role==='parent')await page.getByText('No tests yet',{exact:true}).waitFor();
    if(role==='student'){
     assert.equal(await page.locator('.portal-shell').count(),0);
+    assert.equal(await background('.app .hero'),'rgb(22, 78, 70)','learner book cover');
     assert.equal(await page.locator('.app').evaluate(el=>getComputedStyle(el).display),'grid','learner desktop sidebar theme');
     await page.locator('nav.nav').getByRole('button',{name:'Science Lab',exact:true}).click();await page.locator('.science-lab').waitFor();
     await page.locator('nav.nav').getByRole('button',{name:'Learning Videos',exact:true}).click();await page.getByText('No videos have been published yet.',{exact:true}).waitFor();
     assert.equal(await page.getByRole('button',{name:'Publish video',exact:true}).count(),0);
    }else {
     assert.equal(await page.locator('nav.nav').count(),0);
+    assert.equal(await background('.portal-welcome'),role==='admin'?'rgb(89, 66, 105)':'rgb(24, 87, 78)','role-specific cover');
     assert.match(await page.locator('.portal-header').evaluate(el=>getComputedStyle(el).backgroundImage),/gradient/,'family and team header theme');
    }
    await page.getByRole('button',{name:'Sign out',exact:true}).click();await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
