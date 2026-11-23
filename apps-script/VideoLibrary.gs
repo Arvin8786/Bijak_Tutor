@@ -69,3 +69,31 @@ function removeVideo(token,videoId){
   return {id,status:'REMOVED'};
  }finally{lock.releaseLock()}
 }
+
+/** Editor-only, additive migration. Existing video IDs, including removed entries, stay authoritative. */
+function prepareLearningRelease_(){
+ const lock=LockService.getScriptLock();lock.waitLock(30000);
+ try{
+  const db=database_();
+  for(const name of ['LearningRewards','Orders','Videos']){
+   const sheet=db.getSheetByName(name)||db.insertSheet(name);
+   const width=sheet.getLastColumn(),headers=width?sheet.getRange(1,1,1,width).getValues()[0].map(String):[];
+   const missing=TABLES[name].filter(key=>!headers.includes(key));
+   if(missing.length){
+    if(width+missing.length>sheet.getMaxColumns())sheet.insertColumnsAfter(sheet.getMaxColumns(),width+missing.length-sheet.getMaxColumns());
+    sheet.getRange(1,width+1,1,missing.length).setValues([missing]);
+   }
+   if(!width)sheet.setFrozenRows(1);
+  }
+  const stored=rows_('Videos'),ids=new Set(stored.map(v=>String(v.youtubeId)));
+  const legacy=JSON.parse(props_().getProperty('EDUCATIONAL_VIDEOS')||'[]');
+  for(const entry of legacy){
+   const id=youtubeId_(entry.videoId);if(!id||ids.has(id))continue;
+   const title=String(entry.title||'Learning video');
+   append_('Videos',{videoId:Utilities.getUuid(),youtubeId:id,title,subject:entry.subject||(/habit/i.test(title)?'Self development':'General knowledge'),year:0,sequence:(ids.size+1)*10,status:'ACTIVE',addedAt:new Date().toISOString()});
+   ids.add(id);
+  }
+  SpreadsheetApp.flush();
+ }finally{lock.releaseLock()}
+ return seedModuleAccess_();
+}

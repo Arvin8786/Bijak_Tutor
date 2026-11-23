@@ -24,7 +24,7 @@ const document={mimeType:'application/pdf',data:Buffer.from('%PDF-1.7\nFictional
 const subscription=plan=>({googleSub:'family',plan,status:'ACTIVE',expiresAt:new Date(Date.now()+86400000).toISOString(),updatedAt:new Date().toISOString()});
 
 test('all learning routes map to unique seeded sheet modules',()=>{
- assert.equal(APP_MODULES.length,21);assert.equal(new Set(APP_MODULES.map(m=>m.moduleId)).size,21);
+ assert.equal(APP_MODULES.length,25);assert.equal(new Set(APP_MODULES.map(m=>m.moduleId)).size,25);
  assert.equal(moduleForPage('growth','adult','hobby'),'adult-hobby');
  assert.equal(moduleForPage('lesson'),'study-library');assert.equal(moduleForPage('pin'),'parent-reports');
  assert.equal(moduleForPage('dictionary'),'picture-dictionary');
@@ -123,7 +123,7 @@ test('partially persisted Kasih approval fails closed until application status i
 });
 test('module and growth imports are additive and preserve edited tier settings',()=>{
  const {api,tables}=backend();tables.ModuleAccess=[];
- assert.equal(api.seedModuleAccess_().added,21);tables.ModuleAccess[0].free=false;
+ assert.equal(api.seedModuleAccess_().added,25);tables.ModuleAccess[0].free=false;
  assert.equal(api.seedModuleAccess_().added,0);assert.equal(tables.ModuleAccess[0].free,false);
  assert.equal(api.importGrowthModules_().addedModules,4);assert.ok(tables.ModuleLessons.length>0);
  assert.equal(api.importGrowthModules_().addedLessons,0);
@@ -267,3 +267,14 @@ test('learner and section rules apply to each student and to lesson reads and at
  assert.equal(api.getStudentBootstrap(credential).lessons.length,0);
  assert.throws(()=>api.getLesson(credential,'child','upper'),/MODULE_DENIED/);
 });
+
+for(const module of APP_MODULES){
+ test('Sheet access rule applies individually to '+module.title,()=>{
+  const {api,tables,token}=backend();
+  const rule=tables.ModuleAccess.find(r=>r.moduleId===module.moduleId);
+  for(const enabled of [false,true]){
+   rule.enabled=enabled;rule.free=true;
+   assert.equal(api.authorizeModule(token('family'),module.moduleId).allowed,enabled);
+  }
+ });
+}

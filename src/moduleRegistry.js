@@ -18,6 +18,10 @@ export const APP_MODULES = [
  ['junior-hobby','Junior Creative Hobbies','growth',true,0],
  ['adult-hobby','Adult Creative Hobbies','growth',false,0],
  ['video-library','Learning Videos','videos',true,0],
+ ['language-studio','Language Studio','language-studio',true,0],
+ ['free-library','Free Library','free-library',true,0],
+ ['mock-exams','Year-end mock exams','mock-exams',true,0],
+ ['field-studies','Field Studies','field-studies',true,0],
  ['picture-dictionary','Picture Dictionary','dictionary',true,0],
  ['creative-projects','Creative Projects','creative-projects',true,0],
  ['parent-reports','Parent Learning Insights','parent',false,0]

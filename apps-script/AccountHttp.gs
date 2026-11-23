@@ -9,7 +9,7 @@ function doPost(event){
   if(request?.service!=='bijak-account-v1'||typeof request.method!=='string'||!Array.isArray(request.args))throw Error('Invalid account request');
   const {method,args}=request;
   let value;
-  if(method==='health'&&args.length===0)value={version:1};
+  if(method==='health'&&args.length===0)value={version:1,release:"sky-atlas-1"};
   else if(method==='passwordSignIn'&&args.length===1)value=passwordSignIn(args[0]);
   else if(method==='passwordSignOut'&&args.length===1)value=passwordSignOut(args[0]);
   else if(['getPasswordSettings','saveParentPassword','saveChildPassword'].includes(method)){

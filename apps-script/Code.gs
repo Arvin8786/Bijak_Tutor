@@ -5,9 +5,10 @@
 const TABLES = {
  TutorCache:['keyHash','answerJson','createdAt'],
  Videos:['videoId','youtubeId','title','description','subject','year','sequence','status','addedAt','addedBy','updatedAt'],
+ LearningRewards:['claimId','childId','parentSub','points','earnedAt','availableAt'],
  CommerceSettings:['key','value','updatedAt','updatedBy'],
  DiscountCampaigns:['campaignId','code','percent','startsAt','endsAt','maxUses','enabled','createdAt','createdBy'],
- Orders:['orderId','parentSub','kind','slots','listCents','discountCents','totalCents','discountId','referrerSub','commissionBps','commissionCents','status','createdAt','expiresAt','submittedAt','reference','proofId','reviewedAt','reviewedBy','note'],
+ Orders:['orderId','parentSub','kind','slots','listCents','discountCents','totalCents','discountId','referrerSub','commissionBps','commissionCents','status','createdAt','expiresAt','submittedAt','reference','proofId','reviewedAt','reviewedBy','note','rewardPoints'],
  Uploads:['uploadId','parentSub','purpose','recordId','fileId','mimeType','createdAt','removedAt'],
  Affiliates:['parentSub','code','name','email','createdAt'],
  Referrals:['referredSub','referrerSub','referrerName','referrerEmail','code','createdAt'],
@@ -39,7 +40,7 @@ const TABLES = {
 /** Columns that must stay exact text: Google IDs are 21 digits, answers may look like fractions/dates, references may look like numbers. */
 const TEXT_COLUMNS_ = {
  Parents:['googleSub','parentPinHash','pinSalt'],Subscriptions:['googleSub'],Payments:['googleSub','reference'],
- Orders:['parentSub','referrerSub','reference'],Referrals:['referredSub','referrerSub','code'],Affiliates:['parentSub','code'],
+ LearningRewards:['childId','parentSub'],Orders:['parentSub','referrerSub','reference'],Referrals:['referredSub','referrerSub','code'],Affiliates:['parentSub','code'],
  CommissionPayouts:['referrerSub','reference'],UsageEvents:['googleSub'],Enrolments:['parentSub'],ParentFeedback:['parentSub'],
  StudentAccounts:['googleSub','parentSub'],Children:['parentSub'],Attempts:['googleSub'],Scholarships:['googleSub'],
  Uploads:['parentSub'],DiscountCampaigns:['code'],Questions:['correctAnswer'],TutorCache:['keyHash'],Videos:['youtubeId']

@@ -55,9 +55,9 @@ test('Flashcards are based on actual authored lesson summaries',()=>{
  for(const card of cards)assert.ok(card.front&&card.back&&LESSONS.some(l=>l.id===card.id&&l.summary===card.back));
 });
 
-test('Mascot PWA branding shows primary uniformed boy and girl and welcome is wired',()=>{
+test('PWA icon matches the shared brand mark and welcome is wired',()=>{
  const icon=fs.readFileSync('public/icons/icon.svg','utf8');
- assert.match(icon,/<!-- boy -->/);assert.match(icon,/<!-- girl -->/);
+ assert.equal(icon,fs.readFileSync('public/icons/app-icon.svg','utf8'));assert.match(icon,/<path/);
  const main=fs.readFileSync('src/main.jsx','utf8');
  assert.match(main,/WelcomeGate/);assert.match(main,/MascotFriends/);
  assert.match(main,/PracticeArena/);

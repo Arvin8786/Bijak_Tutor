@@ -34,7 +34,7 @@ export default function VideoLibrary({request,language='en',years}){
   request('getVideoLibrary').catch(async failure=>{
    if(!/Unsupported account request/i.test(failure.message))throw failure;
    const legacy=await request('getEducationalVideos');
-   return legacy.map(video=>({id:video.videoId,youtubeId:video.videoId,title:video.title}));
+   return legacy.map(video=>({id:video.videoId,youtubeId:video.videoId,title:video.title,subject:/habit/i.test(video.title)?'Self development':(video.subject||'General knowledge')}));
   }).then(list=>{if(live)setVideos(Array.isArray(list)?list:[])}).catch(failure=>{if(live){setVideos([]);setError(failure?.message||'error')}});
   return()=>{live=false};
  },[request]);
@@ -46,7 +46,7 @@ export default function VideoLibrary({request,language='en',years}){
   <div className="video-hero"><span className="mini-label">🎬 {say(language,'videos').toUpperCase()}</span><h1>{say(language,'videosTitle')}</h1><p>{say(language,'videosIntro')}</p></div>
   {playing?<Player video={playing} language={language} onBack={()=>setCurrent(null)}/>:<>
    {videos===null&&<p role="status">{say(language,'videoLoading')}</p>}
-   {videos&&subjects.length>1&&<div className="video-filters" role="group" aria-label={say(language,'videosTitle')}><button type="button" className={!subject?'active':''} aria-pressed={!subject} onClick={()=>setSubject('')}>{say(language,'videoAll')}</button>{subjects.map(name=><button type="button" key={name} className={subject===name?'active':''} aria-pressed={subject===name} onClick={()=>setSubject(name)}>{name}</button>)}</div>}
+   {videos&&subjects.length>0&&<div className="video-filters" role="group" aria-label={say(language,'videosTitle')}><button type="button" className={!subject?'active':''} aria-pressed={!subject} onClick={()=>setSubject('')}>{say(language,'videoAll')}</button>{subjects.map(name=><button type="button" key={name} className={subject===name?'active':''} aria-pressed={subject===name} onClick={()=>setSubject(name)}>{name}</button>)}</div>}
    {videos&&!shown.length&&<p className="video-empty" role="status">{error==='signin'?say(language,'videosSignIn'):error||say(language,'videosEmpty')}</p>}
    <div className="video-grid">{shown.map(video=><button type="button" className="video-card" key={video.id} onClick={()=>setCurrent(video.id)}>
     <span className="video-thumb" aria-hidden="true">▶</span>

@@ -1,3 +1,6 @@
+import {StudyGlyph} from './Brand.jsx';
+import LearningBalloon from './LearningBalloon.jsx';
+import FieldStudies from './FieldStudies.jsx';
 import ReleaseUpdates from './ReleaseUpdates.jsx';
 import PictureDictionary from './PictureDictionary.jsx';
 import './learning-tools.css';
@@ -81,6 +84,7 @@ import LearningEditionList from './LearningEditionList.jsx';
 import {JUNIOR,learningEditionForYear,inLearningEdition} from './learningEditions.js';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
 
+import './sky-atlas.css';
 function LessonSearch({query, onChange, count}) {
  return <div className="lesson-search">
   <label>{tx("Find a lesson")} <input type="search" placeholder={tx("Search lesson titles or topics")} value={query} onChange={event=>onChange(event.target.value)}/></label>
@@ -235,13 +239,13 @@ function PwaControls({language='ms'}){
 }
 function HomeToolCard({icon,label,description,onOpen}){
  return <button type="button" className="home-tool-card" onClick={onOpen}>
-  <span className="home-tool-icon" aria-hidden="true">{icon}</span>
+  <span className="home-tool-icon" aria-hidden="true"><StudyGlyph icon={icon}/></span>
   <strong>{label}</strong>
   {description&&<small>{description}</small>}
  </button>;
 }
 
-function NavButton({icon,label,active,onClick}){return <button type="button" className={active?'active':''} aria-current={active?'page':undefined} onClick={onClick}><span aria-hidden="true">{icon}</span> {label}</button>}
+function NavButton({icon,label,active,onClick}){return <button type="button" className={active?'active':''} aria-current={active?'page':undefined} onClick={onClick}><span aria-hidden="true"><StudyGlyph icon={icon}/></span> {label}</button>}
 function App(){
  const [uiLanguage,setUiLanguage]=useState(()=>readLocale()||'ms');
  setUiLang(uiLanguage);
@@ -554,7 +558,8 @@ function App(){
    <NavButton icon="🗺️" label={say(uiLanguage,'map')} active={page==='map'} onClick={()=>setPage('map')}/>
    <NavButton icon="🤖" label={say(uiLanguage,'tutor')} active={page==='tutor'} onClick={()=>setPage('tutor')}/>
    <NavButton icon="🔬" label={say(uiLanguage,'science')} active={page==='science-lab'} onClick={()=>setPage('science-lab')}/>
-   <NavButton icon="📚" label="Free Library" active={page==='free-library'} onClick={()=>setPage('free-library')}/>
+   <NavButton icon="🧭" label="Field Studies" active={page==='field-studies'} onClick={()=>setPage('field-studies')}/>
+   <NavButton icon="📚" label="Free Library"  active={page==='free-library'} onClick={()=>setPage('free-library')}/>
    <NavButton icon="🗣️" label="Learn a Language and Skill" active={page==='language-studio'} onClick={()=>setPage('language-studio')}/>
    <NavButton icon="📖" label="Picture Dictionary" active={page==='dictionary'} onClick={()=>setPage('dictionary')}/>
    <NavButton icon="📺" label="Learning Videos" active={page==='videos'} onClick={()=>setPage('videos')}/>
@@ -577,7 +582,8 @@ function App(){
    <NavButton icon="💚" label={say(uiLanguage,'membership')} active={page==='membership'} onClick={()=>setPage('membership')}/>
   </div>
  </nav>
- <main id="main-content" ref={mainRef} tabIndex={-1}>
+ {(boot?.role==='STUDENT'||!isLive)&&!['mock-exams','free-library','videos'].includes(page)&&<LearningBalloon key={child?.id||'demo'} request={isLive?authRequest:null}/>}
+ <main id="main-content"  ref={mainRef} tabIndex={-1}>
  {page!=='home'&&<nav className="page-controls" aria-label={say(uiLanguage,'pageNavigation')}>
   <button type="button" onClick={goBack}><span aria-hidden="true">←</span> {say(uiLanguage,'back')}</button>
   <button type="button" onClick={()=>setPage('home')}><span aria-hidden="true">🏠</span> {say(uiLanguage,'goHome')}</button>
@@ -597,6 +603,7 @@ function App(){
  {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={activeLessons} initialYear={browseYear} years={primaryYears} school={browseSchool} onOpenLesson={openLesson}/>}
  {page==='science-lab'&&<ScienceLab language={uiLanguage}/>}
  {page==='language-studio'&&<LanguageStudio openSkill={()=>setPage('creative-projects')}/>}
+ {page==='field-studies'&&<FieldStudies/>}
  {page==='free-library'&&<FreeLibrary openWordTiles={()=>setPage('wordgame')} request={isLive&&boot?.role==='STUDENT'?authRequest:undefined}/>}
  {page==='arcade'&&<ActivityArcade edition={edition}/>}
  {page==='wordgame'&&<WordTilesGame/>}

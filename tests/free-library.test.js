@@ -23,7 +23,7 @@ test('two linked learners can complete a private match while others are refused'
  const store=new Map();
  const source=readFileSync(new URL('../apps-script/FriendMatches.gs',import.meta.url),'utf8');
  const match=runInNewContext(source+'\nfriendMatch',{
-  portalIdentity_:studentChildId=>({role:studentChildId==='parent'?'PARENT':'STUDENT',studentChildId}),
+  requireModule_(){},portalIdentity_:studentChildId=>({role:studentChildId==='parent'?'PARENT':'STUDENT',studentChildId}),
   requireChild_:(_,childId)=>({childId}),
   CacheService:{getScriptCache:()=>({get:key=>store.get(key),put:(key,value)=>store.set(key,value)})},
   LockService:{getScriptLock:()=>({waitLock(){},releaseLock(){}})},

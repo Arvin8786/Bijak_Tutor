@@ -1,0 +1,38 @@
+/* Sky atlas: midnight ink, warm paper, terracotta and sea glass. */
+body:has(.app),body:has(.portal-shell),body:has(.signin-page){
+ background-color:#f7f4ef;background-image:radial-gradient(ellipse at 92% 4%,#f9dac8 0,transparent 32rem),radial-gradient(ellipse at 3% 50%,#d7e8e1 0,transparent 38rem),radial-gradient(#695c8924 .8px,transparent .9px);background-size:auto,auto,16px 16px;color:#252940}
+.signin-page .signin-layout{gap:clamp(1.2rem,4vw,4rem);align-items:stretch}
+.signin-page .signin-form{background:#fffdf8;border:1px solid #d9d1cb;border-radius:28px;box-shadow:0 20px 55px -36px #513047;padding:clamp(1.25rem,4vw,3rem)}
+.signin-page .signin-programmes,body .app .hero,.portal-shell .portal-welcome,body .app .free-library>header{
+ color:#fff5df;background:radial-gradient(circle at 88% 16%,#ffca88 0 18px,transparent 19px),radial-gradient(ellipse at 95% 132%,#548c89 0 29%,transparent 29.3%),radial-gradient(ellipse at 71% 140%,#4d747f 0 36%,transparent 36.3%),linear-gradient(120deg,#222a50 0%,#414074 65%,#785582 100%);border:0;border-radius:26px}
+.signin-page .signin-programme-copy{background:transparent;position:relative}
+.signin-page .signin-programme-copy::before{content:"";display:block;width:82px;height:85px;background:url('../public/icons/app-icon.svg') center/contain no-repeat;border:none;transform:rotate(-6deg);margin:0 0 1.1rem}
+body .app .hero h1,.portal-shell .portal-welcome h1,body .app .free-library>header h1,.portal-shell .portal-welcome p{color:#fff5df}
+body .app .hero p{color:#f0e9fb}
+.signin-page .signin-tabs button[aria-pressed=true],.signin-page .signin-password button.primary,.app button.primary,.portal-shell button.primary{background:#453a79;color:#fff;border-color:#453a79}
+body .app .home-tool-card,.portal-shell .panel,.app .field-studies,.app .free-library>section{background:#fffdf9;border:1px solid #dcd5cd;border-radius:20px;box-shadow:0 8px 24px -20px #382f5e}
+body .app .home-tool-grid{gap:1rem}
+.app .nav,.portal-shell .portal-nav{background:#f8f6fc;border-color:#dbd2e3}
+.app .nav button.active,.portal-nav button[aria-current=page]{background:#e4dff2;color:#362d67}
+.app .home-tool-card:hover,.free-grid>button:hover{border-color:#856997;box-shadow:0 9px 22px -18px #4a2a63}
+.app .free-grid>button:has(.book-cover){padding:0 0 1rem;overflow:hidden;background:#fffdf8}
+.free-grid .book-cover{display:grid;align-items:end;justify-content:end;height:76px;padding:.5rem 1rem;color:#fff0cb;font-size:2.5rem;background:repeating-radial-gradient(ellipse at 10% 120%,transparent 0 15px,#ffffff16 16px 18px),linear-gradient(118deg,#513966,#b36557);margin:0 0 .75rem}
+.free-grid>button:nth-child(3n+2) .book-cover{background-color:#3a6570;background-blend-mode:luminosity}
+.free-grid>button:nth-child(3n) .book-cover{background-color:#4b855c;background-blend-mode:luminosity}
+.free-grid>button:has(.book-cover) :is(strong,small){padding-inline:1rem}
+.field-studies nav,.field-studies article{display:flex;gap:.7rem;flex-wrap:wrap;margin-block:1rem}
+.field-studies article :is(h2,h3,p){flex-basis:100%;margin:.35rem 0}
+.balloon-dock{position:fixed;right:max(.8rem,env(safe-area-inset-right));bottom:max(1rem,env(safe-area-inset-bottom));z-index:12;max-width:min(19rem,85vw);display:grid;justify-items:end;pointer-events:none}
+.balloon-dock button,.balloon-pop{pointer-events:auto}
+.app .learning-balloon{position:relative;width:58px;height:67px;border-radius:52% 52% 48% 48%;border:2px solid #fff2db;background:radial-gradient(ellipse at 30% 23%,#ffe1ae 0 8%,transparent 10%),linear-gradient(105deg,#ffad77,#d45c56 56%,#a13b65);box-shadow:inset -6px -6px 10px #88275236,0 7px 18px #4127423a;color:white;font-size:22px;margin:0 8px 24px}
+.learning-balloon::after{content:"";position:absolute;top:100%;left:46%;height:23px;width:8px;border-left:2px solid #885678;border-radius:45%}
+html[data-motion=on] .learning-balloon{animation:atlas-float 3s ease-in-out infinite alternate}
+@keyframes atlas-float{from{transform:translateY(4px) rotate(-5deg)}to{transform:translateY(-8px) rotate(6deg)}}
+.balloon-pop{background:#29263e;color:white;border-radius:16px;box-shadow:0 10px 25px #34244030;padding:.75rem;display:flex;align-items:center;gap:.6rem}
+.balloon-pop button{background:#fff4dc;color:#24263d;border:0;border-radius:50%;min-width:36px;height:36px}
+.reward-statement strong{color:#48377c}
+.subscription-dialog{border:1px solid #cfc6dc;border-radius:1.3rem;max-width:min(28rem,90vw);padding:1.5rem}
+.subscription-dialog::backdrop{background:#22243e80}
+@media(max-width:640px){.signin-page .signin-form{padding:1.2rem}.signin-page .signin-programme-copy::before{width:46px;height:46px;margin:0 0 .5rem}.portal-shell .portal-welcome{padding:1rem}}
+@media(prefers-reduced-motion:reduce){.learning-balloon{animation:none!important}}
+.signin-page .signin-programme-copy::before{position:relative;inset:auto;z-index:0;box-shadow:none;border-radius:20%}

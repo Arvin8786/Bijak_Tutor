@@ -54,6 +54,11 @@ export const games = [
  ['logic','Clue Detective','Logic',sample([['I have four equal sides and four right angles. What am I?','Square','Triangle','Circle','Pentagon'],['Mia is taller than Kim. Kim is taller than Lee. Who is shortest?','Lee','Kim','Mia','All equal'],['A red key opens only a red box. A blue key opens only a blue box. Which key opens the blue box?','Blue','Red','Green','Yellow']])],
  ['memory','Memory Trail','Logic',()=>({type:'memory',prompt:'Study the trail for three seconds, then rebuild it.',answer:shuffle(['★','●','▲','◆'])})],
  ['grid','Robot Grid','Logic'],
+ ['perimeter','Fence Planner','Maths',math((a,b)=>[`A rectangle is ${a} m by ${b} m. How many metres of fence go all the way round?`,2*(a+b)])],
+ ['elapsed','Bus Timetable','Maths',math((a,b)=>[`Your bus leaves at 9:0${a} and arrives at 9:${20+b}. How many minutes is the trip?`,20+b-a])],
+ ['coordinates','Grid Address','Logic',sample([['From (2, 3), move two spaces right. Where are you?','(4, 3)','(2, 5)','(0, 3)'],['From (1, 1), move three spaces up. Where are you?','(1, 4)','(4, 1)','(3, 3)']])],
+ ['materials','Materials Workshop','Science',sample([['Which property helps a raincoat work?','Water resistance','Transparency','Magnetism'],['Why choose glass for a window?','It lets light pass','It bends easily','It absorbs rain'],['Which property helps a sponge dry a spill?','Absorbency','Hardness','Shininess']])],
+ ['prefix','Prefix Workshop','Words',sample([['What does rebuild mean?','Build again','Stop building','Build beneath'],['Which word means not fair?','Unfair','Refair','Prefair'],['Which word means before school?','Preschool','Reschool','Unschool']])],
  ['odd','Odd One Out','Logic',sample([['Which one is not a fruit?','Carrot','Mango','Banana','Apple'],['Which one does not have wings?','Frog','Bee','Eagle','Butterfly'],['Which number is odd?','7','2','4','8']])]
 ];
 

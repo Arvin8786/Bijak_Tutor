@@ -9,6 +9,7 @@ function friendMatch(token,action,payload){
  const user=portalIdentity_(token);
  if(user.role!=='STUDENT'||!user.studentChildId)throw Error('A linked student account is required.');
  const child=requireChild_(user,user.studentChildId);
+ requireModule_(user,'free-library');
  const player=String(child.childId);
  if(!['create','join','status','submit'].includes(action))throw Error('Unknown match action.');
  const id=String(payload?.id||'').trim().toUpperCase();

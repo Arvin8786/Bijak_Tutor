@@ -4,10 +4,19 @@ import lantern from './books/lantern.epub?url&inline';
 import seed from './books/seed.epub?url&inline';
 import shop from './books/shop.epub?url&inline';
 
+import kite from './books/kite.epub?url&inline';
+import librarybell from './books/librarybell.epub?url&inline';
+import tidestory from './books/tidestory.epub?url&inline';
+import seedpost from './books/seedpost.epub?url&inline';
+
 const books=[
  ['Nila and the Rain Gauge','Weather and measurement',rain],
  ['The Lantern Trail','Maps and directions',lantern],
  ['The Seed in the Cup','Growing and testing',seed],
+ ['The Kite with Two Tails','Story · design and teamwork',kite],
+ ['The Bell Beneath the Books','Story · listening and problem solving',librarybell],
+ ['Where the Shore Goes','General knowledge · tides and coasts',tidestory],
+ ['The Travelling Seed Atlas','General knowledge · plants and habitats',seedpost],
  ['The Ten-Ringgit Shop','Money and choices',shop]
 ];
 
@@ -119,8 +128,8 @@ export default function FreeBooks(){
   setBook(null);
   opener.current?.focus({preventScroll:true});
  }
- return <section><h2>Free EPUB books</h2><p>Choose a book to read here. These BijakLearn short stories are available under CC0.</p>
-  <div className="free-grid">{books.map(item=><button type="button" key={item[0]} onClick={event=>{opener.current=event.currentTarget;setBook(item)}}><strong>{item[0]}</strong><small>{item[1]}</small></button>)}</div>
+ return <section><h2>Free EPUB books</h2><p>Choose a book to read here. Explore original stories and nature guides.</p>
+  <div className="free-grid">{books.map(item=><button type="button" key={item[0]} onClick={event=>{opener.current=event.currentTarget;setBook(item)}}><span className="book-cover" aria-hidden="true">{['☂','✧','❧','◇','♫','≈','❧','✦'][books.indexOf(item)]}</span><strong>{item[0]}</strong><small>{item[1]}</small></button>)}</div>
   {book&&<BookReader book={book} onBack={close}/>}
  </section>;
 }

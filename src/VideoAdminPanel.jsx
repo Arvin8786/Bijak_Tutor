@@ -33,7 +33,8 @@ export default function VideoAdminPanel({request}){
    <label>Title<input required maxLength={120} value={form.title} onChange={field('title')}/></label>
    <label>Short description (optional)<textarea maxLength={400} rows={2} value={form.description} onChange={field('description')}/></label>
    <div className="video-form-row">
-    <label>Subject (optional)<input maxLength={75} value={form.subject} onChange={field('subject')} placeholder="Matematik"/></label>
+    <label>Category<input list="video-categories" maxLength={75} value={form.subject} onChange={field('subject')} placeholder="e.g. Self development"/></label>
+    <datalist id="video-categories">{[...new Set(["Self development","Science","Languages","Mathematics",...(videos||[]).map(v=>v.subject).filter(Boolean)])].map(c=><option key={c} value={c}/>)}</datalist>
     <label>Year<select value={form.year} onChange={field('year')}><option value="0">All years</option>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>Year {y}</option>)}</select></label>
     <label>Order<input type="number" min="0" max="9999" value={form.sequence} onChange={field('sequence')} placeholder="auto"/></label>
     <label>Status<select value={form.status} onChange={field('status')}><option value="ACTIVE">Active (visible)</option><option value="HIDDEN">Hidden</option></select></label>
@@ -43,7 +44,7 @@ export default function VideoAdminPanel({request}){
   {error&&<p role="alert" className="video-error">{error}</p>}{notice&&<p role="status" className="video-notice">{notice}</p>}
   {videos===null&&<p role="status">Loading…</p>}
   {videos&&!videos.length&&<p>No videos yet. Add your first one above.</p>}
-  {videos&&videos.length>0&&<div className="video-table-wrap"><table className="video-table"><thead><tr><th>Order</th><th>Title</th><th>Subject</th><th>Year</th><th>Status</th><th>Actions</th></tr></thead><tbody>{videos.map(video=><tr key={video.id}>
+  {videos&&videos.length>0&&<div className="video-table-wrap"><table className="video-table"><thead><tr><th>Order</th><th>Title</th><th>Category</th><th>Year</th><th>Status</th><th>Actions</th></tr></thead><tbody>{videos.map(video=><tr key={video.id}>
    <td>{video.sequence}</td><td><strong>{video.title}</strong><br/><small>{video.youtubeId}</small></td><td>{video.subject||'—'}</td><td>{video.year||'All'}</td><td>{video.status==='ACTIVE'?'Active':'Hidden'}</td>
    <td><button type="button" disabled={busy} onClick={()=>edit(video)}>Edit</button> <button type="button" disabled={busy} onClick={()=>toggle(video)}>{video.status==='ACTIVE'?'Hide':'Show'}</button> <button type="button" disabled={busy} onClick={()=>remove(video)}>Remove</button></td></tr>)}</tbody></table></div>}
  </section>;

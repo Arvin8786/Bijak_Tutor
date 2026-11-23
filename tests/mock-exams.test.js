@@ -13,7 +13,7 @@ function world(){
   getValues:()=>values.slice(r-1,r-1+h).map(row=>row.slice(c-1,c-1+w)),setValues:rows=>{values[r-1]=[...rows[0]]},
   setValue:value=>{values[r-1][c-1]=value;},setNumberFormat(){}
  })};
- const ctx=createContext({Date:{now:()=>time},portalIdentity_:token=>{if(!users[token])throw Error('Sign in required');return users[token]},
+ const ctx=createContext({requireModule_(){},Date:{now:()=>time},portalIdentity_:token=>{if(!users[token])throw Error('Sign in required');return users[token]},
   requireChild_:(user,id)=>{const row=children.find(c=>c.childId===id&&c.parentSub===(user.sub||user.familySub));if(!row)throw Error('Child not linked');return row},
   database_:()=>({getSheetByName:()=>created?sheet:null,insertSheet:()=>{created=true;return sheet}}),
   LockService:{getScriptLock:()=>({waitLock(){assert.equal(locked,false);locked=true},releaseLock(){locked=false}})},

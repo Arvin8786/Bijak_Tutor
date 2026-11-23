@@ -12,6 +12,7 @@ function mockExamRequest(token,action,input){
     .slice(-12).reverse().map(row=>mockExamView_(row,now,true));
  }
  if(user.role!=='STUDENT'||!user.studentChildId)throw Error('A linked student sign-in is required for mock exams.');
+ requireModule_(user,'mock-exams');
  const child=requireChild_(user,user.studentChildId),year=Number(child.year);
  if(!Number.isInteger(year)||year<1||year>6)throw Error('Mock exams are available for Years 1 to 6.');
  const owns=row=>row[1]===String(child.childId)&&row[2]===String(user.familySub);
