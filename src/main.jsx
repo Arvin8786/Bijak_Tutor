@@ -73,6 +73,7 @@ import './design-system.css';
 import './studio.css';
 import './bijak-theme.css';
 import './learning-editions.css';
+import './signin-portal.css';
 import LearningEditionList from './LearningEditionList.jsx';
 import {JUNIOR,learningEditionForYear,inLearningEdition} from './learningEditions.js';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
@@ -160,29 +161,29 @@ function GoogleLogin({onToken,onPassword,notice,signingIn}){
   },250);
   return()=>clearInterval(timer);
  },[onToken]);
- return <main className="signin">
-  <section className="signin-intro">
-   <Brand/>
-   <h1>Make room<br/> for <span>curiosity.</span></h1>
-   <p>Explore lessons, practise new skills, and play learning games at your own pace.</p>
+ return <main className="signin signin-portal">
+  <header className="signin-brandbar"><Brand subtitle="Family learning portal"/></header>
+  <aside className="signin-programmes" aria-labelledby="signin-programmes-title">
+   <h2 id="signin-programmes-title">Find the right learning section</h2>
+   <p>Lessons, practice and creative projects for your child’s school year.</p>
    <LearningEditionList/>
-   <div className="signin-art" aria-hidden="true"><img src="./icons/icon.svg" width="200" height="200" alt=""/></div>
-  </section>
-  <section className="signin-form">
+  </aside>
+  <section className="signin-form" aria-labelledby="signin-heading">
    <div className="signin-tabs" role="group" aria-label="Sign-in type">
     <button type="button" aria-pressed={loginRole==='parent'} disabled={signingIn} onClick={()=>chooseRole('parent')}><PortalGlyph name="accounts"/>Parent sign-in</button>
     <button type="button" aria-pressed={student} disabled={signingIn} onClick={()=>chooseRole('student')}><PortalGlyph name="tiers"/>Student sign-in</button>
     <button type="button" aria-pressed={admin} disabled={signingIn} onClick={()=>chooseRole('admin')}><PortalGlyph name="overview"/>BijakLearn Team</button>
    </div>
-   <h2>{admin?'BijakLearn Team sign-in':student?'Student sign-in':'Welcome back'}</h2>
-   <p>{admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Use your own Google account linked by your parent or BijakLearn Team to your learner profile.':'Sign in to see your child’s progress, manage profiles and view parent notices.'}</p>
+   <h1 id="signin-heading">{admin?'BijakLearn Team sign-in':student?'Student sign-in':'Welcome back'}</h1>
+   <p>{admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Use your student account to open your learning section.':'Sign in to see your child’s progress, manage profiles and view parent notices.'}</p>
+   {isLive&&!admin&&<PasswordSignIn key={loginRole} role={loginRole} onSubmit={onPassword} disabled={signingIn}/>}
+   {isLive&&!admin&&<div className="signin-divider"><span>or</span></div>}
    <div className="signin-action">
     <div hidden={signingIn}>
      {isLive?<>{externalGoogle?<div id="google-signin" ref={googleButtonRef}/>:<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your BijakLearn Team for the private learning app link.</p>}
     </div>
     {signingIn?<p className="signin-progress" role="status"><span aria-hidden="true"/> Signing in…</p>:externalGoogle&&!googleReady&&!issue&&<p className="signin-progress" role="status"><span aria-hidden="true"/> Loading Google sign-in…</p>}
    </div>
-   {isLive&&!admin&&<PasswordSignIn key={loginRole} role={loginRole} onSubmit={onPassword} disabled={signingIn}/>}
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
    {!admin&&!student&&<p className="signin-note">New parent accounts need approval from the BijakLearn Team.</p>}

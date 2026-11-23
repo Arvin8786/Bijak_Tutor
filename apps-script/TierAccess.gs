@@ -5,24 +5,65 @@ function moduleRule_(moduleId,rules){
  const matches=(rules||rows_('ModuleAccess')).filter(row=>String(row.moduleId)===moduleId);
  return matches.length===1?matches[0]:null;
 }
-function moduleDecision_(user,moduleId,rules,currentPlan){
+function learnerSectionForYear_(year){
+ if(year===''||year===null||year===undefined)return '';
+ const value=Number(year);
+ if(!Number.isInteger(value)||value<0||value>6)return '';
+ return value<=3?'junior':'juniorPlus';
+}
+function defaultStudentSection_(moduleId,section){
+ if(!section||['parent-reports','adult-ai','adult-hobby'].includes(moduleId))return false;
+ return moduleId!=='preschool'||section==='junior';
+}
+function learnerModuleContext_(user){
+ if(user.role!=='STUDENT')return null;
+ const learner=requireChild_(user,user.studentChildId);
+ return {section:learnerSectionForYear_(learner.year),rules:rows_('LearnerModuleAccess').filter(row=>String(row.childId).trim()===user.studentChildId)};
+}
+function learnerModuleRule_(rules,moduleId){
+ const rows=rules.filter(row=>String(row.moduleId).trim()===moduleId);
+ if(!rows.length)return '';
+ if(rows.length!==1)return 'DENY';
+ return String(rows[0].decision).trim()==='ALLOW'?'ALLOW':'DENY';
+}
+function moduleDecision_(user,moduleId,rules,currentPlan,learnerContext){
  const rule=moduleRule_(moduleId,rules),plan=currentPlan||access_(user).plan;
  const column={FREE:'free',PREMIUM:'premium',PREMIUM_KASIH:'premiumKasih'}[plan];
- return {moduleId,plan,title:rule?String(rule.title):moduleId,
-  allowed:!(user.role==='STUDENT'&&['parent-reports','adult-ai','adult-hobby'].includes(moduleId))&&!!rule&&trueCell_(rule.enabled)&&!!column&&trueCell_(rule[column]),
+ let allowed=false,reason='unavailable';
+ if(rule&&trueCell_(rule.enabled)&&column){
+  allowed=trueCell_(rule[column]);
+  reason=allowed?'':'membership';
+  if(user.role==='STUDENT'){
+   const {section,rules:individualRules}=learnerContext||learnerModuleContext_(user);
+   if(!defaultStudentSection_(moduleId,section)||(rule[section]!==undefined&&rule[section]!==''&&!trueCell_(rule[section]))){
+    allowed=false;reason='section';
+   }else{
+    const individual=learnerModuleRule_(individualRules,moduleId);
+    if(individual){allowed=individual==='ALLOW';reason=allowed?'':'learner';}
+   }
+  }
+ }
+ return {moduleId,plan,title:rule?String(rule.title):moduleId,allowed,reason,
   freeLessonLimit:rule&&Number.isInteger(Number(rule.freeLessonLimit))&&Number(rule.freeLessonLimit)>=0?Number(rule.freeLessonLimit):0};
 }
 function requireModule_(user,moduleId){
  const decision=moduleDecision_(user,moduleId);
- if(!decision.allowed)throw Error('[MODULE_DENIED] Your plan does not include '+decision.title+'.');
+ if(!decision.allowed)throw Error('[MODULE_DENIED] '+decision.title+' is unavailable for this account.');
  return decision;
+}
+function requireLearnerSection_(user,year){
+ if(user.role!=='STUDENT')return;
+ const child=requireChild_(user,user.studentChildId);
+ const section=learnerSectionForYear_(child.year);
+ if(!section||section!==learnerSectionForYear_(year))throw Error('[MODULE_DENIED] This content belongs to a different learning section.');
 }
 function authorizeModule(token,moduleId){return withAuth_(token,user=>{
  if(typeof moduleId!=='string'||!/^[a-z][a-z0-9-]{1,60}$/.test(moduleId))throw Error('Invalid module');
  return moduleDecision_(user,moduleId);
 })}
-function moduleSummary_(user){const rules=rows_('ModuleAccess'),plan=access_(user).plan;return rules.map(row=>moduleDecision_(user,String(row.moduleId),rules,plan))}
+function moduleSummary_(user){const rules=rows_('ModuleAccess'),plan=access_(user).plan,learner=learnerModuleContext_(user);return rules.map(row=>moduleDecision_(user,String(row.moduleId),rules,plan,learner))}
 function requireLessonAccess_(user,lesson){
+ requireLearnerSection_(user,lesson.year);
  const decision=requireModule_(user,'study-library');
  if(decision.plan!=='FREE')return;
  // A legacy premium flag remains a per-lesson restriction for Free accounts.
@@ -101,6 +142,11 @@ function configureModuleAccessSheet_(){
  const sheet=sheet_('ModuleAccess'),length=Math.max(1,sheet.getLastRow()-1);
  const booleanRule=SpreadsheetApp.newDataValidation().requireCheckbox().setAllowInvalid(false).build();
  sheet.getRange(2,4,length,4).setDataValidation(booleanRule);
+ sheet.getRange(2,11,length,2).setDataValidation(booleanRule);
+ const individual=sheet_('LearnerModuleAccess'),rows=individual.getMaxRows()-1;
+ individual.getRange(2,1,rows,1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInRange(sheet_('Children').getRange('A2:A'),true).setAllowInvalid(false).build());
+ individual.getRange(2,2,rows,1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInRange(sheet.getRange('A2:A'),true).setAllowInvalid(false).build());
+ individual.getRange(2,3,rows,1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['ALLOW','DENY'],true).setAllowInvalid(false).build());
  sheet.getRange(2,8,length,1).setDataValidation(SpreadsheetApp.newDataValidation().requireNumberGreaterThanOrEqualTo(0).setAllowInvalid(false).build());
  sheet.setFrozenRows(1);
  sheet.getRange(1,1,1,TABLES.ModuleAccess.length).setFontWeight('bold');

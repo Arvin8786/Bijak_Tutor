@@ -18,7 +18,8 @@ const byVideoOrder_=(a,b)=>(Number(a.sequence)||0)-(Number(b.sequence)||0)||Stri
 function getVideoLibrary(token){
  return withAuth_(token,user=>{
   requireModule_(user,'video-library');
-  return rows_('Videos').filter(row=>String(row.status)==='ACTIVE'&&youtubeId_(row.youtubeId)).sort(byVideoOrder_).slice(0,300).map(row=>videoView_(row,false));
+  const section=user.role==='STUDENT'?learnerSectionForYear_(requireChild_(user,user.studentChildId).year):'';
+  return rows_('Videos').filter(row=>String(row.status)==='ACTIVE'&&youtubeId_(row.youtubeId)&&(!section||Number(row.year)===0||learnerSectionForYear_(row.year)===section)).sort(byVideoOrder_).slice(0,300).map(row=>videoView_(row,false));
  });
 }
 function listVideosAdmin(token){

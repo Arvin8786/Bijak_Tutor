@@ -1,0 +1,109 @@
+body .signin.signin-portal {
+ display: grid;
+ grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+ grid-template-areas: "brand brand" "programmes form";
+ width: min(100% - 32px, 1050px);
+ min-height: 0;
+ margin: clamp(10px, 4vh, 42px) auto 42px;
+ border: 1px solid #dbe4e9;
+ border-radius: 24px;
+ background: #fff;
+ color: #122834;
+ box-shadow: 0 22px 60px #18394513;
+ overflow: hidden;
+}
+.signin-portal .signin-brandbar {
+ grid-area: brand;
+ padding: 18px clamp(18px, 4vw, 46px);
+ border-bottom: 1px solid #dbe4e9;
+}
+.signin-portal .signin-programmes {
+ grid-area: programmes;
+ position: relative;
+ isolation: isolate;
+ display: flex;
+ flex-direction: column;
+ justify-content: center;
+ min-width: 0;
+ padding: clamp(24px, 4.2vw, 55px);
+ background: radial-gradient(ellipse at 120% 110%, #147969, transparent 65%), #0d333a;
+ color: #fff;
+ overflow: hidden;
+}
+.signin-portal .signin-programmes::before {
+ content: "";
+ position: absolute;
+ z-index: -1;
+ width: 360px;
+ height: 360px;
+ border: 1px solid #b8efe041;
+ border-radius: 50%;
+ right: -210px;
+ bottom: -190px;
+ box-shadow: 0 0 0 28px #b8efe023, 0 0 0 65px #b8efe014;
+}
+.signin-portal .signin-programmes h2 {
+ margin: 0;
+ max-width: 16ch;
+ font: 750 clamp(1.65rem, 3.3vw, 2.55rem)/1.12 system-ui, sans-serif;
+ letter-spacing: -.035em;
+}
+.signin-portal .signin-programmes p { color: #d2e7e4; line-height: 1.6; }
+.signin-portal .signin-programmes .learning-edition-list { grid-template-columns: minmax(0, 1fr); margin-bottom: 0; }
+.signin-portal .learning-edition-list li { padding: .8rem 1rem; border-inline-start-width: 4px; }
+body .signin.signin-portal .signin-form {
+ grid-area: form;
+ gap: 0;
+ align-self: start;
+ padding: clamp(22px, 4vw, 46px);
+}
+.signin-portal #signin-heading {
+ margin: 1.35rem 0 .4rem;
+ color: #102a34;
+ font: 800 clamp(1.85rem, 3.2vw, 2.55rem)/1.1 system-ui, sans-serif;
+ letter-spacing: -.035em;
+}
+.signin-portal .signin-form > p { margin-top: 0; }
+body .signin.signin-portal .signin-tabs { padding: .25rem; border-radius: 12px; }
+body .signin.signin-portal .signin-tabs button {
+ min-height: 42px;
+ padding: .35rem;
+ border-radius: 9px;
+ line-height: 1.2;
+}
+.signin-portal .signin-tabs button svg { display: none; }
+.signin-portal .signin-password { margin-top: .55rem; padding-top: 0; border: 0; gap: .85rem; }
+.signin-portal .signin-password label { font-size: .92rem; }
+.signin-portal .signin-password input {
+ padding: .6rem .75rem;
+ border: 1px solid #b5c8cf;
+ border-radius: 9px;
+ background: #fff;
+ color: #102a34;
+ font-size: 16px;
+}
+.signin-portal .signin-password button {
+ justify-self: stretch;
+ min-height: 45px;
+ border-radius: 9px;
+}
+.signin-portal .signin-divider { display: flex; align-items: center; gap: .6rem; margin-top: 1rem; color: #4c646e; font-size: .8rem; }
+.signin-portal .signin-divider::before,
+.signin-portal .signin-divider::after { content: ""; flex: 1; border-top: 1px solid #dbe4e9; }
+.signin-portal .signin-action { margin: .4rem 0 .8rem; }
+body .signin.signin-portal #google-signin { min-height: 36px; margin: 2px 0; }
+body .signin.signin-portal .signin-note { margin: .6rem 0; padding: 0; border: 0; background: transparent; font-size: .85rem; }
+.signin-portal .brand-credit { margin-top: .8rem; }
+.signin-portal :is(input,button):focus-visible { outline: 3px solid #18746e; outline-offset: 3px; }
+@media (max-width: 760px) {
+ body .signin.signin-portal {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "brand" "form" "programmes";
+  max-width: 520px;
+  border-radius: 18px;
+ }
+ .signin-portal .signin-brandbar { padding-block: 12px; }
+ .signin-portal .signin-programmes { padding: 18px; }
+ .signin-portal .signin-programmes h2 { max-width: none; font-size: 1.3rem; }
+ .signin-portal .signin-programmes p { margin: .38rem 0 .65rem; }
+}

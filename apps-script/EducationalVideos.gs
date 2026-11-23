@@ -3,7 +3,7 @@ function validateVideo_(value){
  if(!value||typeof value!=='object'||typeof value.title!=='string'||!value.title.trim()||value.title.length>120||!/^[A-Za-z0-9_-]{11}$/.test(value.videoId||''))throw Error('Provide a title and valid YouTube video ID.');
  return {title:value.title.trim(),videoId:value.videoId};
 }
-function getEducationalVideos(token){return withAuth_(token,()=>JSON.parse(props_().getProperty('EDUCATIONAL_VIDEOS')||'[]').map(validateVideo_));}
+function getEducationalVideos(token){return withAuth_(token,user=>{if(user.role==='STUDENT')requireModule_(user,'video-library');return JSON.parse(props_().getProperty('EDUCATIONAL_VIDEOS')||'[]').map(validateVideo_)});}
 function setEducationalVideos(token,entries){
  requireAccountAdmin_(token);
  if(!Array.isArray(entries)||entries.length>30)throw Error('The library supports up to 30 videos.');

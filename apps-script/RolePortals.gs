@@ -62,7 +62,7 @@ function ownerPortalBootstrap_(verified,requestedRole){
  if(role==='admin')return {role:'ADMIN',ownerRoleAccess:true,user:{name:user.name,email:user.email},canManageAccounts:true,children:[],lessons:[],modules:[],access:{plan:'ADMIN',active:true}};
  if(role==='parent')return {role:'PARENT',ownerRoleAccess:true,parent:parentDetails_(user),canManageAccounts:false,children:familyChildren_(user),lessons:[],modules:[],access:access_(user)};
  const child=requireChild_(user,user.studentChildId);
- return {role:'STUDENT',ownerRoleAccess:true,user:{name:String(child.nickname),email:user.email},parent:null,canManageAccounts:false,children:[{id:String(child.childId),name:String(child.nickname),year:Number(child.year),school:String(child.school),language:String(child.language||'en')}],access:access_(user),modules:moduleSummary_(user),lessons:lessonCatalogue_(),scholarship:null};
+ return {role:'STUDENT',ownerRoleAccess:true,user:{name:String(child.nickname),email:user.email},parent:null,canManageAccounts:false,children:[{id:String(child.childId),name:String(child.nickname),year:Number(child.year),school:String(child.school),language:String(child.language||'en')}],access:access_(user),modules:moduleSummary_(user),lessons:studentLessonCatalogue_(user),scholarship:null};
 }
 function familyChildren_(user){return rows_('Children').filter(c=>String(c.parentSub)===user.sub&&c.status!=='REMOVED').map(c=>({id:String(c.childId),name:String(c.nickname),year:Number(c.year),school:String(c.school),language:String(c.language)}))}
 function requirePortalParent_(token){const user=portalIdentity_(token);if(user.role!=='PARENT')throw Error('Parent account required');return user}

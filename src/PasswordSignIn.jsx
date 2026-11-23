@@ -16,7 +16,6 @@ export function PasswordSignIn({onSubmit,disabled,role}){
   onSubmit({role,identifier,password});
  }
  return <form className="signin-password" onSubmit={submit}>
-  <h3>Sign in with a password</h3>
   <label>Email, username or user ID<input name="identifier" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" maxLength={254} required disabled={disabled}/></label>
   <label>Password<input name="password" type="password" autoComplete="current-password" maxLength={256} required disabled={disabled}/></label>
   <button className="primary" type="submit" disabled={disabled}>Sign in with password</button>

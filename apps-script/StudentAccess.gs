@@ -43,7 +43,12 @@ function studentPortalData_(user){
  const child=requireChild_(user,user.studentChildId);
  return {role:'STUDENT',user:{name:String(child.nickname)},parent:null,canManageAccounts:false,
   children:[{id:String(child.childId),name:String(child.nickname),year:Number(child.year),school:String(child.school),language:String(child.language||'ms')}],
-  access:access_(user),modules:moduleSummary_(user),lessons:lessonCatalogue_(),scholarship:null};
+  access:access_(user),modules:moduleSummary_(user),lessons:studentLessonCatalogue_(user),scholarship:null};
+}
+function studentLessonCatalogue_(user){
+ if(!moduleDecision_(user,'study-library').allowed)return [];
+ const child=requireChild_(user,user.studentChildId),section=learnerSectionForYear_(child.year);
+ return lessonCatalogue_().filter(lesson=>section&&learnerSectionForYear_(lesson.year)===section);
 }
 function lessonCatalogue_(){return rows_('Lessons').map(l=>({id:l.lessonId,title:l.title,year:Number(l.year),subject:l.subject,icon:l.icon,chapter:l.chapter||'',school:l.school||'ALL',status:l.contentStatus||'DRAFT_TEACHER_REVIEW',premium:String(l.premium).toUpperCase()==='TRUE'}))}
 function listStudentProfiles(token){

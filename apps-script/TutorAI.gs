@@ -10,6 +10,7 @@ function askTutor(token,question,context){
    if(!q||q.length>500)throw Error('Please ask a question of 1–500 characters');
    const info=context&&typeof context==='object'?context:{};
    const year=Math.max(1,Math.min(6,Math.floor(Number(info.year)||1)));
+   requireLearnerSection_(user,year);
    const subject=String(info.subject||'').replace(/[\r\n\t]/g,' ').slice(0,75);
    const lessonId=String(info.lessonId||'').slice(0,80);
    // Do not transmit account identity, child identity, or learner records.

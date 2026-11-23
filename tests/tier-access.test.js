@@ -24,7 +24,7 @@ const document={mimeType:'application/pdf',data:Buffer.from('%PDF-1.7\nFictional
 const subscription=plan=>({googleSub:'family',plan,status:'ACTIVE',expiresAt:new Date(Date.now()+86400000).toISOString(),updatedAt:new Date().toISOString()});
 
 test('all learning routes map to unique seeded sheet modules',()=>{
- assert.equal(APP_MODULES.length,20);assert.equal(new Set(APP_MODULES.map(m=>m.moduleId)).size,20);
+ assert.equal(APP_MODULES.length,21);assert.equal(new Set(APP_MODULES.map(m=>m.moduleId)).size,21);
  assert.equal(moduleForPage('growth','adult','hobby'),'adult-hobby');
  assert.equal(moduleForPage('lesson'),'study-library');assert.equal(moduleForPage('pin'),'parent-reports');
  assert.equal(moduleForPage('dictionary'),'picture-dictionary');
@@ -123,7 +123,7 @@ test('partially persisted Kasih approval fails closed until application status i
 });
 test('module and growth imports are additive and preserve edited tier settings',()=>{
  const {api,tables}=backend();tables.ModuleAccess=[];
- assert.equal(api.seedModuleAccess_().added,20);tables.ModuleAccess[0].free=false;
+ assert.equal(api.seedModuleAccess_().added,21);tables.ModuleAccess[0].free=false;
  assert.equal(api.seedModuleAccess_().added,0);assert.equal(tables.ModuleAccess[0].free,false);
  assert.equal(api.importGrowthModules_().addedModules,4);assert.ok(tables.ModuleLessons.length>0);
  assert.equal(api.importGrowthModules_().addedLessons,0);
@@ -238,4 +238,32 @@ test('administrator student linking approves an accidental pending parent sign-i
  assert.equal(api.getStudentBootstrap(credential).role,'STUDENT');
  tables.AccountAccess.push({accountKey:'google:student',status:'REVOKED'});
  assert.throws(()=>api.getStudentBootstrap(credential),/STUDENT_REVOKED/);
+});
+
+test('learner and section rules apply to each student and to lesson reads and attempts',()=>{
+ const {api,tables,credential,token}=studentFixture();
+ api.setStudentAccount(token('admin'),'student@example.test','child','ACTIVE');
+ tables.Children[0].year=4;
+ tables.Lessons.push(
+  {lessonId:'lower',year:3,school:'SK',subject:'Matematik',title:'Lower',premium:false},
+  {lessonId:'upper',year:4,school:'SK',subject:'Matematik',title:'Upper',premium:false}
+ );
+ tables.Questions=[];
+ tables.LearnerModuleAccess=[
+  {childId:'sibling',moduleId:'science-lab',decision:'ALLOW'},
+  {childId:'child',moduleId:'preschool',decision:'ALLOW'}
+ ];
+ const boot=api.getStudentBootstrap(credential);
+ assert.deepEqual(Array.from(boot.lessons,l=>l.id),['upper']);
+ assert.equal(api.authorizeModule(credential,'science-lab').reason,'membership');
+ assert.equal(api.authorizeModule(credential,'preschool').reason,'section');
+ assert.throws(()=>api.getLesson(credential,'child','lower'),/different learning section/);
+ assert.throws(()=>api.submitAttempt(credential,'child','lower','q','1',0),/different learning section/);
+ tables.LearnerModuleAccess.push({childId:'child',moduleId:'science-lab',decision:'ALLOW'});
+ assert.equal(api.authorizeModule(credential,'science-lab').allowed,true);
+ tables.ModuleAccess.find(row=>row.moduleId==='science-lab').juniorPlus=false;
+ assert.equal(api.authorizeModule(credential,'science-lab').reason,'section');
+ tables.LearnerModuleAccess.push({childId:'child',moduleId:'study-library',decision:'DENY'});
+ assert.equal(api.getStudentBootstrap(credential).lessons.length,0);
+ assert.throws(()=>api.getLesson(credential,'child','upper'),/MODULE_DENIED/);
 });
