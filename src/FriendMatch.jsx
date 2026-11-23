@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import React,{useState} from 'react';
 
 const categories=['Name','Place','Food','Animal'];
 export default function FriendMatch({request}){

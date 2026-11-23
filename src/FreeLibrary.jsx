@@ -1,4 +1,4 @@
-import {useEffect,useState} from 'react';
+import React,{useEffect,useState} from 'react';
 import FreeBooks from './FreeBooks.jsx';
 import FriendMatch from './FriendMatch.jsx';
 import WordTilesGame from './WordTilesGame.jsx';
