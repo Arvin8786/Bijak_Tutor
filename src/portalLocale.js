@@ -9,8 +9,7 @@ export const writePortalLanguage=code=>{try{localStorage.setItem(KEY,code)}catch
 export const PORTAL_COPY={
  ms:{
   'Child reports':'Laporan anak','Enrol a child':'Daftar anak','Comments & suggestions':'Komen & cadangan','Membership & payments':'Keahlian & pembayaran','Referrals & earnings':'Rujukan & pendapatan','Premium Kasih':'Premium Kasih',
-  'Parent dashboard':'Papan pemuka ibu bapa','Growing together, every day':'Membesar bersama, setiap hari','Sign out':'Log keluar','Parent navigation':'Navigasi ibu bapa','YOUR FAMILY SPACE':'RUANG KELUARGA ANDA',
-  'Every small step counts.':'Setiap langkah kecil bermakna.','Celebrate curiosity, effort and the joy of learning.':'Raikan rasa ingin tahu, usaha dan kegembiraan belajar.','CHEER ON THEIR NEXT DISCOVERY':'SORAK PENEMUAN SETERUSNYA',
+  'Parent dashboard':'Papan pemuka ibu bapa','Sign out':'Log keluar','Parent navigation':'Navigasi ibu bapa','YOUR FAMILY SPACE':'RUANG KELUARGA ANDA',
   'Private reports for children linked to your verified parent Google account.':'Laporan peribadi untuk anak yang dipautkan ke akaun Google ibu bapa anda yang telah disahkan.','Language':'Bahasa','Saved successfully.':'Berjaya disimpan.',
   'Family reports':'Laporan keluarga','Google account access is checked by the server.':'Akses akaun Google disemak oleh pelayan.',
   'Results below come from server-marked lesson checks. Games and practice that do not submit an assessment are not counted as test results. Reported activity time excludes hidden pages and extended inactivity and is approximate.':'Keputusan di bawah datang daripada semakan pelajaran yang ditanda oleh pelayan. Permainan dan latihan yang tidak menghantar penilaian tidak dikira sebagai keputusan ujian. Masa aktiviti yang dilaporkan tidak termasuk halaman tersembunyi dan tempoh tidak aktif yang panjang, dan merupakan anggaran.',
@@ -27,8 +26,7 @@ export const PORTAL_COPY={
  },
  zh:{
   'Child reports':'孩子报告','Enrol a child':'登记孩子','Comments & suggestions':'意见与建议','Membership & payments':'会员与付款','Referrals & earnings':'推荐与收益','Premium Kasih':'Premium Kasih',
-  'Parent dashboard':'家长控制台','Growing together, every day':'每一天，一起成长','Sign out':'退出登录','Parent navigation':'家长导航','YOUR FAMILY SPACE':'您的家庭空间',
-  'Every small step counts.':'每一小步都有意义。','Celebrate curiosity, effort and the joy of learning.':'为好奇心、努力和学习的快乐喝彩。','CHEER ON THEIR NEXT DISCOVERY':'为他们的下一个发现加油',
+  'Parent dashboard':'家长控制台','Sign out':'退出登录','Parent navigation':'家长导航','YOUR FAMILY SPACE':'您的家庭空间',
   'Private reports for children linked to your verified parent Google account.':'仅限已关联到您已验证的家长 Google 账户的孩子的私人报告。','Language':'语言','Saved successfully.':'保存成功。',
   'Family reports':'家庭报告','Google account access is checked by the server.':'Google 账户访问由服务器验证。',
   'Results below come from server-marked lesson checks. Games and practice that do not submit an assessment are not counted as test results. Reported activity time excludes hidden pages and extended inactivity and is approximate.':'以下结果来自由服务器批改的课程检测。未提交评估的游戏和练习不计入测试结果。所报告的活动时间不包括隐藏页面和长时间无操作，仅为大约数值。',
@@ -45,8 +43,7 @@ export const PORTAL_COPY={
  },
  ta:{
   'Child reports':'குழந்தை அறிக்கைகள்','Enrol a child':'குழந்தையைப் பதிவு செய்','Comments & suggestions':'கருத்துகள் & பரிந்துரைகள்','Membership & payments':'உறுப்பினர் & கட்டணங்கள்','Referrals & earnings':'பரிந்துரைகள் & வருவாய்','Premium Kasih':'Premium Kasih',
-  'Parent dashboard':'பெற்றோர் முகப்புப் பலகை','Growing together, every day':'ஒவ்வொரு நாளும் சேர்ந்து வளர்கிறோம்','Sign out':'வெளியேறு','Parent navigation':'பெற்றோர் வழிசெலுத்தல்','YOUR FAMILY SPACE':'உங்கள் குடும்ப இடம்',
-  'Every small step counts.':'ஒவ்வொரு சிறு அடியும் முக்கியம்.','Celebrate curiosity, effort and the joy of learning.':'ஆர்வம், முயற்சி, கற்றலின் மகிழ்ச்சியைக் கொண்டாடுங்கள்.','CHEER ON THEIR NEXT DISCOVERY':'அவர்களின் அடுத்த கண்டுபிடிப்பை உற்சாகப்படுத்துங்கள்',
+  'Parent dashboard':'பெற்றோர் முகப்புப் பலகை','Sign out':'வெளியேறு','Parent navigation':'பெற்றோர் வழிசெலுத்தல்','YOUR FAMILY SPACE':'உங்கள் குடும்ப இடம்',
   'Private reports for children linked to your verified parent Google account.':'உங்கள் சரிபார்க்கப்பட்ட பெற்றோர் Google கணக்குடன் இணைக்கப்பட்ட குழந்தைகளுக்கான தனிப்பட்ட அறிக்கைகள்.','Language':'மொழி','Saved successfully.':'வெற்றிகரமாகச் சேமிக்கப்பட்டது.',
   'Family reports':'குடும்ப அறிக்கைகள்','Google account access is checked by the server.':'Google கணக்கு அணுகல் சேவையகத்தால் சரிபார்க்கப்படுகிறது.',
   'Results below come from server-marked lesson checks. Games and practice that do not submit an assessment are not counted as test results. Reported activity time excludes hidden pages and extended inactivity and is approximate.':'கீழே உள்ள முடிவுகள் சேவையகம் மதிப்பிட்ட பாடச் சோதனைகளிலிருந்து வருகின்றன. மதிப்பீட்டைச் சமர்ப்பிக்காத விளையாட்டுகளும் பயிற்சிகளும் தேர்வு முடிவுகளாகக் கணக்கிடப்படாது. பதிவான செயல்பாட்டு நேரத்தில் மறைந்த பக்கங்களும் நீண்ட செயலற்ற நேரமும் சேர்க்கப்படாது; இது தோராயமானது.',

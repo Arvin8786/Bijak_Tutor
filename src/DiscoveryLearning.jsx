@@ -49,7 +49,6 @@ export function DiscoveryLibrary({availableLessons, onOpen}) {
     </div>
    </section>;
   })}
-  <p className="draft-note">{tx("Supplementary learning materials under educator review.")}</p>
  </section>;
 }
 

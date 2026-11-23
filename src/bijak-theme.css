@@ -1,0 +1,132 @@
+/* Shared interface palette and surfaces for the hosted app. */
+:root {
+ --bijak-ink: #172d39;
+ --bijak-muted: #4f6572;
+ --bijak-paper: #fbfcfa;
+ --bijak-line: #dce7e6;
+ --bijak-teal: #08776a;
+ --bijak-gold: #ffce76;
+ --bijak-radius: 22px;
+ --bijak-shadow: 0 10px 28px #1736440d;
+}
+
+body:has(.signin), body:has(.app) {
+ background: radial-gradient(ellipse at 15% 0%, #dbeee7, transparent 43%), #f1f7f5;
+ color: var(--bijak-ink);
+}
+
+/* Sign-in */
+body .signin {
+ width: min(1080px, calc(100% - 40px));
+ min-height: 0;
+ grid-template-columns: minmax(0, 1.08fr) minmax(0, .92fr);
+ margin: clamp(24px, 6vw, 74px) auto 44px;
+ overflow: hidden;
+ border: 1px solid #d4e4e0;
+ border-radius: 32px;
+ box-shadow: 0 22px 64px #153e3b24;
+}
+body .signin .signin-intro {
+ position: relative;
+ display: flex;
+ flex-direction: column;
+ justify-content: flex-start;
+ min-height: 530px;
+ padding: clamp(30px, 4.5vw, 60px);
+ border: 0;
+ background: radial-gradient(ellipse at 87% 95%, #167e71, transparent 64%), #103b42;
+}
+body .signin .signin-intro::before {
+ inset: auto -7rem -11rem auto;
+ width: 31rem;
+ height: 31rem;
+ clip-path: none;
+ border: 1px solid #b5ede343;
+ border-radius: 50%;
+ background: transparent;
+ box-shadow: 0 0 0 28px #b5ede312, 0 0 0 65px #b5ede30c;
+ z-index: -1;
+}
+body .signin .signin-kicker {
+ align-self: flex-start;
+ margin: clamp(26px, 4vw, 44px) 0 0;
+ padding: 6px 11px;
+ border: 1px solid #b2e0d84b;
+ border-radius: 99px;
+ letter-spacing: .02em;
+ font-size: .78rem;
+ font-weight: 650;
+ background: #ecfff412;
+}
+body .signin .signin-intro h1 {
+ margin: 15px 0 10px;
+ font: 800 clamp(2.7rem, 5.7vw, 5rem)/.98 system-ui, sans-serif;
+ letter-spacing: -.055em;
+}
+body .signin .signin-intro h1 span { color: var(--bijak-gold); }
+body .signin .signin-intro p { position: relative; z-index: 1; max-width: 28ch; color: #e0f1eb; line-height: 1.6; }
+.signin-art { position: absolute; right: 18px; bottom: 16px; width: min(29%, 140px); }
+.signin-art img { display: block; width: 100%; height: auto; border-radius: 20px; }
+body .signin .signin-form { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: clamp(22px, 4vw, 45px); background: #fff; color: var(--bijak-ink); }
+body .signin .signin-form h2 { margin: 18px 0 8px; font: 800 clamp(1.85rem, 4vw, 2.45rem)/1.1 system-ui, sans-serif; letter-spacing: -.035em; color: var(--bijak-ink); }
+body .signin .signin-form p { color: var(--bijak-muted); line-height: 1.55; }
+body .signin .signin-tabs { background: #edf5f3; border: 1px solid var(--bijak-line); }
+body .signin .signin-tabs button { border: 1px solid transparent; color: #294a52; font-size: .82rem; }
+body .signin .signin-tabs button[aria-pressed=true] { background: #fff; border-color: #add9ce; color: #07594f; box-shadow: 0 3px 12px #153e3b14; }
+body .signin #google-signin { min-height: 44px; margin: 6px 0 8px; }
+body .signin .signin-form .signin-note { padding: 9px 12px; background: #f1f6f5; border: 1px solid var(--bijak-line); color: #3d5962; }
+body .signin .signin-form .error { color: #852941; }
+
+@media (max-width: 760px) {
+ body .signin { width: min(100% - 24px, 520px); grid-template-columns: minmax(0, 1fr); margin: 12px auto 28px; border-radius: 22px; }
+ body .signin .signin-intro { min-height: 0; padding: 18px; }
+ body .signin .signin-kicker { margin-top: 15px; }
+ body .signin .signin-intro h1 { font-size: clamp(2rem, 8.6vw, 3.2rem); }
+ body .signin .signin-intro h1 br { display: none; }
+ body .signin .signin-intro p { margin: 0; font-size: .88rem; }
+ body .signin .signin-form { padding: 17px; }
+ body .signin .signin-tabs button { min-height: 58px; gap: 3px; }
+ .signin-art { display: none; }
+}
+
+/* Adult consoles */
+body .portal-shell {
+ --cover: #075d55;
+ --cover-dark: #113b41;
+ --tint: #e7f5ef;
+ --bl-primary: var(--cover);
+ background: #f2f7f6;
+ color: var(--bijak-ink);
+}
+body .portal-shell.portal-admin { --cover: #354780; --cover-dark: #202e58; --tint: #edf0fa; }
+body .portal-shell .portal-header { background: linear-gradient(105deg, var(--cover-dark), var(--cover)); border-bottom: 3px solid #e1b75c; }
+body .portal-shell .portal-user > button { border-radius: 11px; background: #fff; }
+body .portal-shell .portal-nav { background: #fff; border-color: var(--bijak-line); }
+body .portal-shell .portal-nav button { border-radius: 11px; }
+body .portal-shell .portal-nav button[aria-current=page] { color: var(--cover-dark); background: var(--tint); box-shadow: inset 3px 0 var(--cover); }
+body .portal-shell .portal-welcome {
+ border: 0;
+ border-radius: var(--bijak-radius);
+ background: radial-gradient(ellipse at 95% 130%, #ffffff39, transparent 63%), linear-gradient(105deg, var(--cover-dark), var(--cover));
+ box-shadow: var(--bijak-shadow);
+}
+body .portal-shell .portal-welcome h1 { font: 800 clamp(1.8rem, 4vw, 3.1rem)/1.1 system-ui, sans-serif; letter-spacing: -.035em; }
+body .portal-shell .portal-main .panel { background: #fff; border: 1px solid var(--bijak-line); border-radius: 18px; box-shadow: var(--bijak-shadow); }
+body .portal-shell .statgrid .stat { background: var(--tint); border-radius: 14px; box-shadow: none; }
+body .portal-shell .portal-footer { background: #f2f7f6; color: var(--bijak-muted); }
+
+/* Learner console */
+body .app .hero { background: radial-gradient(ellipse at 90% 110%, #318974, transparent 60%), #13434a; border: 0; border-radius: var(--bijak-radius); box-shadow: 0 14px 38px #16494024; }
+body .app .hero h1 { font-family: system-ui, sans-serif; font-weight: 830; letter-spacing: -.045em; }
+body .app .hero .eyebrow { background: #ffffff19; color: #ffe3a4; }
+body .app .hero::after { content: none; }
+body .app .panel { background-color: #fff; border: 1px solid var(--bijak-line); border-radius: 18px; box-shadow: var(--bijak-shadow); }
+body .app .section-heading h2, body .app .shelf-title h2 { color: var(--bijak-ink); }
+body .app .studio-card { border: 1px solid transparent; border-radius: 17px; }
+body .app .studio-card.science { background: #e3f6f0; border-color: #bfe5d8; color: #15594e; }
+body .app .studio-card.maths { background: #fff1d5; border-color: #eed9ad; color: #654820; }
+body .app .subject-picker, body .app .illustrated-lesson { border-radius: 18px; box-shadow: var(--bijak-shadow); }
+body .app .subject-picker { border: 1px solid var(--bijak-line); background: linear-gradient(155deg, #fff 52%, hsl(var(--card-hue) 50% 94%)); }
+body .app .illustrated-lesson::before { height: 4px; background: linear-gradient(90deg, #0b8375, #56b8a4, #f5c464); }
+body .app .video-hero { border: 1px solid #c7e5dc; border-radius: 18px; background: linear-gradient(120deg, #e3f7ed, #fff4dd); box-shadow: var(--bijak-shadow); }
+body :is(.signin, .app, .portal-shell) :is(button, a, input, select, textarea):focus-visible { outline: 3px solid #177d71; outline-offset: 3px; }

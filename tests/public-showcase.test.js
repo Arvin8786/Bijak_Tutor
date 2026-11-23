@@ -8,7 +8,7 @@ test('public site requires the login gate and limits demo access to explicit bui
  assert.match(src,/if\(!token\)return <>/);
  assert.match(src,/VITE_ENABLE_DEMO==='true'/);
  assert.match(src,/!isLive&&demoEnabled/);
- assert.match(src,/VITE_ACCOUNT_APP_URL/);
+ assert.match(fs.readFileSync('src/accountTransport.js','utf8'),/VITE_ACCOUNT_APP_URL/);
  assert.match(src,/say\(uiLanguage,'personaliseTitle'\)/);
  assert.match(fs.readFileSync('src/shellCopy.js','utf8'),/personaliseTitle:'Personalise your learning space'/);
  assert.ok(!src.includes('Explore local demo'));

@@ -68,6 +68,7 @@ import './professional.css';
 import './studio-refresh.css';
 import './design-system.css';
 import './studio.css';
+import './bijak-theme.css';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
 
 function LessonSearch({query, onChange, count}) {
@@ -113,10 +114,9 @@ function GoogleLogin({onToken,notice}){
  const initialRole=['parent','student','admin'].includes(window.BIJAKLEARN_LOGIN_ROLE)?window.BIJAKLEARN_LOGIN_ROLE:'parent';
  const [loginRole,setLoginRole]=useState(initialRole);
  const modeRef=useRef(initialRole);
+ const googleButtonRef=useRef(null);
  const chooseRole=role=>{modeRef.current=role;setLoginRole(role)};
  const admin=loginRole==='admin',student=loginRole==='student';
- const accountUrl=import.meta.env.VITE_ACCOUNT_APP_URL||ACCOUNT_URL;
- const validAccountUrl=/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(accountUrl);
  useEffect(()=>{
   if(!isLive||window.location.hostname.endsWith('-script.googleusercontent.com'))return;
   if(!(window.BIJAKLEARN_GOOGLE_CLIENT_ID||GOOGLE_CLIENT_ID)){setIssue('Google sign-in is not configured. Ask the BijakLearn Team to set the OAuth Web client ID in Apps Script.');return;}
@@ -127,7 +127,11 @@ function GoogleLogin({onToken,notice}){
     clearInterval(timer);
     try{
      window.google.accounts.id.initialize({client_id:id,callback:res=>onToken(res.credential,modeRef.current),ux_mode:'popup'});
-     window.google.accounts.id.renderButton(document.getElementById('google-signin'),{theme:'outline',size:'medium',shape:'rectangular',text:'signin_with',width:260});
+     const container=googleButtonRef.current;
+     if(container){
+      container.replaceChildren();
+      window.google.accounts.id.renderButton(container,{theme:'outline',size:'medium',shape:'rectangular',text:'signin_with',width:260});
+     }
     }catch{setIssue('Google sign-in could not be initialized. Please try again.')}
    }else if(++tries>80){clearInterval(timer);setIssue('Google sign-in could not load on this browser. Please reload to try again.')}
   },250);
@@ -135,10 +139,11 @@ function GoogleLogin({onToken,notice}){
  },[onToken]);
  return <main className="signin">
   <section className="signin-intro">
-   <Brand subtitle="A world of little discoveries"/>
-   <h1>Little steps.<br/><span>Wonderful possibilities.</span></h1>
-   <p>A happy place to discover, practise and grow. Every learner has a bright story waiting to unfold.</p><div className="book-abacus" aria-hidden="true"><span><i/></span><span><i/></span><span><i/></span></div>
-   <span className="signin-kicker">Preschool · Primary years 1–6</span>
+   <Brand/>
+   <span className="signin-kicker">Preschool · Primary Years 1–6</span>
+   <h1>Make room<br/> for <span>curiosity.</span></h1>
+   <p>Explore lessons, practise new skills, and play learning games at your own pace.</p>
+   <div className="signin-art" aria-hidden="true"><img src="./icons/icon.svg" width="200" height="200" alt=""/></div>
   </section>
   <section className="signin-form">
    <div className="signin-tabs" role="group" aria-label="Sign-in type">
@@ -147,11 +152,11 @@ function GoogleLogin({onToken,notice}){
     <button type="button" aria-pressed={admin} onClick={()=>chooseRole('admin')}><PortalGlyph name="overview"/>BijakLearn Team</button>
    </div>
    <h2>{admin?'BijakLearn Team sign-in':student?'Student sign-in':'Welcome back'}</h2>
-   <p>{admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Use your own Google account linked by your parent or BijakLearn Team to your learner profile.':'Your family’s learning journey, all in one place. Sign in to view reports and support your child.'}</p>
-   {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin"/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your BijakLearn Team for the private learning app link.</p>}
+   <p>{admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Use your own Google account linked by your parent or BijakLearn Team to your learner profile.':'Sign in to see your child’s progress, manage profiles and view parent notices.'}</p>
+   {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin" ref={googleButtonRef}/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your BijakLearn Team for the private learning app link.</p>}
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
-   <p className="signin-note">{admin?'BijakLearn Team permissions are verified by the server after sign-in.':student?'Sign in with the Google account linked to your learner profile.':'New accounts require BijakLearn Team approval. Return here after the team approves your request.'}</p>
+   {!admin&&!student&&<p className="signin-note">New parent accounts need approval from the BijakLearn Team.</p>}
    {!isLive&&demoEnabled&&<button type="button" onClick={()=>onToken('DEMO')}>Explore learning demo</button>}
    <BrandCredit/>
   </section>
@@ -507,7 +512,7 @@ function App(){
  <section className="library-section" id="study-library">
    <div className="section-heading"><div><span className="mini-label">{say(uiLanguage,'libraryEyebrow')}</span><h2>{say(uiLanguage,'explore')}</h2><p>{say(uiLanguage,'libraryText')}</p></div><span className="heading-spark" aria-hidden="true">🌟</span></div>
    <div className="library-filters"><label>{tx("Learning pathway")} <select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{tx("School year")} <select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{[1,2,3,4,5,6].map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><span className="library-hint">{child?'Showing subjects for '+child.name:'Browse without creating a learner'}</span></div>
-   <div className="optional-subject-toggle"><button type="button" aria-pressed={showOptional} onClick={()=>setShowOptional(v=>!v)}>{showOptional?'Hide optional-language catalogues':'Show additional optional languages'} <span aria-hidden="true">{showOptional?'−':'+'}</span></button><small>{tx("Optional subjects vary by school and some do not yet have authored study content.")}</small></div>
+   <div className="optional-subject-toggle"><button type="button" aria-pressed={showOptional} onClick={()=>setShowOptional(v=>!v)}>{showOptional?'Hide optional-language catalogues':'Show additional optional languages'} <span aria-hidden="true">{showOptional?'−':'+'}</span></button><small>{tx("Optional subjects vary by school.")}</small></div>
    <div className="subjects playful-subjects">{subjectOptions.map((subject,index)=>{
     const total=lessonCountForSubject(bootLessons,subject.name,browseYear,browseSchool);
     return <button type="button" className="subject subject-picker" id={'subject-'+subject.id}
@@ -519,8 +524,8 @@ function App(){
      }}>
      <span className="subject-illustration" aria-hidden="true">{subject.icon}</span>
      <strong>{subject.name}</strong>
-     <small>{total?total+' lessons to explore':'Content in preparation'}</small>
-     {total>0?<span className="ready-dot">{say(uiLanguage,'lesson')} ✦</span>:<span className="catalog-dot">{say(uiLanguage,'preparing')}</span>}
+     <small>{total?total+' lessons to explore':tx('No lessons available')}</small>
+     {total>0&&<span className="ready-dot">{say(uiLanguage,'lesson')} →</span>}
     </button>;
    })}</div>
  </section></>}
@@ -535,11 +540,10 @@ function App(){
  <div className="chapter-chips" aria-label={tx("Filter lessons by topic")}><button type="button" aria-pressed={activeChapter==='all'} className={activeChapter==='all'?'selected':''} onClick={()=>setBrowseChapter('all')}>{tx("All topics")}</button>{chapters.map(ch=><button type="button" key={ch} aria-pressed={activeChapter===ch} className={activeChapter===ch?'selected':''} onClick={()=>setBrowseChapter(ch)}>{ch}</button>)}</div>
  <div className="cards lesson-shelf">{visibleLessons.map((l,i)=><button type="button" className="lesson illustrated-lesson" key={l.id} onClick={()=>openLesson(l.id)}><span className="lesson-art" aria-hidden="true">{l.icon}</span><span className="lesson-index">LESSON {i+1}</span><strong>{l.title}</strong><small>{l.chapter||l.subject} · Tahun {l.year}</small><span className="lesson-link">{tx("📖 Open lesson →")}</span></button>)}</div>
  {noSearchResults&&<p className="lesson-no-results">{tx("No matching lessons.")} <button type="button" onClick={()=>{setLessonQuery('');setBrowseChapter('all')}}>{tx("Clear filters")}</button></p>}
- {!subjectLessons.length&&<div className="empty-library"><h2>{tx("More lessons are being prepared")}</h2><p>{tx("Study materials for this subject and year are being prepared. Choose another year or subject to explore currently available lessons.")}</p><button type="button" className="primary" onClick={()=>{setBrowseSubject('Matematik');setBrowseChapter('all');setPage('map')}}>Explore Tahun {browseYear} Mathematics</button></div>}
- <p className="draft-note">{tx("Content and curriculum mappings remain under educational review.")}</p></section>}
+ {!subjectLessons.length&&<div className="empty-library"><h2>{tx("No lessons available")}</h2><p>{tx("Choose another year or subject to find lessons you can open.")}</p><button type="button" className="primary" onClick={()=>{setBrowseSubject('Matematik');setBrowseChapter('all');setPage('map')}}>Explore Tahun {browseYear} Mathematics</button></div>}
+ </section>}
 
  {page==='lesson'&&lesson&&<div className="lesson-reader">
-  <div className="reader-toolbar"><span className="draft-tag">{tx("📚 Draft learning material · Educator review pending")}</span></div>
   <div className="lessonhead colourful-lessonhead"><span className="lesson-head-art" aria-hidden="true">{lesson.icon}</span><div><span className="mini-label">{lesson.subject} • TAHUN {lesson.year}</span><h1>{lesson.title}</h1><p>{tx("Discover the idea, study the examples, then test your understanding.")}</p></div></div>
   <LessonNavigation active={studyTab} onChange={setStudyTab} questionCount={lesson.questions.length} onTutor={()=>setPage('tutor',{lesson})}/>
   <div id="lesson-panel" role="tabpanel" aria-labelledby={'lesson-tab-'+studyTab} tabIndex={0}>

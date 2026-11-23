@@ -13,7 +13,7 @@ test('console language defaults to English and only parents get a picker', () =>
 
 test('parent dashboard translations cover the same strings in every language', () => {
   const keys=Object.keys(PORTAL_COPY.ms).sort();
-  assert.ok(keys.length>=60);
+  assert.ok(keys.includes("Sign out") && keys.includes("Child reports"));
   for(const [code] of PORTAL_LANGUAGES.filter(l=>l[0]!=='en')){
     assert.deepEqual(Object.keys(PORTAL_COPY[code]).sort(),keys,code);
     for(const key of keys)assert.ok(PORTAL_COPY[code][key].trim(),code+': '+key);

@@ -167,28 +167,6 @@ body .signin .signin-tabs button[aria-pressed=true] { background: var(--forest);
 body .signin .signin-form .signin-note { background: #fbf0d6; border: 1px solid #ddcda7; color: #574724; }
 body .signin #google-signin { min-height: 60px; }
 .brand-credit { display: block; margin-top: 12px; font-size: 11px; line-height: 1.7; }
-.book-abacus {
-  display: grid;
-  width: min(210px, 86%);
-  gap: 9px;
-  margin-top: 24px;
-  padding: 10px 4px;
-  border-inline: 7px solid #edb27b;
-  transform: rotate(-4deg);
-}
-.book-abacus i {
-  display: block;
-  height: 17px;
-  background: radial-gradient(ellipse closest-side, var(--bead) 90%, transparent 100%) var(--offset) center / 19px 17px repeat-x;
-  border-radius: 999px;
-  width: var(--length);
-  box-shadow: 0 0 0 1px #ffffff10;
-}
-.book-abacus span { display: flex; align-items: center; background: linear-gradient(#ffdfb3,#ffdfb3) center / 100% 3px no-repeat; }
-.book-abacus span:nth-child(1) { --bead: #ffd166; --length: 76px; --offset: 0px; }
-.book-abacus span:nth-child(2) { --bead: #ff9186; --length: 114px; --offset: 0px; justify-content: flex-end; }
-.book-abacus span:nth-child(3) { --bead: #8de1ce; --length: 95px; --offset: 0px; }
-
 body .welcome-gate .welcome-main, body .app .panel {
   background-color: #fffdf8;
   border: 1px solid #d4c6a8;
@@ -246,7 +224,6 @@ body .portal-shell .portal-footer { background: #f4efdf; color: #344e45; }
   body .signin { margin: 14px 12px 32px; min-height: 0; }
   body .signin .signin-intro { padding: 22px; }
   body .signin .signin-intro h1 { margin-block: 12px; }
-  .book-abacus { display: none; }
   body .portal-shell .portal-nav { border-bottom: 1px solid #d7ceb9; }
 }
 /* Give each sign-in choice a full touch target and a visible keyboard focus. */
