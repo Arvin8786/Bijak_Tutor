@@ -3,6 +3,10 @@ const VERSION = 'bijaklearn-static-v9'; // replaced by scripts/stamp-release.mjs
 const BASE = new URL(self.registration.scope).pathname;
 const BUNDLED_ASSETS = []; // populated by scripts/stamp-release.mjs
 const CORE = ['index.html', 'manifest.webmanifest', 'icons/icon.svg', 'icons/app-icon.svg', 'icons/app-icon-192.png', 'icons/app-icon-512.png', ...BUNDLED_ASSETS].map(path => BASE + path);
+const CACHEABLE_FILES=new Set(CORE.filter(path=>!path.endsWith('/index.html')));
+function mayCache(response){
+ return response.ok&&response.type==='basic'&&!/\b(?:private|no-store)\b/i.test(response.headers.get('Cache-Control')||'');
+}
 self.addEventListener('install', event => {
  event.waitUntil((async () => {
   const cache = await caches.open(VERSION);
@@ -34,18 +38,18 @@ self.addEventListener('fetch', event => {
   }));
   return;
  }
- if(!(/\.(?:js|css|png|jpg|jpeg|svg|webp|woff2?|webmanifest)$/.test(url.pathname)))return;
+ if(url.search||!CACHEABLE_FILES.has(url.pathname))return;
  const isImmutable=/\/assets\/[^/]+-[A-Za-z0-9_-]{8,}\.(?:js|css)$/.test(pathWithinApp);
  if(isImmutable){
   event.respondWith(caches.match(req).then(hit=>hit||fetch(req).then(res=>{
-   if(res.ok&&res.type==='basic'){const clone=res.clone();event.waitUntil(caches.open(VERSION).then(c=>c.put(req,clone)))}
+   if(mayCache(res)){const clone=res.clone();event.waitUntil(caches.open(VERSION).then(c=>c.put(req,clone)))}
    return res;
   })));
   return;
  }
  // Brand icons, fonts and manifest are network first: updates don't remain stuck in an old app cache.
  event.respondWith(fetch(req,{cache:'no-store'}).then(res=>{
-  if(res.ok&&res.type==='basic'){const clone=res.clone();event.waitUntil(caches.open(VERSION).then(c=>c.put(req,clone)))}
+  if(mayCache(res)){const clone=res.clone();event.waitUntil(caches.open(VERSION).then(c=>c.put(req,clone)))}
   return res;
  }).catch(async()=>await caches.match(req)||Response.error()));
 });

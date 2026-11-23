@@ -95,7 +95,11 @@ export async function checkOwnerRolesBrowser(browser,base){
      await page.setViewportSize({width:1280,height:900});
     }else assert.equal(await background('.portal-header'),'rgb(22, 66, 61)','parent header theme');
    }
-   await page.getByRole('button',{name:'Sign out',exact:true}).click();await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
+   if(role==='student'){
+    await page.evaluate(()=>window.dispatchEvent(new PageTransitionEvent('pageshow',{persisted:true})));
+    await page.getByText('Sign in again to reopen your account.',{exact:true}).waitFor();
+   }else await page.getByRole('button',{name:'Sign out',exact:true}).click();
+   await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   }
   const requests=await page.evaluate(()=>window.ownerRequests);
   for(const method of ['getAdministrationOverview','getParentDashboard','authorizeModule','getVideoLibrary','getEducationalVideos'])assert.ok(requests.some(r=>r.method===method&&r.scoped),method+' must retain the selected server role');

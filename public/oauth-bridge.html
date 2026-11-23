@@ -1,17 +1,2 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>BijakLearn Google sign-in</title><style>body{font:18px system-ui;background:#fffaf0;color:#263747;max-width:480px;margin:60px auto;padding:24px}h1{font-size:28px}#message{line-height:1.6}</style></head><body><h1>BijakLearn Junior</h1><p id="message" role="status">Loading Google sign-in…</p><div id="google-signin"></div><script>
-const RETURN_ORIGIN='https://n-vldjkpsrhfo7nws4qz55tdcwo4iumiztih5n5cq-0lu-script.googleusercontent.com';
-const CLIENT_ID='92044632567-40m43hcb263872ausujuc1b4ij99e1u7.apps.googleusercontent.com';
-const nonce=location.hash.slice(1),message=document.getElementById('message');
-history.replaceState(null,'',location.pathname);
-function initializeGoogle(){
- if(!window.opener||!/^\w{64}$/.test(nonce)){message.textContent='Open sign-in from the BijakLearn account page.';return;}
- google.accounts.id.initialize({client_id:CLIENT_ID,nonce,ux_mode:'popup',callback:result=>{
-  if(!result.credential)return;
-  window.opener.postMessage({type:'bijak-google-credential',nonce,credential:result.credential},RETURN_ORIGIN);
-  message.textContent='Sign-in sent securely. Return to BijakLearn.';
- }});
- google.accounts.id.renderButton(document.getElementById('google-signin'),{theme:'outline',size:'medium',shape:'pill',width:280});
- message.textContent='Choose your Google account. Access is checked by the BijakLearn administrator.';
-}
-</script><script src="https://accounts.google.com/gsi/client" async defer onload="initializeGoogle()" onerror="document.getElementById('message').textContent='Google sign-in could not load. Please close this window and try again.'"></script></body></html>
+<html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="script-src 'self' https://accounts.google.com/gsi/; object-src 'none'; base-uri 'none'; form-action 'none'"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>BijakLearn Google sign-in</title><style>body{font:18px system-ui;background:#fffaf0;color:#263747;max-width:480px;margin:60px auto;padding:24px}h1{font-size:28px}#message{line-height:1.6}</style></head><body><h1>BijakLearn Junior</h1><p id="message" role="status">Loading Google sign-in…</p><div id="google-signin"></div><script src="./oauth-bridge.js" defer></script></body></html>

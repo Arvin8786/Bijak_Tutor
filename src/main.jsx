@@ -420,6 +420,14 @@ function App(){
   setError('');
   setLoginNotice(notice);
  },[]);
+ useEffect(()=>{
+  if(!isLive)return;
+  const checkRestoredPage=event=>{
+   if(event.persisted&&activeToken.current)endSession('Sign in again to reopen your account.');
+  };
+  window.addEventListener('pageshow',checkRestoredPage);
+  return ()=>window.removeEventListener('pageshow',checkRestoredPage);
+ },[endSession]);
  const authRequest=useCallback(async(method,...args)=>{
   const credential=activeToken.current;
   if(!credential)throw Error('Sign in again to continue.');
