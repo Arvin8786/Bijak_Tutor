@@ -14,7 +14,7 @@
  --bijak-display: Georgia, "Times New Roman", serif;
 }
 
-body:has(.app), body:has(.portal-shell), body:has(.welcome-gate) {
+body:has(.app), body:has(.portal-shell:where(:not(.portal-admin))), body:has(.welcome-gate) {
  background: var(--bijak-paper);
  color: var(--bijak-ink);
 }
@@ -226,8 +226,8 @@ body .app .progress-track > div { background: var(--section-color); }
 body .app .feedback.good { background: #e5f5ec; color: #194831; border-color: #b9ddca; }
 body .app .feedback.gentle { background: #fff1d9; color: #613b18; border-color: #edd5a6; }
 
-/* Parent and team workspaces */
-body .portal-shell {
+/* Parent workspace */
+body .portal-shell:where(:not(.portal-admin)) {
  --cover: #245f57;
  --cover-dark: #16423d;
  --tint: #e6f2ee;
@@ -236,66 +236,65 @@ body .portal-shell {
  background: #f3f5f5;
  color: var(--bijak-ink);
 }
-body .portal-shell.portal-admin { --cover: #36548a; --cover-dark: #223962; --tint: #e9eff9; }
-body .portal-shell .portal-header {
+body .portal-shell:where(:not(.portal-admin)) .portal-header {
  background: var(--cover-dark);
  border: 0;
  box-shadow: none;
 }
-body .portal-shell .portal-header :is(.bl-brand-copy strong, .bl-brand-copy em, .bl-brand-copy small, .portal-user-copy strong, .portal-language > span) { color: #fff; }
-body .portal-shell .portal-user > button { background: #fff; border-radius: 8px; color: var(--cover-dark); }
-body .portal-shell .portal-nav { background: #fff; border-color: var(--bijak-line); }
-body .portal-shell .portal-nav button { border-radius: 9px; color: var(--bijak-ink); box-shadow: none; }
-body .portal-shell .portal-nav button[aria-current='page'] {
+body .portal-shell:where(:not(.portal-admin)) .portal-header :is(.bl-brand-copy strong, .bl-brand-copy em, .bl-brand-copy small, .portal-user-copy strong, .portal-language > span) { color: #fff; }
+body .portal-shell:where(:not(.portal-admin)) .portal-user > button { background: #fff; border-radius: 8px; color: var(--cover-dark); }
+body .portal-shell:where(:not(.portal-admin)) .portal-nav { background: #fff; border-color: var(--bijak-line); }
+body .portal-shell:where(:not(.portal-admin)) .portal-nav button { border-radius: 9px; color: var(--bijak-ink); box-shadow: none; }
+body .portal-shell:where(:not(.portal-admin)) .portal-nav button[aria-current='page'] {
  color: var(--cover-dark);
  background: var(--tint);
  box-shadow: inset 3px 0 var(--cover);
 }
-body .portal-shell .portal-welcome {
+body .portal-shell:where(:not(.portal-admin)) .portal-welcome {
  min-height: 0;
  background: linear-gradient(115deg,var(--cover-dark),var(--cover));
  border: 0;
  border-radius: 18px;
  box-shadow: var(--bijak-shadow);
 }
-body .portal-shell .portal-welcome h1 {
+body .portal-shell:where(:not(.portal-admin)) .portal-welcome h1 {
  font: 500 clamp(1.9rem, 4vw, 3rem)/1.08 var(--bijak-display);
  letter-spacing: -.03em;
 }
-body .portal-shell .portal-welcome .portal-subtitle { color: #edf5ff; }
-body .portal-shell .portal-main :is(.panel, .child-directory-card) {
+body .portal-shell:where(:not(.portal-admin)) .portal-welcome .portal-subtitle { color: #edf5ff; }
+body .portal-shell:where(:not(.portal-admin)) .portal-main :is(.panel, .child-directory-card) {
  background: #fff;
  border: 1px solid var(--bijak-line);
  border-radius: var(--bijak-radius);
  box-shadow: var(--bijak-shadow);
 }
-body .portal-shell .statgrid .stat {
+body .portal-shell:where(:not(.portal-admin)) .statgrid .stat {
  background: var(--tint);
  border: 1px solid var(--bijak-line);
  border-radius: 12px;
  box-shadow: none;
 }
-body .portal-shell .portal-table th { background: var(--tint); color: var(--cover-dark); }
-body .portal-shell .portal-table :is(th,td) { border-color: var(--bijak-line); }
-body .portal-shell .portal-footer { background: #f3f5f5; color: var(--bijak-muted); }
+body .portal-shell:where(:not(.portal-admin)) .portal-table th { background: var(--tint); color: var(--cover-dark); }
+body .portal-shell:where(:not(.portal-admin)) .portal-table :is(th,td) { border-color: var(--bijak-line); }
+body .portal-shell:where(:not(.portal-admin)) .portal-footer { background: #f3f5f5; color: var(--bijak-muted); }
 
 /* Consistent inputs and actions across the shared surfaces */
-body :is(.app, .portal-shell) :is(input:not([type]), input[type='text'], input[type='email'], input[type='password'], input[type='search'], input[type='tel'], select, textarea) {
+body :is(.app, .portal-shell:where(:not(.portal-admin))) :is(input:not([type]), input[type='text'], input[type='email'], input[type='password'], input[type='search'], input[type='tel'], select, textarea) {
  background-color: #fff;
  color: var(--bijak-ink);
  border-color: #bac7d4;
  border-radius: 8px;
 }
-body :is(.app, .portal-shell) button.primary {
+body :is(.app, .portal-shell:where(:not(.portal-admin))) button.primary {
  background: var(--section-color);
  color: #fff;
  border: 1px solid transparent;
  border-radius: 9px;
  box-shadow: none;
 }
-body :is(.app, .portal-shell) button.primary::after { content: none; }
-body :is(.app, .portal-shell) button.primary:hover:not(:disabled) { background: var(--section-hover); }
-body :is(.app, .portal-shell) button:disabled { opacity: .65; }
+body :is(.app, .portal-shell:where(:not(.portal-admin))) button.primary::after { content: none; }
+body :is(.app, .portal-shell:where(:not(.portal-admin))) button.primary:hover:not(:disabled) { background: var(--section-hover); }
+body :is(.app, .portal-shell:where(:not(.portal-admin))) button:disabled { opacity: .65; }
 body .welcome-gate .welcome-main {
  border: 1px solid var(--bijak-line);
  background: #fff;
@@ -343,7 +342,7 @@ body .welcome-gate .welcome-main h1 { color: var(--bijak-ink); font-family: var(
   padding: 7px 9px;
   font-size: .76rem;
  }
- body .portal-shell .portal-nav {
+ body .portal-shell:where(:not(.portal-admin)) .portal-nav {
   display: flex;
   width: 100%;
   padding: 9px 12px;
@@ -351,7 +350,7 @@ body .welcome-gate .welcome-main h1 { color: var(--bijak-ink); font-family: var(
   overflow-x: auto;
   overscroll-behavior-inline: contain;
  }
- body .portal-shell .portal-nav button {
+ body .portal-shell:where(:not(.portal-admin)) .portal-nav button {
   display: flex;
   flex: 0 0 112px;
   justify-content: center;
@@ -359,10 +358,43 @@ body .welcome-gate .welcome-main h1 { color: var(--bijak-ink); font-family: var(
   font-size: .71rem;
   padding: 7px 5px;
  }
- body .portal-shell .portal-nav .portal-nav-icon { height: 17px; flex-basis: 17px; }
- body .portal-shell .portal-nav .portal-nav-icon svg { height: 16px; width: 16px; }
+ body .portal-shell:where(:not(.portal-admin)) .portal-nav .portal-nav-icon { height: 17px; flex-basis: 17px; }
+ body .portal-shell:where(:not(.portal-admin)) .portal-nav .portal-nav-icon svg { height: 16px; width: 16px; }
  body .app .hero { border-radius: var(--bijak-radius); }
 }
 @media (prefers-reduced-motion: reduce) {
  body .app :is(.subject-picker, .illustrated-lesson, .video-card):hover:not(:disabled) { transform: none; }
 }
+
+/* The original team console, including its three-column mobile menu. */
+body .portal-shell.portal-admin {
+ --bijak-ink: #172d39;
+ --bijak-muted: #4f6572;
+ --bijak-line: #dce7e6;
+ --bijak-radius: 22px;
+ --bijak-shadow: 0 10px 28px #1736440d;
+ --cover: #354780;
+ --cover-dark: #202e58;
+ --tint: #edf0fa;
+ --bl-primary: var(--cover);
+ background: #f2f7f6;
+ color: var(--bijak-ink);
+}
+body .portal-admin .portal-header {
+ background: linear-gradient(105deg, var(--cover-dark), var(--cover));
+ border-bottom: 3px solid #e1b75c;
+}
+body .portal-admin .portal-user > button { border-radius: 11px; background: #fff; }
+body .portal-admin .portal-nav { background: #fff; border-color: var(--bijak-line); }
+body .portal-admin .portal-nav button { border-radius: 11px; }
+body .portal-admin .portal-nav button[aria-current=page] { color: var(--cover-dark); background: var(--tint); box-shadow: inset 3px 0 var(--cover); }
+body .portal-admin .portal-welcome {
+ border: 0;
+ border-radius: var(--bijak-radius);
+ background: radial-gradient(ellipse at 95% 130%, #ffffff39, transparent 63%), linear-gradient(105deg, var(--cover-dark), var(--cover));
+ box-shadow: var(--bijak-shadow);
+}
+body .portal-admin .portal-welcome h1 { font: 800 clamp(1.8rem, 4vw, 3.1rem)/1.1 system-ui, sans-serif; letter-spacing: -.035em; }
+body .portal-admin .portal-main .panel { background: #fff; border: 1px solid var(--bijak-line); border-radius: 18px; box-shadow: var(--bijak-shadow); }
+body .portal-admin .statgrid .stat { background: var(--tint); border-radius: 14px; box-shadow: none; }
+body .portal-admin .portal-footer { background: #f2f7f6; color: var(--bijak-muted); }

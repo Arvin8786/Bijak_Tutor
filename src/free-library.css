@@ -19,6 +19,121 @@ body .app .free-library > header {display:block; position:static; padding:clamp(
 .free-sudoku select:nth-child(2n) {margin-right:.1rem; border-right:3px solid #223961}
 .free-sudoku select:nth-child(n+5):nth-child(-n+8) {border-bottom:3px solid #223961}
 .free-robot span {display:grid; place-items:center; min-height:42px; border:1px solid #c6d6df; border-radius:.35rem}
-.free-book article {max-width:42rem; background:#fcf8ed; border-radius:1rem; padding:1.25rem; font:1.15rem/1.65 Georgia,serif}
 .free-library .free-match-form {display:grid; gap:.6rem; max-width:26rem}
 .free-match-form label {display:grid; gap:.25rem}
+
+/* The modal takes the entire app viewport, including in the installed PWA. */
+html:has(.epub-reader[open]) {overflow:hidden}
+.free-library .epub-reader {
+ position:fixed;
+ inset:0;
+ width:100%;
+ max-width:none;
+ height:100%;
+ height:100dvh;
+ max-height:none;
+ box-sizing:border-box;
+ margin:0;
+ padding:0;
+ border:0;
+ background:#ede5d4;
+ color:#242c2e;
+ overflow:hidden;
+}
+.epub-reader::backdrop {background:#ede5d4}
+.epub-reader-layout {
+ height:100%;
+ display:grid;
+ grid-template-rows:auto minmax(0,1fr) auto;
+}
+.epub-toolbar,.epub-pagination {
+ display:grid;
+ grid-template-columns:minmax(max-content,1fr) minmax(0,2fr) minmax(max-content,1fr);
+ align-items:center;
+ gap:.75rem;
+ padding:.6rem max(1rem,env(safe-area-inset-right)) .6rem max(1rem,env(safe-area-inset-left));
+ background:#fffaf0;
+}
+.epub-toolbar {
+ padding-top:max(.6rem,env(safe-area-inset-top));
+ border-bottom:1px solid #ddd1b9;
+}
+.epub-toolbar h2 {
+ margin:0;
+ text-align:center;
+ overflow-wrap:anywhere;
+ font:700 clamp(1.05rem,2.5vw,1.4rem)/1.2 Georgia,serif;
+ color:#283a36;
+}
+.epub-toolbar > a {justify-self:end;color:#1a5a52;padding:.6rem .45rem}
+.epub-toolbar > button,.epub-pagination > button {justify-self:start;white-space:nowrap}
+.epub-pagination > button:last-child {justify-self:end}
+.epub-toolbar button,.epub-pagination button {
+ min-height:44px;
+ padding:.45rem .7rem;
+ border:1px solid #d5c7ac;
+ border-radius:.55rem;
+ color:#214943;
+ background:#fffdf6;
+ font-size:.88rem;
+}
+.epub-pagination {
+ border-top:1px solid #ddd1b9;
+ padding-bottom:max(.6rem,env(safe-area-inset-bottom));
+ text-align:center;
+}
+.epub-pagination span[role="status"] {font-size:.85rem;font-variant-numeric:tabular-nums}
+.epub-reading-area {
+ min-height:0;
+ overflow:hidden auto;
+ overscroll-behavior:contain;
+ touch-action:pan-y pinch-zoom;
+ padding:clamp(.5rem,2.5vw,1.45rem) max(.5rem,env(safe-area-inset-right)) clamp(.5rem,2.5vw,1.45rem) max(.5rem,env(safe-area-inset-left));
+}
+.epub-paper {
+ position:relative;
+ isolation:isolate;
+ perspective:1150px;
+ width:min(100%,48rem);
+ min-height:100%;
+ display:grid;
+ margin:auto;
+}
+.epub-leaf {
+ margin:0;
+ padding:clamp(1.4rem,5vw,3.5rem) clamp(1.45rem,7vw,5rem);
+ border-radius:.22rem .65rem .65rem .22rem;
+ border:1px solid #ded2b7;
+ background:linear-gradient(90deg,#e6dac1 0%,#fffaf0 3%,#fffdf5 23%);
+ box-shadow:0 4px 15px #43301624;
+ font:clamp(1.14rem,2.9vw,1.48rem)/1.65 Georgia,serif;
+ overflow-wrap:anywhere;
+}
+.epub-reader .epub-leaf h3 {
+ margin:0 0 .8em;
+ color:#293b37;
+ font:700 clamp(1.55rem,4vw,2.35rem)/1.2 Georgia,serif;
+}
+.epub-reader .epub-leaf p {font:inherit;margin:0 0 .8em}
+.epub-turn {
+ position:absolute;
+ z-index:1;
+ inset:0;
+ overflow:hidden;
+ pointer-events:none;
+ backface-visibility:hidden;
+ animation:.38s cubic-bezier(.42,0,.18,1) both;
+}
+.epub-turn-next {transform-origin:left center;animation-name:epub-turn-next}
+.epub-turn-prev {transform-origin:right center;animation-name:epub-turn-prev}
+@keyframes epub-turn-next {to {transform:rotateY(-103deg);opacity:.32}}
+@keyframes epub-turn-prev {to {transform:rotateY(103deg);opacity:.32}}
+.epub-error {margin:1.25rem}
+@media (max-width:560px) {
+ .epub-toolbar {grid-template-columns:1fr auto;gap:.25rem .6rem}
+ .epub-toolbar h2 {grid-row:2;grid-column:1/-1;padding:.22rem 0 .35rem}
+ .epub-toolbar > a {grid-row:1;grid-column:2}
+ .epub-pagination {gap:.35rem;padding-left:max(.55rem,env(safe-area-inset-left));padding-right:max(.55rem,env(safe-area-inset-right))}
+}
+@media (prefers-reduced-motion:reduce) {.epub-reader .epub-turn {display:none}}
+html[data-motion="off"] .epub-reader .epub-turn {display:none}
