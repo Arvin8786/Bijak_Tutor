@@ -56,6 +56,7 @@ await page.addInitScript(() => {
     }},
    };
   });
+  await page.addInitScript(()=>localStorage.setItem('bijaklearn:ui-language:v1','en'));
   await page.goto(base);
   await page.getByRole('button', {name: 'Test family sign-in'}).click();
   await page.getByRole('alert').filter({hasText: 'waiting for BijakLearn Team approval'}).waitFor();
