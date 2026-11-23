@@ -7,6 +7,7 @@ import AccountAccessPanel from './AccountAccessPanel.jsx';
 import StudentAccessPanel from './StudentAccessPanel.jsx';
 import KasihReviewPanel from './KasihReviewPanel.jsx';
 import FamilyCommerce from './FamilyCommerce.jsx';
+import {ParentMockResults} from './MockExams.jsx';
 import VideoAdminPanel from './VideoAdminPanel.jsx';
 import PremiumKasihApplication from './PremiumKasihApplication.jsx';
 import {setUiLang} from './i18n.js';
@@ -36,7 +37,7 @@ export function StudentUsage({request,page}){
 }
 export function RolePortals({boot,request,onSignOut}){
  const admin=boot.role==='ADMIN';
- const tabs=admin?[['overview','Overview & usage'],['accounts','Access & family links'],['enrolments','Enrolment approvals'],['tiers','Module & tier settings'],['videos','Educational videos'],['payments','Payment controls'],['offers','Discounts & referrals'],['kasih','Premium Kasih approvals'],['feedback','Parent feedback'],['notices','Parent notices']]:[['reports','Child reports'],['enrol','Enrol a child'],['feedback','Comments & suggestions'],['membership','Membership & payments'],['referrals','Referrals & earnings'],['kasih','Premium Kasih'],['password','Password sign-in']];
+ const tabs=admin?[['overview','Overview & usage'],['accounts','Access & family links'],['enrolments','Enrolment approvals'],['tiers','Module & tier settings'],['videos','Educational videos'],['payments','Payment controls'],['offers','Discounts & referrals'],['kasih','Premium Kasih approvals'],['feedback','Parent feedback'],['notices','Parent notices']]:[['reports','Child reports'],['mock-results','Mock exam results'],['enrol','Enrol a child'],['feedback','Comments & suggestions'],['membership','Membership & payments'],['referrals','Referrals & earnings'],['kasih','Premium Kasih'],['password','Password sign-in']];
  const [language,setLanguage]=useState(()=>admin?'en':readPortalLanguage());
  const lang=admin?'en':language,t=text=>portalText(lang,text);
  setUiLang(lang);
@@ -105,6 +106,7 @@ export function RolePortals({boot,request,onSignOut}){
  {!admin&&data&&page==='enrol'&&<ParentEnrolment parent={data.parent} enrolments={data.enrolments} mutate={mutate} busy={busy} t={t}/>}
  {!admin&&data&&page==='feedback'&&<ParentFeedback feedback={data.feedback} mutate={mutate} busy={busy} t={t}/>}
  {!admin&&['membership','referrals'].includes(page)&&<FamilyCommerce revision={sheetRevision+refresh} request={request} section={page}/>}
+ {!admin&&page==='mock-results'&&<ParentMockResults request={request} children={children}/>}
  {!admin&&page==='kasih'&&<PremiumKasihApplication request={request} live={true} student={false} onSubmitted={()=>setRefresh(n=>n+1)}/>}
  </main>{!admin&&<ParentNoticePopup request={request}/>}<footer className="portal-footer">BijakLearn Junior · {admin?'BijakLearn Team operations':t('Family reports')} · {admin?'Google account access is checked by the server.':t('Google account access is checked by the server.')}<BrandCredit language={lang}/></footer></div>;
 }

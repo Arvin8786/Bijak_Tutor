@@ -41,6 +41,7 @@ import GrowthHub from './GrowthHub.jsx';
 import './growth.css';
 import WordTilesGame from './WordTilesGame.jsx';
 import FreeLibrary from './FreeLibrary.jsx';
+import MockExams from './MockExams.jsx';
 import LanguageStudio from './LanguageStudio.jsx';
 import './word-tiles.css';
 import ActivityArcade from './ActivityArcade.jsx';
@@ -109,7 +110,7 @@ async function localCall(method,args){
  if(method==='getParentReport'){if(args[2]!==mockPin)throw Error('Incorrect parent PIN');const childId=args[1];const skills=Object.entries(mockAttempts).filter(([k])=>k.startsWith(childId+'/'));const attempts=skills.flatMap(([,s])=>s.attempts);return {attempts:attempts.length,errors:attempts.filter(a=>!a.correct).length,independent:attempts.filter(a=>a.correct&&!a.hints&&a.mode!=='choice').length,mastered:skills.filter(([,s])=>evaluateSkill(s).mastered).length,topics:skills.map(([k,s])=>({lessonId:k.split('/')[1],...evaluateSkill(s)})),recent:attempts.slice(-20)};}
  throw Error('Unsupported demo operation: '+method)
 }
-const directMethods=new Set(['getPasswordSettings','saveParentPassword','saveChildPassword','passwordSignIn','passwordSignOut','friendMatch']);
+const directMethods=new Set(['getPasswordSettings','saveParentPassword','saveChildPassword','passwordSignIn','passwordSignOut','friendMatch','mockExamRequest']);
 let accountUsesDirect=false;
 function api(method,...args){const pending=!isLive?localCall(method,args):directMethods.has(method)||accountUsesDirect?directAccountCall(method,...args):!nativeAccountService?remoteAccountCall(method,...args):new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));return pending.catch(error=>{if(error instanceof AccountConnectionError)throw error;throw new Error(String(error.message||error).replace(/\badministrator\b/gi,'BijakLearn Team'))});}
 function accountNotice(error) {
@@ -543,6 +544,7 @@ function App(){
   </div>
   <div className="nav-group" role="group" aria-label={say(uiLanguage,'navPlay')}><span className="nav-title">{say(uiLanguage,'navPlay')}</span>
    <NavButton icon="✂️" label="Creative Projects" active={page==='creative-projects'} onClick={()=>setPage('creative-projects')}/>
+   {isLive&&boot?.role==='STUDENT'&&child?.year>0&&<NavButton icon="📝" label="Year-end mock exams" active={page==='mock-exams'} onClick={()=>setPage('mock-exams')}/>}
    <NavButton icon="🎯" label={say(uiLanguage,'practice')} active={page==='practice'} onClick={()=>setPage('practice')}/>
    <NavButton icon="🔡" label={say(uiLanguage,'wordGame')} active={page==='wordgame'} onClick={()=>setPage('wordgame')}/>
    <NavButton icon="🎪" label={say(uiLanguage,'arcade')} active={page==='arcade'} onClick={()=>setPage('arcade')}/>
@@ -581,6 +583,7 @@ function App(){
  {page==='arcade'&&<ActivityArcade edition={edition}/>}
  {page==='wordgame'&&<WordTilesGame/>}
  {page==='growth'&&<GrowthHub studentOnly={boot?.role==='STUDENT'} audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?id=>authRequest("getGrowthModule",id):null} checkAnswer={isLive?(lessonId,answerIndex)=>authRequest("checkGrowthAnswer",lessonId,answerIndex):null}/>}
+ {page==='mock-exams'&&isLive&&boot?.role==='STUDENT'&&<MockExams request={authRequest}/>}
  {page==='practice'&&<PracticeArena lessons={activeLessons} year={browseYear} school={browseSchool} language={uiLanguage} onOpenLesson={openLesson} onAttempt={isLive?undefined:recordPractice}/>}
  {page==='tutor'&&<StudyBuddy lessons={activeLessons} year={browseYear} subject={lesson?.subject||''} currentLesson={lesson} askOnline={isLive?(question,context)=>authRequest('askTutor',question,context):null}/>}
  {page==='packs'&&<><div className="library-filters"><label>Learning pathway<select value={browseSchool} disabled={!!child} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Year<select value={browseYear} disabled={!!child} onChange={e=>setYear(Number(e.target.value))}>{primaryYears.map(y=><option key={y} value={y}>Tahun {y}</option>)}</select></label><span className="library-hint">Short learning adventures created from available lessons</span></div><AdventurePacks lessons={activeLessons.filter(l=>(!l.school||l.school==='ALL'||l.school===browseSchool))} year={browseYear} school={browseSchool} childId={childId} attempts={isLive?{}:mockAttempts} onOpen={openLesson} onPreschool={edition===JUNIOR?()=>setPage('preschool'):undefined}/></>}

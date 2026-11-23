@@ -4,6 +4,29 @@ export async function checkOwnerRolesBrowser(browser,base){
  page.on('pageerror',e=>errors.push(e.message));
  try{
   await page.route('https://accounts.google.com/gsi/client',r=>r.fulfill({status:200,contentType:'application/javascript',body:''}));
+  let savedExamAnswer=false;
+  await page.route('https://script.google.com/macros/s/**/exec',async route=>{
+   const post=route.request().postDataJSON();
+   assert.equal(post.method,'mockExamRequest');
+   const [credential,action,input]=post.args;
+   const completed={id:'exam-browser',title:'Mathematics · Year 1',year:1,total:1,finished:true,score:1,answered:1,endsAt:1700003600000};
+   let value;
+   if(action==='results'){
+    assert.equal(credential.role,'parent');
+    assert.equal(input.childId,'owner-child');
+    value=[completed];
+   }else{
+    assert.equal(credential.role,'student');
+    if(action==='catalog')value={papers:[{id:'1-maths',title:'Mathematics',year:1}],active:null,completed:[]};
+    if(action==='start')value={...completed,finished:false,serverNow:completed.endsAt-5000,questions:[{prompt:'What is 3 + 2?',options:['5','7']}],answers:{}};
+    if(action==='save'){assert.equal(input.answer,'0');savedExamAnswer=true;value={saved:true};}
+    if(action==='state'){
+     assert.equal(savedExamAnswer,true);
+     value={...completed,review:[{prompt:'What is 3 + 2?',answer:'5',submitted:'5',correct:true}]};
+    }
+   }
+   await route.fulfill({status:200,headers:{'access-control-allow-origin':'*'},json:{ok:true,value}});
+  });
   await page.addInitScript(()=>{
    window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';localStorage.setItem('bijaklearn:ui-language:v1','en');let callback;
    const child={id:'owner-child',name:'My learner',year:1,school:'SK',language:'en'};window.ownerRequests=[];
@@ -35,7 +58,11 @@ export async function checkOwnerRolesBrowser(browser,base){
   for(const [choice,role,heading] of [['BijakLearn Team','admin','Overview & usage'],['Parent sign-in','parent','Child reports'],['Student sign-in','student','Your learning profile']]){
    await page.getByRole('button',{name:choice,exact:true}).click();await page.getByRole('button',{name:'Use my Google account',exact:true}).click();
    await page.getByRole('heading',{name:heading,exact:true}).waitFor();
-   if(role==='parent')await page.getByText('No tests yet',{exact:true}).waitFor();
+   if(role==='parent'){
+    await page.getByText('No tests yet',{exact:true}).waitFor();
+    await page.getByRole('button',{name:'Mock exam results',exact:true}).click();
+    await page.getByText('Mathematics · Year 1 · 1/1',{exact:true}).waitFor();
+   }
    if(role==='student'){
     assert.equal(await page.locator('.portal-shell').count(),0);
     assert.equal(await background('.app .hero'),'rgb(17, 59, 60)','learner header surface');
@@ -47,6 +74,14 @@ export async function checkOwnerRolesBrowser(browser,base){
     await page.locator('nav.nav').getByRole('button',{name:'Learning Videos',exact:true}).click();await page.getByText('No videos have been added yet. Please check again soon!',{exact:true}).waitFor();
     assert.equal(await page.locator('.video-page').evaluate(el=>getComputedStyle(el).display),'grid','video styles must be loaded');
     assert.equal(await page.getByRole('button',{name:'Publish video',exact:true}).count(),0);
+    await page.getByRole('button',{name:'Year-end mock exams',exact:true}).click();
+    await page.getByLabel('Subject',{exact:true}).selectOption('1-maths');
+    await page.getByRole('button',{name:'Start one-hour exam',exact:true}).click();
+    await page.getByRole('radio',{name:'5',exact:true}).check();
+    await page.getByRole('button',{name:'Save answer',exact:true}).click();
+    await page.getByText('Answer saved',{exact:true}).waitFor();
+    await page.getByText('1 / 1',{exact:true}).waitFor();
+    await page.getByRole('heading',{name:'What is 3 + 2?',exact:true}).waitFor();
    }else {
     assert.equal(await page.locator('nav.nav').count(),0);
     assert.match(await page.locator('.portal-welcome').evaluate(el=>getComputedStyle(el).backgroundImage),role==='admin'?/rgb\(53, 71, 128\)/:/rgb\(36, 95, 87\)/,'role-specific header colors');

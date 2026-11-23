@@ -16,6 +16,7 @@ function doPost(event){
    value=accountPasswordSettingsRequest_(method,args);
   }else if(method==='parentNoticeRequest'&&args.length===2)value=parentNoticeRequest(...args);
   else if(method==='friendMatch'&&args.length===3)value=friendMatch(...args);
+  else if(method==='mockExamRequest'&&args.length===3)value=mockExamRequest(...args);
   else value=portalRequest(method,args);
   result={ok:true,value};
  }catch(error){
