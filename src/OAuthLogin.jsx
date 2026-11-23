@@ -1,6 +1,7 @@
 import React,{useEffect,useRef,useState} from 'react';
 import {acceptGoogleMessage} from './oauthMessage.js';
-const BRIDGE='https://arvin8786.github.io/Bijak_Tutor/oauth-bridge.html';
+const site=import.meta.env.VITE_PUBLIC_APP_URL||'https://arvin8786.github.io/Bijak_Tutor/';
+const BRIDGE=new URL('oauth-bridge.html',site.replace(/\/?$/,'/')).href;
 export default function OAuthLogin({onToken,notice,live}){
  const [issue,setIssue]=useState(''),[busy,setBusy]=useState(false);
  const active=useRef(null),callback=useRef(onToken);callback.current=onToken;
