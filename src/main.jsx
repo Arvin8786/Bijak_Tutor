@@ -565,7 +565,7 @@ function App(){
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<><AccountAccessPanel request={authRequest}/><StudentAccessPanel request={authRequest}/><KasihReviewPanel request={authRequest}/></>}
  {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={activeLessons} initialYear={browseYear} years={primaryYears} school={browseSchool} onOpenLesson={openLesson}/>}
  {page==='science-lab'&&<ScienceLab language={uiLanguage}/>}
- {page==='arcade'&&<ActivityArcade/>}
+ {page==='arcade'&&<ActivityArcade edition={edition}/>}
  {page==='wordgame'&&<WordTilesGame/>}
  {page==='growth'&&<GrowthHub studentOnly={boot?.role==='STUDENT'} audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?id=>authRequest("getGrowthModule",id):null} checkAnswer={isLive?(lessonId,answerIndex)=>authRequest("checkGrowthAnswer",lessonId,answerIndex):null}/>}
  {page==='practice'&&<PracticeArena lessons={activeLessons} year={browseYear} school={browseSchool} language={uiLanguage} onOpenLesson={openLesson} onAttempt={isLive?undefined:recordPractice}/>}

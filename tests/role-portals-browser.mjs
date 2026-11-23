@@ -116,6 +116,8 @@ export async function checkRolePortalsBrowser(browser,base){
    await page.getByLabel('Choose a project',{exact:true}).selectOption('bonus');
    await page.getByRole('heading',{name:'Design a message from space',exact:true}).waitFor();
    assert.equal(await page.locator('.dictionary-project input:checked').count(),0);
+   await page.locator('nav.nav').getByRole('button',{name:'Activity Playground',exact:true}).click();
+   await page.locator('.arcade-hero').getByText('BijakLearn Junior Plus · Activity Playground',{exact:true}).waitFor();
    assert.equal(await page.locator('.portal-shell').count(),0);assert.equal(await page.getByRole('button',{name:'Manage account access',exact:true}).count(),0);
   }
   assert.equal(new URL(page.url()).pathname,'/Bijak_Tutor/','Role changes must not navigate away from the app URL');assert.deepEqual(errors,[]);await page.close();

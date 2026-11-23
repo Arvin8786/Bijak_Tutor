@@ -1,5 +1,6 @@
 import React,{useState} from 'react';
 import {tx} from './i18n.js';
+import {JUNIOR} from './learningEditions.js';
 import {PICTURE_SUBTRACTION,VOCAB_CARDS,HIJAIYAH,makeMathOptions,matchOptions,makeHijaiyahOptions} from './miniActivities.js';
 import {DrawingPad} from './PreschoolStudio.jsx';
 import ExtraPractice,{EXTRA_MODES} from './ExtraPractice.jsx';
@@ -17,7 +18,7 @@ function say(text,lang='en-US'){
  const utterance=new SpeechSynthesisUtterance(String(text));utterance.lang=lang;utterance.rate=.84;
  window.speechSynthesis.speak(utterance);return true;
 }
-export default function ActivityArcade(){
+export default function ActivityArcade({edition=JUNIOR}){
  const [mode,setMode]=useState('subtract'),[index,setIndex]=useState(0),[choice,setChoice]=useState(null),[stars,setStars]=useState(0),[lang,setLang]=useState('ms'),[guide,setGuide]=useState(false),[message,setMessage]=useState(''),[level,setLevel]=useState(1);
  const resetFeedback=()=>{setChoice(null);setGuide(false);setMessage('')};
  const next=()=>{setIndex(i=>i+1);resetFeedback()};
@@ -35,7 +36,7 @@ export default function ActivityArcade(){
  const expected=mode==='subtract'?n:mode==='match'?label:mode==='hijaiyah'?target[0]:'';
  const solved=choice!==null;
  return <section className="activity-arcade" aria-label={tx("Interactive games and activities")}>
-  <div className="arcade-hero"><div><span className="growth-kicker">{tx("🌈 BIJAKLEARN JUNIOR • ACTIVITY PLAYGROUND")}</span><h1>{tx("Learn by playing!")}</h1><p>{tx("Tap, count, match, trace and explore. These are original interactive activities, inspired by everyday early-learning themes.")}</p></div><span aria-hidden="true">🎪</span></div>
+  <div className="arcade-hero"><div><span className="growth-kicker">{edition.name} · {tx('Activity Playground')}</span><h1>{tx("Learn by playing!")}</h1><p>{tx("Tap, count, match, trace and explore. Choose a game to practise words, numbers, patterns or creative skills.")}</p></div><span aria-hidden="true">🎪</span></div>
   <div className="arcade-intro"><strong>{MODES.length} interactive activities</strong><span>{tx("Choose any game, then keep tapping Next for fresh practice. 🌟")}</span></div>
   <div className="arcade-modes">{MODES.map(([id,icon,title,desc])=><button key={id} type="button" aria-pressed={mode===id} onClick={()=>switchMode(id)} className={mode===id?'selected':''}><span aria-hidden="true">{icon}</span><strong>{title}</strong><small>{desc}</small></button>)}</div>
   <div className="arcade-stage">
