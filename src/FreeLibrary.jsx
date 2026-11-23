@@ -1,7 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import FreeBooks from './FreeBooks.jsx';
 import FriendMatch from './FriendMatch.jsx';
-import WordTilesGame from './WordTilesGame.jsx';
 import {games, matchPairs, physicalGames, shuffle} from './freeGames.js';
 import './free-library.css';
 
@@ -93,7 +92,7 @@ function RobotGrid(){
  </div>;
 }
 
-export default function FreeLibrary({request}){
+export default function FreeLibrary({request,openWordTiles}){
  const [tab,setTab]=useState('Books'),[active,setActive]=useState(null),[filter,setFilter]=useState('All');
  function switchTab(value){setTab(value);setActive(null)}
  const [id,title,,round]=active||[];
@@ -102,8 +101,8 @@ export default function FreeLibrary({request}){
  {tab==='Books'&&<FreeBooks/>}
  {tab==='Physical games'&&<section><h2>Physical game rules</h2><div className="free-grid">{physicalGames.map(([name,rules])=><article key={name}><h3>{name}</h3><p>{rules}</p></article>)}</div></section>}
  {tab==='Learning games'&&(active?<section><button onClick={()=>setActive(null)}>Back to games</button><h2>{title}</h2>
- {id==='pairs'?<WordMatch/>:id==='sudoku'?<Sudoku/>:id==='grid'?<RobotGrid/>:id==='friend'?<FriendMatch request={request}/>:id==='tiles'?<WordTilesGame/>:<Challenge key={id} makeRound={round}/>}
+ {id==='pairs'?<WordMatch/>:id==='sudoku'?<Sudoku/>:id==='grid'?<RobotGrid/>:id==='friend'?<FriendMatch request={request}/>:<Challenge key={id} makeRound={round}/>}
  </section>:<section><h2>{games.length} learning games</h2><label>Skill <select value={filter} onChange={e=>setFilter(e.target.value)}>{['All','Words','Maths','Logic','Science'].map(item=><option key={item}>{item}</option>)}</select></label>
- <div className="free-grid">{games.filter(game=>filter==='All'||game[2]===filter).map(game=><button key={game[0]} onClick={()=>setActive(game)}><strong>{game[1]}</strong><small>{game[2]}</small></button>)}</div></section>)}
+ <div className="free-grid">{games.filter(game=>filter==='All'||game[2]===filter).map(game=><button key={game[0]} onClick={()=>game[0]==='tiles'?openWordTiles():setActive(game)}><strong>{game[1]}</strong><small>{game[2]}</small></button>)}</div></section>)}
  </section>;
 }
