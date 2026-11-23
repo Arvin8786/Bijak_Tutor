@@ -5,6 +5,7 @@ import {chromium} from 'playwright';
 import {spawn} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {LESSONS} from '../src/lessons.js';
+import {DISCOVERY_MODULES} from '../src/discoveryModules.js';
 import {questionBank, selectPractice} from '../src/practiceBank.js';
 import {buildWordSearch, LIFE_CYCLES} from '../src/extendedPracticeData.js';
 import {checkAccountAccessBrowser} from './account-access-browser.mjs';
@@ -388,7 +389,7 @@ try{
     await page.getByRole('button',{name:'Interactive Modules'}).click();
     const modules=page.locator('.discovery-library');
     await modules.getByRole('heading',{name:/Interactive Modules/}).waitFor();
-    assert.equal(await modules.getByRole('button').count(),20);
+    assert.equal(await modules.getByRole('button').count(),DISCOVERY_MODULES.flatMap(module=>module.lessons).filter(lesson=>lesson.year<=3).length);
     await modules.getByRole('button',{name:/Pasar mini/}).click();
     const activity=page.getByRole('region',{name:'Interactive lesson activity'});
     await activity.getByRole('button',{name:'20 sen',exact:true}).click();
@@ -453,6 +454,11 @@ try{
     await lab.getByRole('button',{name:'Check my work'}).click();
     await lab.getByRole('status').filter({hasText:'20 minutes past 9'}).waitFor();
     await pageControls.getByRole('button',{name:'Back',exact:true}).click();
+    assert.equal(await paths.getByRole('button',{name:'Open Fraction Lab'}).count(),0);
+    await pageControls.getByRole('button',{name:'Go to Home',exact:true}).click();
+    await page.getByRole('button',{name:'BijakLearn Junior Plus Years 4–6',exact:true}).click();
+    await continueLearning.getByRole('button',{name:'Explore learning paths'}).click();
+    assert.equal(await paths.getByRole('button',{name:'Open Clock Lab'}).count(),0);
     await paths.getByRole('button',{name:'Open Fraction Lab'}).click();
     await lab.getByRole('combobox',{name:'Equal parts'}).selectOption('8');
     for(let i=0;i<6;i++)await lab.getByRole('slider').press('ArrowRight');
