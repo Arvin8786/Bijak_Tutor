@@ -17,6 +17,8 @@ export const APP_MODULES = [
  ['adult-ai','Adult Learn AI','growth',false,0],
  ['junior-hobby','Junior Creative Hobbies','growth',true,0],
  ['adult-hobby','Adult Creative Hobbies','growth',false,0],
+ ['picture-dictionary','Picture Dictionary','dictionary',true,0],
+ ['creative-projects','Creative Projects','creative-projects',true,0],
  ['parent-reports','Parent Learning Insights','parent',false,0]
 ].map(([moduleId,title,route,free,freeLessonLimit])=>({moduleId,title,route,enabled:true,free,premium:true,premiumKasih:true,freeLessonLimit,notes:moduleId==='study-library'?'Free limit per subject, year and stream. 0 denies free lessons.':'Module access; 0 means no additional lesson-count limit.'}));
 export function moduleForPage(page,audience='junior',kind='ai'){

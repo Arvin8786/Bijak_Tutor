@@ -1,3 +1,4 @@
+import {checkPasswordBrowser} from './password-browser.mjs';
 import {checkAccountSyncBrowser} from './account-sync-browser.mjs';
 import {checkOwnerRolesBrowser} from './owner-roles-browser.mjs';
 import {chromium} from 'playwright';
@@ -601,6 +602,7 @@ try{
   assert.equal(await offlinePage.locator('nav.nav').count(),0,'Offline navigation must preserve the login gate');
  }
  await offlineContext.close();
+ await checkPasswordBrowser(browser, base);
  await checkAccountAccessBrowser(browser, base);
  await checkTierAccessBrowser(browser, base);
  await checkStudentAccessBrowser(browser, base);

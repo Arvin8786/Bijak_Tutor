@@ -11,11 +11,12 @@ import PremiumKasihApplication from './PremiumKasihApplication.jsx';
 import {setUiLang} from './i18n.js';
 import {PORTAL_LANGUAGES,portalText,readPortalLanguage,writePortalLanguage} from './portalLocale.js';
 import './role-portals.css';
+import {ChildPasswordFields,FamilyPasswordSettings} from './PasswordSettings.jsx';
 
 const minutes=seconds=>Math.round((seconds||0)/60)+' min';
 function useRemote(request,method,refresh){
  const [result,setResult]=useState({data:null,error:''});
- useEffect(()=>{let active=true;request(method).then(data=>{if(active)setResult({data,error:''})}).catch(error=>{if(active)setResult({data:null,error:error.message})});return()=>{active=false}},[request,method,refresh]);return result;
+ useEffect(()=>{if(!method)return;let active=true;request(method).then(data=>{if(active)setResult({data,error:''})}).catch(error=>{if(active)setResult({data:null,error:error.message})});return()=>{active=false}},[request,method,refresh]);return result;
 }
 function RemoteState({result}){return result.error?<p role="alert" className="error">{result.error}</p>:!result.data?<p role="status">Loading…</p>:null}
 export function StudentUsage({request,page}){
@@ -34,7 +35,7 @@ export function StudentUsage({request,page}){
 }
 export function RolePortals({boot,request,onSignOut}){
  const admin=boot.role==='ADMIN';
- const tabs=admin?[['overview','Overview & usage'],['accounts','Access & family links'],['enrolments','Enrolment approvals'],['tiers','Module & tier settings'],['videos','Educational videos'],['payments','Payment controls'],['offers','Discounts & referrals'],['kasih','Premium Kasih approvals'],['feedback','Parent feedback'],['notices','Parent notices']]:[['reports','Child reports'],['enrol','Enrol a child'],['feedback','Comments & suggestions'],['membership','Membership & payments'],['referrals','Referrals & earnings'],['kasih','Premium Kasih']];
+ const tabs=admin?[['overview','Overview & usage'],['accounts','Access & family links'],['enrolments','Enrolment approvals'],['tiers','Module & tier settings'],['videos','Educational videos'],['payments','Payment controls'],['offers','Discounts & referrals'],['kasih','Premium Kasih approvals'],['feedback','Parent feedback'],['notices','Parent notices']]:[['reports','Child reports'],['enrol','Enrol a child'],['feedback','Comments & suggestions'],['membership','Membership & payments'],['referrals','Referrals & earnings'],['kasih','Premium Kasih'],['password','Password sign-in']];
  const [language,setLanguage]=useState(()=>admin?'en':readPortalLanguage());
  const lang=admin?'en':language,t=text=>portalText(lang,text);
  setUiLang(lang);
@@ -44,6 +45,7 @@ export function RolePortals({boot,request,onSignOut}){
  const [selectedChild,setSelectedChild]=useState(''),[editingChild,setEditingChild]=useState('');
  const overview=useRemote(request,admin?'getAdministrationOverview':'getParentDashboard',refresh+sheetRevision);
  async function mutate(method,...args){setBusy(true);setNotice('');try{const result=await request(method,...args);setRefresh(n=>n+1);setNotice(t('Saved successfully.'));return result}catch(error){setNotice(error.message);throw error}finally{setBusy(false)}}
+ const passwordSettings=useRemote(request,!admin&&(page==='password'||editingChild)?'getPasswordSettings':null,refresh);
  const data=overview.data;
  const reportChildren=!admin&&Array.isArray(data?.children)?data.children:null;
  const children=reportChildren??boot.children??[];
@@ -83,6 +85,9 @@ export function RolePortals({boot,request,onSignOut}){
   </div>
  </section>}
  {!admin&&page==='reports'&&editing&&<ChildProfileEditor key={editing.id} child={editing} mutate={mutate} busy={busy} t={t} onClose={()=>setEditingChild('')}/>}
+ {!admin&&page==='reports'&&editing&&<><RemoteState result={passwordSettings}/>{passwordSettings.data&&<FamilyPasswordSettings key={editing.id} child={editing} record={passwordSettings.data.children.find(row=>row.id===editing.id)} mutate={mutate} busy={busy}/>}</>}
+ {!admin&&page==='password'&&<><RemoteState result={passwordSettings}/>{passwordSettings.data&&<FamilyPasswordSettings record={passwordSettings.data.parent} mutate={mutate} busy={busy} passwordAccess={boot.passwordAccess} email={boot.parent?.signInEmail||boot.parent?.email}/>}</>}
+
  {!admin&&page==='reports'&&selection&&children.length>1&&<button type="button" onClick={()=>{setSelectedChild('');setEditingChild('')}}>{t('Show all child reports')}</button>}
  {data&&admin&&page==='overview'&&<><div className="statgrid"><article className="stat"><strong>{data.children}</strong><span>Linked learner profiles</span></article><article className="stat"><strong>{minutes(data.reportedSeconds7Days)}</strong><span>Reported learning time · last 7 days</span></article></div><section className="panel service-settings"><h2>Service settings</h2><p>A clear view of the services supporting your learning community.</p><div className="service-status-grid">{Object.entries(data.settings).map(([key,value])=><div className={'service-status '+(value?'is-ready':'needs-setup')} key={key}><span className="service-status-dot" aria-hidden="true"/><span>{({clientIdConfigured:'Google sign-in',spreadsheetConfigured:'Learning database',adminConfigured:'BijakLearn Team identity',pinPepperConfigured:'Private security settings',documentsConfigured:'Private document storage'})[key]||key.replace(/([A-Z])/g,' $1')}<strong>{value?'Configured':'Not configured'}</strong></span></div>)}</div><p>Secrets and private identifiers are never displayed here. Usage time is approximate activity reporting, not verified attendance.</p><button onClick={()=>setRefresh(n=>n+1)}>Refresh overview</button></section></>}
  {admin&&page==='accounts'&&<><AccountAccessPanel request={request} revision={sheetRevision+refresh}/><StudentAccessPanel request={request} revision={sheetRevision+refresh}/></>}
@@ -119,10 +124,36 @@ function ChildProfileEditor({child,mutate,busy,t,onClose}){
  </section>;
 }
 function ParentEnrolment({parent,enrolments,mutate,busy,t=x=>x}){
- const [form,setForm]=useState({requestId:crypto.randomUUID(),name:'',studentEmail:'',year:1,school:'SK',language:'ms',consent:false});
+ const [form,setForm]=useState({requestId:crypto.randomUUID(),name:'',studentEmail:'',username:'',password:'',phoneNumber:'',year:1,school:'SK',language:'ms',consent:false});
+ const [saved,setSaved]=useState(null);
  const change=(key,value)=>setForm(f=>({...f,[key]:value}));
- return <><section className="panel"><h2>{t('Link a child’s Google account')}</h2><p>{t('Parent account:')} <strong>{parent.email}</strong>. {t('This pairing comes from your verified sign-in and cannot be changed by typing another parent’s address.')}</p><form className="portal-form" onSubmit={async e=>{e.preventDefault();try{await mutate('submitParentEnrolment',{...form,year:Number(form.year)});setForm({...form,requestId:crypto.randomUUID(),name:'',studentEmail:'',consent:false})}catch{}}}>
- <label>{t('Child nickname')}<input required maxLength={40} value={form.name} onChange={e=>change('name',e.target.value)}/></label><label>{t('Student Google email')}<input type="email" autoComplete="off" required maxLength={254} value={form.studentEmail} onChange={e=>change('studentEmail',e.target.value)}/></label><label>{t('School year')}<select value={form.year} onChange={e=>change('year',e.target.value)}>{[1,2,3,4,5,6].map(year=><option key={year}>{year}</option>)}</select></label><label>{t('School stream')}<select value={form.school} onChange={e=>change('school',e.target.value)}>{['SK','SJKC','SJKT'].map(stream=><option key={stream}>{stream}</option>)}</select></label><label>{t('Learning language')}<select value={form.language} onChange={e=>change('language',e.target.value)}>{[['ms','Bahasa Melayu'],['en','English'],['zh','中文'],['ta','தமிழ்']].map(([code,name])=><option value={code} key={code}>{name}</option>)}</select></label><label className="portal-check"><input type="checkbox" required checked={form.consent} onChange={e=>change('consent',e.target.checked)}/>{t('I am the parent or guardian and consent to pairing this student account and viewing its learning reports.')}</label><p>{t('Your Google-verified parent account authorizes this link immediately. The child must sign in with that Google account. Only an BijakLearn Team can remove or change a link. Children beyond paid Premium slots use Free modules until the extra RM30 payment is approved.')}</p><button className="primary" disabled={busy}>{t('Add child account')}</button></form></section><h2>{t('Enrolment requests')}</h2>{enrolments.length?enrolments.filter(r=>!['REMOVED','DECLINED'].includes(r.status)).map(r=><p key={r.id}>{r.name} · {r.studentEmail} · {r.status==='PROFILE_MISSING'?'Disabled — profile missing; contact BijakLearn Team':r.status}</p>):<p>{t('No enrolment requests yet.')}</p>}</>;
+ async function submit(event){
+  event.preventDefault();
+  try{
+   const result=await mutate('submitParentEnrolment',{...form,year:Number(form.year)});
+   setSaved(result.signIn);
+   setForm(f=>({...f,requestId:crypto.randomUUID(),name:'',studentEmail:'',username:'',password:'',phoneNumber:'',consent:false}));
+  }catch{}
+ }
+ return <>
+  <section className="panel">
+   <h2>{t('Add a child')}</h2>
+   <p>{t('Parent account:')} <strong>{parent.email}</strong></p>
+   {saved?.userId&&<p role="status" style={{overflowWrap:'anywhere'}}>Student username: <strong>{saved.username}</strong>. User ID: <strong>{saved.userId}</strong>.</p>}
+   <form className="portal-form" onSubmit={submit}>
+    <label>{t('Child nickname')}<input required maxLength={40} value={form.name} onChange={e=>change('name',e.target.value)}/></label>
+    <ChildPasswordFields form={form} change={change}/>
+    <label>Student Google email (optional)<input type="email" autoComplete="off" maxLength={254} value={form.studentEmail} onChange={e=>change('studentEmail',e.target.value)}/></label>
+    <label>{t('School year')}<select value={form.year} onChange={e=>change('year',e.target.value)}>{[0,1,2,3,4,5,6].map(year=><option key={year} value={year}>{year===0?t('Preschool'):year}</option>)}</select></label>
+    <label>{t('School stream')}<select value={form.school} onChange={e=>change('school',e.target.value)}>{['SK','SJKC','SJKT'].map(stream=><option key={stream}>{stream}</option>)}</select></label>
+    <label>{t('Learning language')}<select value={form.language} onChange={e=>change('language',e.target.value)}>{PORTAL_LANGUAGES.map(([code,name])=><option value={code} key={code}>{name}</option>)}</select></label>
+    <label className="portal-check"><input type="checkbox" required checked={form.consent} onChange={e=>change('consent',e.target.checked)}/>{t('I am the parent or guardian and consent to pairing this student account and viewing its learning reports.')}</label>
+    <button className="primary" disabled={busy}>{t('Add child account')}</button>
+   </form>
+  </section>
+  <h2>{t('Enrolment requests')}</h2>
+  {enrolments.length?enrolments.filter(r=>!['REMOVED','DECLINED'].includes(r.status)).map(r=><p key={r.id}>{r.name}{r.studentEmail?' · '+r.studentEmail:''} · {r.status==='PROFILE_MISSING'?'Disabled — profile missing; contact BijakLearn Team':r.status==='UNLINKED'&&!r.studentEmail?'Password sign-in':r.status}</p>):<p>{t('No enrolment requests yet.')}</p>}
+ </>;
 }
 function EnrolmentApprovals({request,refresh,mutate,busy}){const result=useRemote(request,'listEnrolments',refresh);return <><RemoteState result={result}/>{result.data?.length===0&&<p>No enrolment requests.</p>}{result.data?.map(r=><section className="panel" key={r.requestId}><h2>{r.nickname}</h2><p>Parent: {r.parentEmail} · Student: {r.studentEmail}</p><p>Year {r.year} · {r.school} · Guardian consent recorded {r.consentAt} · {r.status}</p>{r.status==='PENDING'&&<div className="actions"><button disabled={busy} onClick={()=>mutate('reviewEnrolment',r.requestId,true).catch(()=>{})}>Approve pairing</button><button disabled={busy} onClick={()=>mutate('reviewEnrolment',r.requestId,false).catch(()=>{})}>Decline pairing</button></div>}</section>)}</>}
 function ParentFeedback({feedback,mutate,busy,t=x=>x}){const [category,setCategory]=useState('SUGGESTION'),[text,setText]=useState('');return <><form className="panel portal-form" onSubmit={async e=>{e.preventDefault();try{await mutate('submitParentFeedback',category,text);setText('')}catch{}}}><h2>{t('Share a comment or improvement idea')}</h2><label>{t('Category')}<select value={category} onChange={e=>setCategory(e.target.value)}><option value="SUGGESTION">{t('Improvement suggestion')}</option><option value="COMMENT">{t('Comment')}</option><option value="ISSUE">{t('Report an issue')}</option></select></label><label>{t('Your message')}<textarea required minLength={5} maxLength={2000} value={text} onChange={e=>setText(e.target.value)}/></label><p>{t('Please do not include passwords, payment-card details or sensitive documents.')}</p><button disabled={busy} className="primary">{t('Send to BijakLearn Team')}</button></form><h2>{t('Your messages and replies')}</h2>{feedback.length?feedback.map(item=><article className="panel" key={item.id}><strong>{item.category} · {item.status}</strong><p>{item.message}</p>{item.reply&&<><h3>{t('BijakLearn Team reply')}</h3><p>{item.reply}</p></>}</article>):<p>{t('No messages yet.')}</p>}</>}

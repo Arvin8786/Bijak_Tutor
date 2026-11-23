@@ -7,7 +7,10 @@ export async function checkRolePortalsBrowser(browser,base){
   await page.emulateMedia({reducedMotion:'reduce'});
   page.on('pageerror',error=>errors.push(error.message));
   await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({status:200,contentType:'application/javascript',body:'// Google identity is mocked in this test.'}));
-await page.addInitScript(role=>{
+  await page.route('https://script.google.com/macros/s/**/exec',route=>route.fulfill({
+   headers:{'Access-Control-Allow-Origin':'*'},json:{ok:true,value:{parent:null,children:[]}}
+  }));
+  await page.addInitScript(role=>{
    localStorage.setItem('bijaklearn:ui-language:v1','en');window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';let signIn;
    window.playedWords=[];
    Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>[],cancel(){},speak(word){window.playedWords.push([word.text,word.lang]);}}});
@@ -79,7 +82,7 @@ await page.addInitScript(role=>{
    await page.getByLabel('Child nickname',{exact:true}).fill('Updated learner');
    await page.getByRole('button',{name:'Save profile',exact:true}).click();
    await directory.getByText('Updated learner',{exact:true}).waitFor();
-   await page.getByRole('button',{name:'Enrol a child',exact:true}).click();await page.getByLabel('Student Google email',{exact:true}).waitFor();await page.getByText('parent@test.invalid',{exact:true}).waitFor();
+   await page.getByRole('button',{name:'Enrol a child',exact:true}).click();await page.getByLabel('Student Google email (optional)',{exact:true}).waitFor();await page.getByText('parent@test.invalid',{exact:true}).waitFor();
    await page.getByRole('button',{name:'Comments & suggestions',exact:true}).click();await page.getByLabel('Your message',{exact:true}).fill('Fictional suggestion for testing');await page.getByRole('button',{name:'Send to BijakLearn Team',exact:true}).click();await page.getByText('Saved successfully.',{exact:true}).waitFor();
    await page.locator('.portal-language select').selectOption('ta');await page.getByRole('button',{name:'வெளியேறு',exact:true}).waitFor();await page.locator('.portal-language select').selectOption('en');await page.getByRole('button',{name:'Sign out',exact:true}).waitFor();
   }else{

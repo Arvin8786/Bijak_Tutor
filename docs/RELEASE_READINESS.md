@@ -17,7 +17,7 @@ The public learning pilot can be published after the automated build and browser
 
 The repository contains 804 authored lessons, 2,395 lesson questions and 78 additional challenges. The content audit checks every lesson for required reading material, valid answers/choices, unique question prompts/IDs and reachability through the year/stream subject catalogue. It also mechanically checks 117 direct arithmetic expressions. These checks do not verify all contextual word problems or all factual and language claims.
 
-There are 720 generated recall/recognition questions. Repeated supplementary topics across years are enrichment, not proof of distinct year-level official syllabus coverage. All content remains draft; there are zero teacher-approved lessons. Eighteen catalogue combinations have no materials: Iban, Kadazandusun and Semai in SK Years 1–6. These remain visibly unavailable rather than invented language lessons.
+There are 720 generated recall/recognition questions. Repeated supplementary topics across years are enrichment, not proof of distinct year-level official syllabus coverage. All content remains draft; there are zero teacher-approved lessons. Iban, Kadazandusun and Semai now have introductory vocabulary practice in SK Years 1–6. See [Password Sign-In and Language Lessons](PASSWORD_SIGN_IN.md) for the vocabulary references.
 
 `npm run build` produces `release/CONTENT_QUALITY.json` and `release/CURRICULUM_COVERAGE.json`. The reports identify structural failures separately from educational sign-off. `npm test` includes negative fixtures proving that wrong arithmetic answers and duplicate prompts fail validation.
 

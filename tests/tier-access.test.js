@@ -24,9 +24,11 @@ const document={mimeType:'application/pdf',data:Buffer.from('%PDF-1.7\nFictional
 const subscription=plan=>({googleSub:'family',plan,status:'ACTIVE',expiresAt:new Date(Date.now()+86400000).toISOString(),updatedAt:new Date().toISOString()});
 
 test('all learning routes map to unique seeded sheet modules',()=>{
- assert.equal(APP_MODULES.length,18);assert.equal(new Set(APP_MODULES.map(m=>m.moduleId)).size,18);
+ assert.equal(APP_MODULES.length,20);assert.equal(new Set(APP_MODULES.map(m=>m.moduleId)).size,20);
  assert.equal(moduleForPage('growth','adult','hobby'),'adult-hobby');
  assert.equal(moduleForPage('lesson'),'study-library');assert.equal(moduleForPage('pin'),'parent-reports');
+ assert.equal(moduleForPage('dictionary'),'picture-dictionary');
+ assert.equal(moduleForPage('creative-projects'),'creative-projects');
  assert.equal(moduleForPage('premium-kasih'),null);
 });
 test('each tier reads its own permission column and malformed rules fail closed',()=>{
@@ -121,7 +123,7 @@ test('partially persisted Kasih approval fails closed until application status i
 });
 test('module and growth imports are additive and preserve edited tier settings',()=>{
  const {api,tables}=backend();tables.ModuleAccess=[];
- assert.equal(api.seedModuleAccess_().added,18);tables.ModuleAccess[0].free=false;
+ assert.equal(api.seedModuleAccess_().added,20);tables.ModuleAccess[0].free=false;
  assert.equal(api.seedModuleAccess_().added,0);assert.equal(tables.ModuleAccess[0].free,false);
  assert.equal(api.importGrowthModules_().addedModules,4);assert.ok(tables.ModuleLessons.length>0);
  assert.equal(api.importGrowthModules_().addedLessons,0);

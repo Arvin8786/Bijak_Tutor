@@ -1,5 +1,6 @@
 import fs from 'node:fs';import path from 'node:path';
 import {LESSONS} from '../src/lessons.js';
+import {HERITAGE_LANGUAGE_LESSONS} from '../src/heritageLanguages.js';
 import {APP_MODULES} from '../src/moduleRegistry.js';
 import {GROWTH_TRACKS} from '../src/growthCurriculum.js';
 const dir='dist';const html=fs.readFileSync(path.join(dir,'index.html'),'utf8');
@@ -21,6 +22,9 @@ fs.copyFileSync('apps-script/AccountAccess.gs','release/AccountAccess.gs');
 fs.copyFileSync('apps-script/TutorAI.gs','release/TutorAI.gs');
 fs.copyFileSync('apps-script/ModuleService.gs','release/ModuleService.gs');
 const exportable=LESSONS.map(l=>({id:l.id,year:l.year,school:l.school||'ALL',subject:l.subject,chapter:l.chapter||'',title:l.title,summary:l.summary||'',visual:l.visual||'',icon:l.icon||'📚',status:l.status||'DRAFT_TEACHER_REVIEW',steps:l.steps||[],mind:l.mind||[],check:l.check||[],misconceptions:l.misconceptions||{}}));
+const heritageIds=new Set(HERITAGE_LANGUAGE_LESSONS.map(lesson=>lesson.id));
+const additions={lessons:exportable.filter(lesson=>heritageIds.has(lesson.id)),modules:APP_MODULES.filter(module=>['picture-dictionary','creative-projects'].includes(module.moduleId))};
+fs.writeFileSync('release/PasswordLearningData.gs','const BIJAK_LEARNING_ADDITIONS_ = '+JSON.stringify(additions)+';\n');
 fs.writeFileSync('release/CurriculumData.gs',`const BIJAK_CURRICULUM_BUNDLE = ${JSON.stringify(exportable)};\n`);fs.copyFileSync('apps-script/appsscript.json','release/appsscript.json');console.log(`Ready: release/App.html, Code.gs, CurriculumImport.gs, AdminOperations.gs, AccountAccess.gs, AnswerMarking.gs, TutorAI.gs, ModuleService.gs, CurriculumData.gs, appsscript.json (${LESSONS.length} lessons)`);
 
 fs.writeFileSync('release/AnswerMarking.gs',fs.readFileSync('src/answerMarking.js','utf8').replaceAll('export ','').replace(/\b(markPractice|normalizedAnswer|numericValue)\b/g,'$1_'));
@@ -30,7 +34,7 @@ fs.writeFileSync('release/ModuleData.gs','const BIJAK_APP_MODULES = '+JSON.strin
 fs.writeFileSync('release/ModuleAccess.csv',Object.keys(APP_MODULES[0]).join(',')+'\n'+APP_MODULES.map(m=>Object.values(m).map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n')+'\n');
 
 
-for(const name of ['RolePortals.gs','Transport.html','EducationalVideos.gs','ParentNotices.gs'])fs.copyFileSync('apps-script/'+name,'release/'+name);
+for(const name of ['RolePortals.gs','Transport.html','EducationalVideos.gs','ParentNotices.gs','PasswordAccounts.gs','AccountHttp.gs','PasswordLearningSetup.gs'])fs.copyFileSync('apps-script/'+name,'release/'+name);
 
 fs.copyFileSync('apps-script/Commerce.gs','release/Commerce.gs');
 fs.writeFileSync('release/ArithmeticCheck.gs',fs.readFileSync('src/arithmetic.js','utf8').replaceAll('export ','').replace(/\b(arithmeticExpression|calculateExpression)\b/g,'$1_'));

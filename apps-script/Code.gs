@@ -85,6 +85,7 @@ function initializeDatabase_(){const ss=database_();Object.entries(TABLES).forEa
   applyTextColumns_(name,s);});textReady_={};staticRows_={};if(rows_('Lessons').length===0){SEED_LESSONS.forEach(l=>{append_('Lessons',{lessonId:l.id,year:l.year,subject:l.subject,title:l.title,summary:l.summary,icon:l.icon,mindJson:JSON.stringify(l.mind),stepsJson:JSON.stringify(l.steps),premium:'FALSE'});(l.check||[]).forEach(q=>append_('Questions',{questionId:q.id,lessonId:l.id,mode:q.mode,text:q.text,optionsJson:JSON.stringify(q.options||[]),correctAnswer:q.answer,why:q.why,transfer:q.transfer?'TRUE':'FALSE',misconceptionsJson:JSON.stringify(l.misconceptions||{})}));});}seedSkillMap_();return 'Sheets initialized';}
 function doGet(e){if(e?.parameter?.transport==='1'){const bridge=HtmlService.createTemplateFromFile('Transport');bridge.channel=/^[a-f0-9-]{36}$/.test(e.parameter.channel||'')?e.parameter.channel:'';return bridge.evaluate().setTitle('BijakLearn account service').setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);}const t=HtmlService.createTemplateFromFile('App');t.clientId=props_().getProperty('GOOGLE_CLIENT_ID')||'';t.loginRole=['parent','student','admin'].includes(e?.parameter?.role)?e.parameter.role:'parent';return t.evaluate().setTitle('BijakLearn Junior').addMetaTag('viewport','width=device-width, initial-scale=1')}
 function verify_(input){
+ if(typeof input==='string'&&/^bja1\.[a-f0-9]{64}$/.test(input))return passwordSessionIdentity_(input);
  if(!input||typeof input!=='object'||Array.isArray(input))return verifiedGoogleAccount_(input);
  const verified=verifiedGoogleAccount_(input.idToken);
  if(typeof input.role!=='string'||typeof input.childId!=='string'||input.childId.length>140)throw Error('Invalid role session');
@@ -94,7 +95,7 @@ function verifiedGoogleAccount_(idToken){if(typeof idToken!=='string'||idToken.l
 function upsertParent_(u){if(rows_('Parents').some(p=>String(p.googleSub)===u.sub))return;const lock=LockService.getScriptLock();lock.waitLock(10000);try{if(studentLink_(u))throw Error('[STUDENT_ONLY] Use Student sign-in for your linked learner profile.');if(!rows_('Parents').some(p=>String(p.googleSub)===u.sub))append_('Parents',{googleSub:u.sub,email:u.email,displayName:u.name,createdAt:new Date().toISOString()})}finally{lock.releaseLock()}}
 function withAuth_(token,fn,requestOnSignIn=false){
  let user=verify_(token);
- if(user.ownerRoleAccess){if(user.role==='STUDENT')requireChild_(user,user.studentChildId);return fn(user)}
+ if(user.ownerRoleAccess||user.passwordAccess){if(user.role==='STUDENT')requireChild_(user,user.studentChildId);return fn(user)}
  const link=studentLink_(user);
  if(link){user=studentIdentity_(user,link);if(!link.googleSub)throw Error('[STUDENT_ONLY] Use Student sign-in to activate your linked profile.');return fn(user)}
  user={...user,role:'PARENT'};

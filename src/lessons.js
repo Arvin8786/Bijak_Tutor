@@ -1,3 +1,4 @@
+import {HERITAGE_LANGUAGE_LESSONS} from './heritageLanguages.js';
 import {unifyLessonLanguage} from './lessonLocale.js';
 import {DISCOVERY_LESSONS} from './discoveryModules.js';
 import {EXPLORE_LESSONS} from './exploreLessons.js';
@@ -336,4 +337,4 @@ export const PRIMARY_SUBJECTS=[['Matematik','🧮'],['Bahasa Melayu','📖'],['E
 
 export const RAW_LESSONS = [...SKILL_DEMO_LESSONS, ...ORIGINAL_LESSONS, ...EXPANDED_LESSONS, ...withMathPractice(enrichPractice([...JUNIOR_FOUNDATION_LESSONS,...JUNIOR_ENRICHMENT_LESSONS,...JUNIOR_STREAM_LESSONS,...OPTIONAL_STARTER_LESSONS])), ...SUPPLEMENTARY_LESSONS, ...REVIEW_LESSONS, ...EXPLORE_LESSONS, ...DISCOVERY_LESSONS];
 // Every lesson now speaks one language (the one of its subject); see lessonLocale.js.
-export const LESSONS = unifyLessonLanguage(RAW_LESSONS);
+export const LESSONS = unifyLessonLanguage([...RAW_LESSONS,...HERITAGE_LANGUAGE_LESSONS]);

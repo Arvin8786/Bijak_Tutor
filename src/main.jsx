@@ -7,9 +7,10 @@ import VideoLibrary from './VideoLibrary.jsx';
 // Capture a referral only in this tab; no tracking cookies, email addresses or child data in URLs.
 function getReferralCode(){try{const code=new URL(window.location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('bijaklearn:referral',code);return sessionStorage.getItem('bijaklearn:referral')||''}catch{return ''}}
 getReferralCode();
-import {ACCOUNT_URL,GOOGLE_CLIENT_ID,AccountConnectionError,remoteAccountCall} from './accountTransport.js';
+import {ACCOUNT_URL,GOOGLE_CLIENT_ID,AccountConnectionError,directAccountCall,remoteAccountCall} from './accountTransport.js';
 import {RolePortals,StudentUsage} from './RolePortals.jsx';
 import OAuthLogin from './OAuthLogin.jsx';
+import {PasswordSignIn} from './PasswordSignIn.jsx';
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {tx,setUiLang} from './i18n.js';
 import {TRACK_CONSENT,trackingEnabled,setTrackingEnabled,readUsage,wipeUsage,recordUsage,summariseUsage,IDLE_LIMIT_MS,MAX_TICK_MS} from './learningTime.js';
@@ -102,8 +103,11 @@ async function localCall(method,args){
  if(method==='getParentReport'){if(args[2]!==mockPin)throw Error('Incorrect parent PIN');const childId=args[1];const skills=Object.entries(mockAttempts).filter(([k])=>k.startsWith(childId+'/'));const attempts=skills.flatMap(([,s])=>s.attempts);return {attempts:attempts.length,errors:attempts.filter(a=>!a.correct).length,independent:attempts.filter(a=>a.correct&&!a.hints&&a.mode!=='choice').length,mastered:skills.filter(([,s])=>evaluateSkill(s).mastered).length,topics:skills.map(([k,s])=>({lessonId:k.split('/')[1],...evaluateSkill(s)})),recent:attempts.slice(-20)};}
  throw Error('Unsupported demo operation: '+method)
 }
-function api(method,...args){const pending=!isLive?localCall(method,args):!nativeAccountService?remoteAccountCall(method,...args):new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));return pending.catch(error=>{if(error instanceof AccountConnectionError)throw error;throw new Error(String(error.message||error).replace(/\badministrator\b/gi,'BijakLearn Team'))});}
+const directMethods=new Set(['getPasswordSettings','saveParentPassword','saveChildPassword','passwordSignIn','passwordSignOut']);
+let accountUsesDirect=false;
+function api(method,...args){const pending=!isLive?localCall(method,args):directMethods.has(method)||accountUsesDirect?directAccountCall(method,...args):!nativeAccountService?remoteAccountCall(method,...args):new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));return pending.catch(error=>{if(error instanceof AccountConnectionError)throw error;throw new Error(String(error.message||error).replace(/\badministrator\b/gi,'BijakLearn Team'))});}
 function accountNotice(error) {
+ if(error.message.includes('[PASSWORD_SESSION]'))return 'Your session ended. Please sign in again.';
  if(error.message.includes('[STUDENT_NOT_LINKED]'))return 'Your Google account is not linked to a learner profile. Ask your parent or BijakLearn Team to enable student sign-in.';
  if(error.message.includes('[STUDENT_REVOKED]'))return 'Student sign-in is unavailable. Ask your parent or BijakLearn Team to check your profile link.';
  if(error.message.includes('[STUDENT_ONLY]'))return 'This is a student account. Please choose Student sign-in.';
@@ -112,7 +116,7 @@ function accountNotice(error) {
  return '';
 }
 function signInFailure(error,role){
- if(error instanceof AccountConnectionError)return 'BijakLearn could not reach its account service. Check your connection and try Google sign-in again.';
+ if(error instanceof AccountConnectionError)return 'BijakLearn could not reach its account service. Please check your connection and try signing in again.';
  const notice=accountNotice(error);
  if(notice)return notice;
  if(/(?:google identity verification failed|invalid google identity|sign in with your google account)/i.test(error.message)){
@@ -123,7 +127,7 @@ function signInFailure(error,role){
  }
  return 'BijakLearn could not load your account. Please try signing in again.';
 }
-function GoogleLogin({onToken,notice,signingIn}){
+function GoogleLogin({onToken,onPassword,notice,signingIn}){
  const [issue,setIssue]=useState(''),[googleReady,setGoogleReady]=useState(false);
  const externalGoogle=isLive&&!window.location.hostname.endsWith('-script.googleusercontent.com');
  const initialRole=['parent','student','admin'].includes(window.BIJAKLEARN_LOGIN_ROLE)?window.BIJAKLEARN_LOGIN_ROLE:'parent';
@@ -175,6 +179,7 @@ function GoogleLogin({onToken,notice,signingIn}){
     </div>
     {signingIn?<p className="signin-progress" role="status"><span aria-hidden="true"/> Signing in…</p>:externalGoogle&&!googleReady&&!issue&&<p className="signin-progress" role="status"><span aria-hidden="true"/> Loading Google sign-in…</p>}
    </div>
+   {isLive&&!admin&&<PasswordSignIn key={loginRole} role={loginRole} onSubmit={onPassword} disabled={signingIn}/>}
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
    {!admin&&!student&&<p className="signin-note">New parent accounts need approval from the BijakLearn Team.</p>}
@@ -362,6 +367,9 @@ function App(){
  const endSession=useCallback((notice='')=>{
   loginAttempt.current++;
   setSigningIn(false);
+  const previous=activeToken.current;
+  if(typeof previous==='string'&&previous.startsWith('bja1.'))directAccountCall('passwordSignOut',previous).catch(()=>{});
+  accountUsesDirect=false;
   activeToken.current='';
   setToken('');
   setBoot(null);
@@ -396,27 +404,45 @@ function App(){
   catch(error){if(!isLive||activeToken.current===token)setError(error.message);throw error}
   finally{setBusy(false)}
  }
- const login=useCallback(async (credential,role='parent')=>{
+ const login=useCallback(async (input,role='parent')=>{
   const attempt=++loginAttempt.current;
-  activeToken.current=credential;
+  const withPassword=typeof input==='object'&&input!==null;
+  const requestedRole=withPassword?input.role:role;
+  activeToken.current='';
+  accountUsesDirect=false;
   setLoginNotice('');
   setSigningIn(true);
   try{
-   const data=await api(portalV2?'getPortalBootstrap':role==='student'?'getStudentBootstrap':'getBootstrap',credential,...(portalV2?[role,getReferralCode(),'owner-roles-v1']:[]));
-   if(attempt!==loginAttempt.current||activeToken.current!==credential)return;
+   const credential=withPassword?(await directAccountCall('passwordSignIn',input)).token:input;
+   if(attempt!==loginAttempt.current)return;
+   const method=portalV2?'getPortalBootstrap':requestedRole==='student'?'getStudentBootstrap':'getBootstrap';
+   const options=portalV2?[requestedRole,getReferralCode(),'owner-roles-v1']:[];
+   let data,direct=false;
+   if(withPassword||isLive&&!nativeAccountService&&portalV2){
+    try{
+     data=await directAccountCall('getPortalBootstrap',credential,requestedRole,...options.slice(1));
+     direct=true;
+    }catch(error){
+     if(withPassword||!(error instanceof AccountConnectionError))throw error;
+    }
+   }
+   if(attempt!==loginAttempt.current)return;
+   if(!direct)data=await api(method,credential,...options);
+   if(attempt!==loginAttempt.current)return;
    if(!data||!Array.isArray(data.children))throw new Error('Incomplete account response');
    if(data.role==='STUDENT'){setGrowthAudience('junior');setGrowthKind('ai');}
    const session=data.ownerRoleAccess?{idToken:credential,role:data.role.toLowerCase(),childId:data.role==='STUDENT'?data.children[0]?.id||'':''}:credential;
+   accountUsesDirect=direct;
    activeToken.current=session;
-   setBoot(data);
+   setBoot({...data,passwordAccess:withPassword});
    setChildId(data.children[0]?.id||'');
    setPage('home');
    setToken(session);
    setSigningIn(false);
   }catch(error){
-   if(attempt===loginAttempt.current&&activeToken.current===credential)endSession(signInFailure(error,role));
+   if(attempt===loginAttempt.current)endSession(withPassword?(accountNotice(error)||error.message):signInFailure(error,requestedRole));
   }
- },[authRequest,endSession]);
+ },[endSession]);
  async function refresh(){const b=await call(portalV2?'getPortalBootstrap':boot?.role==='STUDENT'?'getStudentBootstrap':'getBootstrap',...(portalV2?[boot?.role?.toLowerCase()]:[]));setBoot(b);if(!b.children.some(x=>x.id===childId))setChildId(b.children[0]?.id||'');}
  useEffect(()=>{if(accountRevision&&isLive&&token&&boot?.role==='STUDENT')refresh().catch(()=>{})},[accountRevision]);
  function toggleDemoSave(enabled){
@@ -461,7 +487,7 @@ function App(){
  async function savePin(){try{await call('setParentPin',pin,oldPin);alert('Parent PIN saved. Keep it private.')}catch{}}
 
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
- if(!token)return <><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} notice={loginNotice} signingIn={signingIn}/></>;
+ if(!token)return <><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} onPassword={login} notice={loginNotice} signingIn={signingIn}/></>;
  if(portalV2&&['ADMIN','PARENT'].includes(boot?.role))return <RolePortals boot={boot} request={authRequest} onSignOut={()=>endSession()} language={uiLanguage}/>;
  return <div className="app"><header><button className="logo" onClick={()=>setPage('home')}><Brand subtitle="Discover something wonderful"/></button><div className="topactions"><StreakChip language={uiLanguage}/>{isLive&&boot?.role==='STUDENT'&&<button disabled={busy} onClick={()=>refresh().catch(()=>{})}>Refresh account details</button>}<button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}

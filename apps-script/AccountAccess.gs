@@ -1,6 +1,6 @@
 /** Account activation for the authenticated web app. Premium plans are checked separately. */
 function isAccountAdmin_(user) {
- return isOwnerAccount_(user) && (!user.ownerRoleAccess || user.role === 'ADMIN');
+ return !user.passwordAccess && isOwnerAccount_(user) && (!user.ownerRoleAccess || user.role === 'ADMIN');
 }
 function isOwnerAccount_(user) {
  const adminSub = String(props_().getProperty('ACCOUNT_ADMIN_GOOGLE_SUB') || '').trim();

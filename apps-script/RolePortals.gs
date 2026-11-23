@@ -1,7 +1,7 @@
 /** Role-specific data contracts. Roles and family ownership come from verified Google identity. */
 function portalIdentity_(token){
  const verified=verify_(token);
- if(verified.ownerRoleAccess)return verified;
+ if(verified.ownerRoleAccess||verified.passwordAccess)return verified;
  if(isAccountAdmin_(verified))return {...verified,role:'ADMIN'};
  const link=studentLink_(verified);
  if(link)return bindStudentIdentity_(verified);
@@ -9,6 +9,11 @@ function portalIdentity_(token){
 }
 function getPortalBootstrap(token,requestedRole,referralCode,roleSelection){
  const verified=verify_(token);
+ if(verified.passwordAccess){
+  if(requestedRole!==verified.role.toLowerCase())throw Error('Choose the sign-in type that matches your account.');
+  if(verified.role==='STUDENT')return studentPortalData_(verified);
+  return {role:'PARENT',passwordAccess:true,parent:parentDetails_(verified),canManageAccounts:false,children:familyChildren_(verified),lessons:[],modules:[],access:access_(verified)};
+ }
  if(typeof isOwnerAccount_==='function'&&isOwnerAccount_(verified)&&(roleSelection==='owner-roles-v1'||verified.ownerRoleAccess))return ownerPortalBootstrap_(verified,requestedRole);
  if(typeof registerReferralOnboarding_==='function')registerReferralOnboarding_(verify_(token),referralCode);
  const user=portalIdentity_(token);

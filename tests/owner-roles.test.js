@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {createHash,pbkdf2Sync} from 'node:crypto';
+import {derive} from '../scripts/password-kdf.js';
 
 function backend(){
  const owner='123456789012345678901',other='223456789012345678901';
@@ -16,6 +18,13 @@ function backend(){
  api.sheet_=()=>({getDataRange:()=>({getValues:()=>[[]]})});
  api.append_=(name,row)=>(tables[name]||=[]).push({...row});
  api.update_=(name,key,value,patch)=>{const row=(tables[name]||[]).find(r=>String(r[key])===String(value));if(!row)return false;Object.assign(row,patch);return true};
+ const cache=new Map();
+ api.CacheService={getScriptCache:()=>({get:key=>cache.get(key),put:(key,value)=>cache.set(key,value),remove:key=>cache.delete(key)})};
+ api.Utilities.base64EncodeWebSafe=bytes=>Buffer.from(bytes).toString('base64url');
+ api.Utilities.DigestAlgorithm={SHA_256:'sha256'};
+ api.Utilities.computeDigest=(algorithm,value)=>createHash(algorithm).update(value).digest();
+ api.BijakPasswordKdf={derive:(...args)=>derive(...args)};
+ vm.runInContext(fs.readFileSync('apps-script/PasswordAccounts.gs','utf8'),api);
  const session=(role,childId='')=>({idToken:tokens.owner,role,childId});
  return {api,tables,tokens,owner,other,session};
 }
@@ -65,4 +74,49 @@ test('role envelopes never grant other Google accounts owner powers or cross-fam
  assert.equal(api.getParentDashboard(session('parent')).children.length,1);
  assert.throws(()=>api.verify_({idToken:tokens.owner,role:'root',childId:''}),/Choose Parent/);
  assert.throws(()=>api.verify_({idToken:'invalid',role:'admin',childId:''}),/Google account/);
+});
+
+test('PBKDF2 verifier matches Node for UTF-8 passwords',()=>{
+ const pass='Long test phrase 🔬',salt='74657374207465737420746573742031';
+ const expected=pbkdf2Sync(pass,Buffer.from(salt,'hex'),600000,32,'sha256').toString('hex');
+ assert.equal(derive(pass,salt,600000),expected);
+});
+
+test('a password-only learner stays linked to one profile and a reset invalidates their session',()=>{
+ const {api,tables,session,tokens,other}=backend();
+ api.getPortalBootstrap(tokens.owner,'parent','','owner-roles-v1');
+ tables.Parents.push({googleSub:other,email:'other@example.test'});
+ tables.Children.push({childId:'other-child',parentSub:other,nickname:'Other child'});
+ const input={requestId:'11111111-2222-4222-8222-111111111111',name:'Learner',year:1,username:'little-reader',password:'fictional reading password',consent:true};
+ assert.throws(()=>api.linkParentChild(session('parent'),{...input,consent:false}),/consent/);
+ const linked=api.linkParentChild(session('parent'),input);
+ assert.equal(api.linkParentChild(session('parent'),input).childId,linked.childId);
+ assert.equal(tables.StudentAccounts.length,0);
+ assert.equal(tables['User Authentication'].length,1);
+ assert.notEqual(tables['User Authentication'][0].passwordHash,input.password);
+ assert.equal(linked.signIn.passwordHash,undefined);
+ const {token}=api.passwordSignIn({identifier:linked.signIn.userId,password:input.password,role:'student'});
+ const boot=api.getPortalBootstrap(token,'student');
+ assert.deepEqual(Array.from(boot.children,c=>c.id),[linked.childId]);
+ assert.equal(boot.access.plan,'FREE');
+ assert.throws(()=>api.getParentDashboard(token),/Parent account required/);
+ assert.throws(()=>api.requireAccountAdmin_(token),/administrator access required/);
+ assert.throws(()=>api.getLesson(token,'other-child','lesson'),/not linked/);
+ assert.throws(()=>api.getPortalBootstrap(token,'admin'),/sign-in type/);
+ assert.throws(()=>api.saveChildPassword(tokens.other,linked.childId,{password:'unauthorized test word'}),/not linked/);
+ api.sheet_=()=>({
+  getLastRow:()=>2,
+  getRange:(row,column)=>row===2&&column===1?{
+   createTextFinder:()=>({matchEntireCell:()=>({findNext:()=>({getRow:()=>2})})}),
+   setValues([values]){const old=tables['User Authentication'][0];tables['User Authentication'][0]=Object.fromEntries(Object.keys(old).map((key,i)=>[key,values[i]]));}
+  }:null
+ });
+ const next='changed fictional password';
+ api.saveChildPassword(session('parent'),linked.childId,{password:next});
+ assert.throws(()=>api.getPortalBootstrap(token,'student'),/PASSWORD_SESSION/);
+ assert.throws(()=>api.passwordSignIn({identifier:linked.signIn.username,password:input.password,role:'student'}),/incorrect/);
+ const renewed=api.passwordSignIn({identifier:linked.signIn.username,password:next,role:'student'});
+ assert.equal(api.getPortalBootstrap(renewed.token,'student').children[0].id,linked.childId);
+ api.passwordSignOut(renewed.token);
+ assert.throws(()=>api.getPortalBootstrap(renewed.token,'student'),/PASSWORD_SESSION/);
 });

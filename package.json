@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build && node scripts/stamp-release.mjs && node scripts/package-gas.mjs && node scripts/audit-curriculum.mjs && node scripts/audit-content.mjs",
+    "build": "vite build && node scripts/stamp-release.mjs && node scripts/build-account-kdf.mjs && node scripts/package-gas.mjs && node scripts/audit-curriculum.mjs && node scripts/audit-content.mjs",
     "test": "node scripts/check-public-security.mjs && node --test tests/*.test.js",
     "audit:curriculum": "node scripts/audit-curriculum.mjs",
     "check:public": "node scripts/check-public-security.mjs",
@@ -13,9 +13,12 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.2.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "vite": "^6.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@noble/hashes": "1.8.0",
+    "esbuild": "^0.25.0"
+  }
 }

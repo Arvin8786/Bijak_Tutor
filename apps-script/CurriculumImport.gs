@@ -7,9 +7,12 @@
 function importFullJuniorCurriculum_(){
   if(typeof BIJAK_CURRICULUM_BUNDLE==='undefined')throw Error('Missing CurriculumData.gs from release build');
   initializeDatabase_();
+  return importJuniorCurriculumBundle_(BIJAK_CURRICULUM_BUNDLE);
+}
+
+function importJuniorCurriculumBundle_(data){
   const lock=LockService.getScriptLock();lock.waitLock(30000);
   try{
-    const data=BIJAK_CURRICULUM_BUNDLE;
     const existingLessons=new Set(rows_('Lessons').map(x=>String(x.lessonId)));
     const existingQuestions=new Set(rows_('Questions').map(x=>String(x.lessonId)+'/'+String(x.questionId)));
     let addedLessons=0,addedQuestions=0,skipped=0;

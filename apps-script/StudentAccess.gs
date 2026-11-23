@@ -34,7 +34,12 @@ function bindStudentIdentity_(user){
 }
 function requireParent_(user){if(user.role==='STUDENT')throw Error('[PARENT_ONLY] Sign in with a parent account for this action.')}
 function getStudentBootstrap(token){
- const user=bindStudentIdentity_(verify_(token));
+ const verified=verify_(token);
+ const user=verified.passwordAccess?verified:bindStudentIdentity_(verified);
+ if(user.role!=='STUDENT')throw Error('[STUDENT_ONLY] Use Student sign-in.');
+ return studentPortalData_(user);
+}
+function studentPortalData_(user){
  const child=requireChild_(user,user.studentChildId);
  return {role:'STUDENT',user:{name:String(child.nickname)},parent:null,canManageAccounts:false,
   children:[{id:String(child.childId),name:String(child.nickname),year:Number(child.year),school:String(child.school),language:String(child.language||'ms')}],

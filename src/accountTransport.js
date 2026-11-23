@@ -87,3 +87,26 @@ export async function remoteAccountCall(method,...args){
   return send();
  }
 }
+
+const NOTICE_METHODS=['getParentNotices','getParentNoticeImage','listParentNoticesAdmin','publishParentNotice','unpublishParentNotice'];
+
+export async function directAccountCall(method,...args){
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),method==='getPortalBootstrap'?12000:45000);
+ let result;
+ try{
+  const notice=NOTICE_METHODS.includes(method);
+  const response=await fetch(ACCOUNT_URL,{
+   method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},
+   credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer',signal:controller.signal,
+   body:JSON.stringify({service:'bijak-account-v1',method:notice?'parentNoticeRequest':method,args:notice?[method,args]:args})
+  });
+  if(!response.ok)throw Error('Account service returned an HTTP error');
+  result=await response.json();
+  if(typeof result?.ok!=='boolean')throw Error('Account service returned an unexpected response');
+ }catch{
+  throw new AccountConnectionError('BijakLearn could not reach its account service.');
+ }finally{clearTimeout(timeout)}
+ if(!result.ok)throw Error(result.error||'Account request failed');
+ return result.value;
+}
