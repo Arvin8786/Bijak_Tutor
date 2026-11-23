@@ -7,11 +7,11 @@ export async function checkFamilyCommerceBrowser(browser,base){
  await page.addInitScript(admin=>{
   window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';localStorage.setItem('bijaklearn:ui-language:v1','en');let signIn;
   const settings={monthlyPromotion:true,annualDiscountPercent:25,commissionBps:1000,paymentInstructions:'Scan our verified Touch n Go QR',qrUploadId:''},orders=[],children=[],calls=[];window.commerceCalls=calls;
-  const parent={name:'Test Parent',email:'parent@test.invalid'};
+  const parent={name:'Test Parent',email:'parent@test.invalid'},expiryDate=new Date(Date.now()+86400000).toISOString();
   function invoke(method,...args){calls.push([method,...args]);
    if(method==='getPortalBootstrap')return {role:admin?'ADMIN':'PARENT',parent,user:{name:'Test Admin'},children:[],lessons:[],modules:[],access:{plan:'FREE'},canManageAccounts:admin};
    if(method==='getAdministrationOverview')return {settings:{},pendingReceiptCount:1,children:0,reportedSeconds7Days:0,modules:[],parents:[],payments:[]};
-   if(method==='getParentDashboard')return {parent,access:{plan:'PREMIUM',expiresAt:new Date(Date.now()+86400000).toISOString()},children:[],enrolments:[],feedback:[]};
+   if(method==='getParentDashboard')return {parent,access:{plan:'PREMIUM',expiresAt:expiryDate},children:[],enrolments:[],feedback:[]};
    if(method==='getFamilyCommerce')return {settings,access:{plan:'FREE'},premiumSlots:2,children,orders,affiliateUrl:'https://example.test/?ref='+'a'.repeat(32),referrals:[{name:'Test referral',status:'PAID',commissionCents:1000,month:'2026-10',paidOut:false}],payouts:[],uploadsConfigured:true};
    if(method==='getCommerceAdministration')return {settings,orders:[{id:'order-test',parentEmail:'parent@test.invalid',kind:'LIFETIME_PREMIUM',slots:1,totalCents:10000,status:'SUBMITTED',proofId:'proof-test'}],discounts:[],commissions:[],payouts:[],uploadsConfigured:true};
    if(method==='submitParentEnrolment')return {status:'APPROVED'};
