@@ -1,0 +1,7 @@
+.notice-dates,.notice-actions { display:flex; gap:.75rem; flex-wrap:wrap; }
+.notice-dates label { flex:1 1 12rem; }
+.notice-publisher li + li { margin-top:.75rem; }
+.parent-notice-popup { z-index:101; }
+.parent-notice-popup img { display:block; max-width:100%; max-height:30vh; margin:0 auto .75rem; object-fit:contain; }
+.parent-notice-message { white-space:pre-wrap; overflow-wrap:anywhere; }
+.notice-actions { margin-top:.75rem; }

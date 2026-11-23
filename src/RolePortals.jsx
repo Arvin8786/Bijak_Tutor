@@ -1,3 +1,4 @@
+import {NoticePublisher,ParentNoticePopup} from './ParentNotices.jsx';
 import {useSheetRefresh} from './sheetRefresh.js';
 import Brand,{APP_ICON,PortalGlyph,BrandCredit} from './Brand.jsx';
 import React,{useEffect,useState} from 'react';
@@ -33,7 +34,7 @@ export function StudentUsage({request,page}){
 }
 export function RolePortals({boot,request,onSignOut}){
  const admin=boot.role==='ADMIN';
- const tabs=admin?[['overview','Overview & usage'],['accounts','Access & family links'],['enrolments','Enrolment approvals'],['tiers','Module & tier settings'],['videos','Educational videos'],['payments','Payment controls'],['offers','Discounts & referrals'],['kasih','Premium Kasih approvals'],['feedback','Parent feedback']]:[['reports','Child reports'],['enrol','Enrol a child'],['feedback','Comments & suggestions'],['membership','Membership & payments'],['referrals','Referrals & earnings'],['kasih','Premium Kasih']];
+ const tabs=admin?[['overview','Overview & usage'],['accounts','Access & family links'],['enrolments','Enrolment approvals'],['tiers','Module & tier settings'],['videos','Educational videos'],['payments','Payment controls'],['offers','Discounts & referrals'],['kasih','Premium Kasih approvals'],['feedback','Parent feedback'],['notices','Parent notices']]:[['reports','Child reports'],['enrol','Enrol a child'],['feedback','Comments & suggestions'],['membership','Membership & payments'],['referrals','Referrals & earnings'],['kasih','Premium Kasih']];
  const [language,setLanguage]=useState(()=>admin?'en':readPortalLanguage());
  const lang=admin?'en':language,t=text=>portalText(lang,text);
  setUiLang(lang);
@@ -52,6 +53,7 @@ export function RolePortals({boot,request,onSignOut}){
  {admin&&page==='accounts'&&<><AccountAccessPanel request={request} revision={sheetRevision+refresh}/><StudentAccessPanel request={request} revision={sheetRevision+refresh}/></>}
  {admin&&page==='enrolments'&&<EnrolmentApprovals request={request} refresh={refresh+sheetRevision} mutate={mutate} busy={busy}/>}
  {admin&&data&&page==='tiers'&&<><p>These controls determine which learning modules each membership can use. Account blocking always takes priority.</p>{data.modules.map(module=><ModulePolicy key={module.moduleId+refresh} module={module} mutate={mutate} busy={busy}/>)}</>}
+ {admin&&page==='notices'&&<NoticePublisher request={request}/>}
  {admin&&page==='videos'&&<VideoAdminPanel request={request}/>}
  {admin&&page==='payments'&&<FamilyCommerce revision={sheetRevision+refresh} request={request} admin section="payments"/>}
  {admin&&page==='offers'&&<FamilyCommerce revision={sheetRevision+refresh} request={request} admin section="offers"/>}
@@ -62,7 +64,7 @@ export function RolePortals({boot,request,onSignOut}){
  {!admin&&data&&page==='feedback'&&<ParentFeedback feedback={data.feedback} mutate={mutate} busy={busy} t={t}/>}
  {!admin&&['membership','referrals'].includes(page)&&<FamilyCommerce revision={sheetRevision+refresh} request={request} section={page}/>}
  {!admin&&page==='kasih'&&<PremiumKasihApplication request={request} live={true} student={false} onSubmitted={()=>setRefresh(n=>n+1)}/>}
- </main><footer className="portal-footer">BijakLearn Junior · {admin?'BijakLearn Team operations':t('Family reports')} · {admin?'Google account access is checked by the server.':t('Google account access is checked by the server.')}<BrandCredit language={lang}/></footer></div>;
+ </main>{!admin&&<ParentNoticePopup request={request}/>}<footer className="portal-footer">BijakLearn Junior · {admin?'BijakLearn Team operations':t('Family reports')} · {admin?'Google account access is checked by the server.':t('Google account access is checked by the server.')}<BrandCredit language={lang}/></footer></div>;
 }
 function ParentEnrolment({parent,enrolments,mutate,busy,t=x=>x}){
  const [form,setForm]=useState({requestId:crypto.randomUUID(),name:'',studentEmail:'',year:1,school:'SK',language:'ms',consent:false});

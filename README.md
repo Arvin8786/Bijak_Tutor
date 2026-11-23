@@ -6,7 +6,7 @@ The repository contains interactive preschool modules, a primary-school study li
 
 ## Release notes and announcements
 
-Edit [release-notes.json](release-notes.json) and publish through the normal GitHub Pages workflow. Each notice has a unique `id`, a `title`, and an `items` list. Add a new ID for a new announcement or a revised notice that readers should see again. Keep notices public and remove expired announcements from the file.
+In the BijakLearn Team console, open **Parent notices** to publish announcements or release notes. A notice can include text and an optional PNG or JPEG up to 350 KB. Choose the first and last display dates in Malaysia time. Parents see active notices when they sign in or reopen their console. Use **Unpublish** to take a notice down early.
 
 ## Run the learning app
 

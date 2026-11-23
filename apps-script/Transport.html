@@ -14,7 +14,9 @@ if(window.top!==window&&/^[a-f0-9-]{36}$/.test(channel)){
   if(active>=8)return refuse('Too many requests at once. Please try again.');
   seen.add(m.id);active++;
   const send=(ok,value)=>{active--;source.postMessage({type:'bijak-rpc-result',channel,id:m.id,ok,...(ok?{value}:{error:String(value).slice(0,300)})},PAGES_ORIGIN)};
-  google.script.run.withSuccessHandler(value=>send(true,value)).withFailureHandler(error=>send(false,error.message||'Account request failed')).portalRequest(m.method,m.args);
+  const rpc=google.script.run.withSuccessHandler(value=>send(true,value)).withFailureHandler(error=>send(false,error.message||'Account request failed'));
+  if(['getParentNotices','getParentNoticeImage','listParentNoticesAdmin','publishParentNotice','unpublishParentNotice'].includes(m.method))rpc.parentNoticeRequest(m.method,m.args);
+  else rpc.portalRequest(m.method,m.args);
  });
  source.postMessage({type:'bijak-rpc-ready',channel},PAGES_ORIGIN);
 }

@@ -575,5 +575,5 @@ function App(){
  </ModuleGate>
  </main><footer><div>{say(uiLanguage,'footerLine',{mode:say(uiLanguage,isLive?'modeLive':'modePreview')})}</div><div className="proease-footer">{say(uiLanguage,'footerRights',{year:new Date().getFullYear()})}</div></footer></div>
 }
-createRoot(document.getElementById('root')).render(<AppBoundary><PlayfulScene/><App/>{!nativeAccountService&&<ReleaseUpdates showNotices={!demoEnabled}/>}</AppBoundary>);
+createRoot(document.getElementById('root')).render(<AppBoundary><PlayfulScene/><App/>{!nativeAccountService&&<ReleaseUpdates/>}</AppBoundary>);
 

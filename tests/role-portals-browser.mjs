@@ -9,7 +9,11 @@ export async function checkRolePortalsBrowser(browser,base){
 await page.addInitScript(role=>{
    localStorage.setItem('bijaklearn:ui-language:v1','en');window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';let signIn;
    const child={id:'fictional-child',name:'Fictional learner',year:2,school:'SK',language:'en'};
+   const posted=[];
    function invoke(method,...args){
+    if(method==='listParentNoticesAdmin')return posted;
+    if(method==='publishParentNotice'){posted.push({...args[1],id:'test-notice',published:true});return {id:'test-notice'}}
+    if(method==='getParentNotices')return [{id:'test-notice',kind:'Announcement',title:'Holiday schedule',message:'Classes resume on Monday.'}];
     if(method==='getPortalBootstrap')return {role,user:{name:'Test account'},parent:{name:'Test parent',email:'parent@test.invalid'},canManageAccounts:role==='ADMIN',children:role==='STUDENT'?[child]:[],lessons:[],access:{active:false,plan:'FREE'},modules:[]};
     if(method==='getCommerceAdministration')return {settings:{commissionBps:0,paymentInstructions:'Scan our administrator QR',qrUploadId:''},orders:[],discounts:[],commissions:[],payouts:[],uploadsConfigured:false};
     if(method==='getEducationalVideos')return [];
@@ -43,11 +47,25 @@ await page.addInitScript(role=>{
    if(role==='ADMIN'){await page.setViewportSize({width:375,height:900});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:process.env.BIJAK_SCREENSHOT_DIR+'/admin-mobile.png',fullPage:true});await page.setViewportSize({width:1280,height:900})}
   }
   if(role==='ADMIN'){
-   await page.getByRole('heading',{name:'Overview & usage',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Science Lab',exact:true}).count(),0);assert.equal(await page.locator('.portal-nav button').count(),9);
+   await page.getByRole('heading',{name:'Overview & usage',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Science Lab',exact:true}).count(),0);assert.equal(await page.locator('.portal-nav button').count(),10);
    await page.getByRole('button',{name:'Parent feedback',exact:true}).click();await page.getByText('No parent feedback yet.',{exact:true}).waitFor();
+   await page.getByRole('button',{name:'Parent notices',exact:true}).click();
+   await page.getByLabel('Title',{exact:true}).fill('Holiday schedule');
+   await page.getByLabel('Message',{exact:true}).fill('Classes resume on Monday.');
+   await page.getByLabel('First display date').fill('2026-11-23');
+   await page.getByLabel('Last display date').fill('2026-11-30');
+   await page.getByRole('button',{name:'Save and publish'}).click();
+   await page.getByText('2026-11-23 to 2026-11-30',{exact:false}).waitFor();
    await page.getByRole('button',{name:'Payment controls',exact:true}).click();await page.getByRole('heading',{name:'Payment controls',exact:true}).waitFor();
   }else if(role==='PARENT'){
    await page.getByRole('heading',{name:'Child reports',exact:true}).waitFor();await page.getByText('75%',{exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Science Lab',exact:true}).count(),0);assert.equal(await page.getByRole('button',{name:'Access & family links',exact:true}).count(),0);
+   const announcement=page.getByRole('complementary',{name:'Parent notices'});
+   await announcement.getByRole('heading',{name:'Holiday schedule'}).waitFor();
+   await announcement.getByRole('button',{name:'Close'}).click();
+   assert.equal(await announcement.count(),0);
+   await page.evaluate(()=>window.dispatchEvent(new Event('online')));
+   await announcement.getByRole('heading',{name:'Holiday schedule'}).waitFor();
+   await announcement.getByRole('button',{name:'Close'}).click();
    await page.getByRole('button',{name:'Enrol a child',exact:true}).click();await page.getByLabel('Student Google email',{exact:true}).waitFor();await page.getByText('parent@test.invalid',{exact:true}).waitFor();
    await page.getByRole('button',{name:'Comments & suggestions',exact:true}).click();await page.getByLabel('Your message',{exact:true}).fill('Fictional suggestion for testing');await page.getByRole('button',{name:'Send to BijakLearn Team',exact:true}).click();await page.getByText('Saved successfully.',{exact:true}).waitFor();
    await page.locator('.portal-language select').selectOption('ta');await page.getByRole('button',{name:'வெளியேறு',exact:true}).waitFor();await page.locator('.portal-language select').selectOption('en');await page.getByRole('button',{name:'Sign out',exact:true}).waitFor();

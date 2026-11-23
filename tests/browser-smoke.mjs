@@ -47,11 +47,6 @@ try{
   assert.match(await page.locator('.signin .brand-credit').innerText(),/ProEase Studio/);
   assert.doesNotMatch(await page.locator('.signin').innerText(),/fictional profiles|pilot phase|Studio · [0-9a-f]{7}/i,'Customer sign-in must show product attribution, not development notices');
   if(!await page.getByRole('button',{name:'Explore learning demo',exact:true}).count()){
-   const notices=page.getByRole('complementary',{name:'BijakLearn updates'});
-   await notices.getByRole('heading',{name:'What’s new in BijakLearn'}).waitFor();
-   await notices.getByRole('button',{name:'Got it'}).click();
-   await page.reload({waitUntil:'networkidle'});
-   assert.equal(await notices.count(),0,'Dismissed notes should stay closed after reopening');
    assert.equal(await page.locator('nav.nav').count(),0,'Learning must stay behind the gate');
    await page.getByRole('button',{name:'BijakLearn Team',exact:true}).click();
    await page.getByRole('heading',{name:'BijakLearn Team sign-in',exact:true}).waitFor();
