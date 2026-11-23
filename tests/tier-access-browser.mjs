@@ -25,7 +25,8 @@ await page.addInitScript(()=>{
    }
    window.google={accounts:{id:{initialize(options){signIn=options.callback},renderButton(container){for(const [label,credential] of [['Test family sign-in','family'],['Test operator sign-in','operator']]){const button=document.createElement('button');button.textContent=label;button.onclick=()=>signIn({credential});container.append(button)}}}},script:{run:{withSuccessHandler(success){return {withFailureHandler:failure=>new Proxy({},{get:(_,method)=>(...args)=>{try{success(invoke(method,...args))}catch(error){failure(error)}}})}}}}};
   });
-  await page.goto(base);await page.getByRole('button',{name:'English',exact:true}).click();await page.getByRole('button',{name:'Continue',exact:true}).click();
+  await page.addInitScript(()=>localStorage.setItem('bijaklearn:ui-language:v1','en'));
+  await page.goto(base);
   await page.getByRole('button',{name:'Test family sign-in'}).click();
   await page.locator('nav.nav').getByRole('button',{name:'Science Lab',exact:true}).click();
   await page.getByText('Your FREE plan does not include Science Lab.',{exact:true}).waitFor();

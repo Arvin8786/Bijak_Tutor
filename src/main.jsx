@@ -1,6 +1,6 @@
 import {useSheetRefresh} from './sheetRefresh.js';
 import Brand,{BrandCredit,PortalGlyph} from './Brand.jsx';
-import EducationalVideos from './EducationalVideos.jsx';
+import VideoLibrary from './VideoLibrary.jsx';
 // Capture a referral only in this tab; no tracking cookies, email addresses or child data in URLs.
 function getReferralCode(){try{const code=new URL(window.location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('bijaklearn:referral',code);return sessionStorage.getItem('bijaklearn:referral')||''}catch{return ''}}
 getReferralCode();
@@ -241,7 +241,7 @@ function NavButton({icon,label,active,onClick}){return <button type="button" cla
 function App(){
  const [uiLanguage,setUiLanguage]=useState(()=>readLocale()||'ms');
  setUiLang(uiLanguage);
- const [welcomeDone,setWelcomeDone]=useState(()=>!!readLocale());
+ const [welcomeDone,setWelcomeDone]=useState(true);
  useEffect(()=>{document.documentElement.lang=uiLanguage},[uiLanguage]);
  const [token,setToken]=useState(''),[boot,setBoot]=useState(null),[childId,setChildId]=useState(''),[qIndex,setQIndex]=useState(0),[answer,setAnswer]=useState(''),[hints,setHints]=useState(0),[result,setResult]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[pin,setPin]=useState(''),[oldPin,setOldPin]=useState(''),[report,setReport]=useState(null),[newName,setNewName]=useState(''),[year,setYear]=useState(1),[school,setSchool]=useState('SK'),[language,setLanguage]=useState('ms');
  const schoolNow=boot?.children?.find(x=>x.id===childId)?.school||school;
@@ -521,7 +521,7 @@ function App(){
  {page==='lab'&&selectedPath&&<PracticeLab key={selectedPath.id} path={selectedPath} onComplete={()=>updateProgress('activities',selectedPath.id)}/>}
  {page==='review'&&!isLive&&<ReviewQuestions items={selectedPath?missed.filter(item=>selectedPath.lessons.includes(item.lesson.id)):missed}
   onRetry={(id,questionId)=>openLesson(id,{questionId})}/>}
- {page==='videos'&&<EducationalVideos request={isLive?authRequest:null}/>}
+ {page==='videos'&&<VideoLibrary request={isLive?authRequest:null} language={uiLanguage}/>}
  {page==='discovery'&&<DiscoveryLibrary availableLessons={bootLessons||[]} onOpen={openLesson}/>}
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<><AccountAccessPanel request={authRequest}/><StudentAccessPanel request={authRequest}/><KasihReviewPanel request={authRequest}/></>}
  {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={activeLessons} initialYear={browseYear} school={browseSchool} onOpenLesson={openLesson}/>}

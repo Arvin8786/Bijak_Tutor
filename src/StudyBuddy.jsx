@@ -1,7 +1,8 @@
 import {studyCopy} from './studyCopy.js';
 import {tx} from './i18n.js';
 import React,{useEffect,useRef,useState} from 'react';
-import {tutorReply} from './tutorEngine.js';
+import {tutorReply,solveWorkedCalculation} from './tutorEngine.js';
+import {solveExtendedMath} from './mathSolverPlus.js';
 
 function getSpeechLang(text){
  if(/[\u0B80-\u0BFF]/.test(text))return 'ta-IN';
@@ -43,8 +44,9 @@ export default function StudyBuddy({language='en',lessons=[],year=1,subject='',c
    const request=++requestRef.current;
    setQuestion(text);setBusy(true);setStatus('');
    try{
-     let result=null;
-     if(askOnline)try{result=await askOnline(text,{year,subject,lessonId:currentLesson?.id||null})}catch(e){if(mounted.current&&requestRef.current===request)setStatus('Online tutor unavailable. Showing available on-device guidance instead.')}
+     // 1. Free, instant and checked: worked maths by code. 2. Only if that cannot answer, the online helper.
+     let result=solveExtendedMath(text)||solveWorkedCalculation(text);
+     if(!result&&askOnline)try{result=await askOnline(text,{year,subject,lessonId:currentLesson?.id||null})}catch(e){if(mounted.current&&requestRef.current===request)setStatus('Online tutor unavailable. Showing available on-device guidance instead.')}
      if(!result||!Array.isArray(result.steps))result=tutorReply(text,lessons,{year,subject});
      if(mounted.current&&requestRef.current===request)setResponse(result);
    }finally{if(mounted.current&&requestRef.current===request)setBusy(false)}
@@ -61,7 +63,7 @@ export default function StudyBuddy({language='en',lessons=[],year=1,subject='',c
    <div className="tutor-actions"><button type="button" className="primary" disabled={busy||!question.trim()} onClick={()=>ask()}>{busy?'Thinking…':'✨ Explain to me'}</button><button type="button" onClick={listen} aria-label={tx("Speak your question")}>{tx("🎙️ Ask by voice")}</button>{response&&<><button type="button" onClick={()=>speak([response.title,...response.steps].join('. '))}>{tx("🔊 Read answer")}</button><button type="button" onClick={stopSpeech}>{tx("⏹ Stop")}</button></>}</div>
    {status&&<p role="status" className="tutor-status">{status}</p>}
    {response&&<section className="tutor-answer" aria-live="polite"><span className="mini-label">{response.kind==='math'?'🧮 WORKED METHOD':response.kind==='lesson'?'📚 EXPLAIN A CONCEPT':'💡 STUDY GUIDANCE'}</span><h2>{response.title}</h2><ol>{response.steps.map((step,i)=><li key={i}>{step}</li>)}</ol>{response.source&&<p className="tutor-answer-note">Source: {response.source}</p>}{response.lessonId&&<p className="tutor-answer-note">{tx("You can open the matching topic in the subject library for its practice activities.")}</p>}</section>}
-   <p className="tutor-footnote">This on-device helper explains checked arithmetic and retrieves explanations from available lessons. It is not a live generative AI chatbot on the public site. Speech recognition and text-to-speech depend on browser permissions and installed voices; responses may contain mistakes and should be checked with a teacher.</p>
+   <p className="tutor-footnote">{tx("Maths is worked out by checked code on your device. Other questions use lesson explanations and, for signed-in members, an online AI helper that may make mistakes: check important answers with a teacher. Speech recognition and read-aloud depend on browser permissions and installed voices.")}</p>
   </div>
  </section>;
 }

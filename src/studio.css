@@ -277,3 +277,31 @@ body :is(.app, .signin, .portal-shell) :is(button, a, input, select, textarea):f
 body :is(.signin-form, .portal-nav, .portal-header) button:focus-visible {
   outline-color: #84580d;
 }
+
+/* Video lessons: learner page and administrator manager */
+.video-page{display:grid;gap:16px}
+.video-hero{padding:26px;border-radius:26px;background:linear-gradient(115deg,#ffe9e1,#f2e8ff 60%,#e1f1ff);border:2px solid #fff;box-shadow:0 10px 26px rgba(70,60,140,.12)}
+.video-hero h1{font-size:clamp(26px,5vw,38px);line-height:1.15;margin:6px 0}.video-hero p{margin:0;color:#536681;max-width:560px;line-height:1.55}
+.video-filters{display:flex;flex-wrap:wrap;gap:8px}
+.video-filters button{border-radius:999px;border:1px solid #d6dcf5;background:#fff;padding:8px 14px;min-height:40px;font-weight:700;cursor:pointer}
+.video-filters button.active{background:linear-gradient(120deg,#e6ecff,#f1e9ff);border-color:#b9c6ff;color:#2c3ea3}
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.video-card{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;padding:14px;border-radius:20px;border:2px solid #fff;background:#fff;box-shadow:0 8px 22px rgba(60,70,140,.12);cursor:pointer;transition:transform .18s cubic-bezier(.3,1.5,.5,1),box-shadow .18s}
+.video-card:hover,.video-card:focus-visible{transform:translateY(-4px);box-shadow:0 14px 28px rgba(60,70,140,.2)}
+.video-thumb{width:100%;aspect-ratio:16/9;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,#ff8a65,#7e57c2);color:#fff;font-size:38px}
+.video-meta{display:flex;flex-wrap:wrap;gap:6px}.video-meta em{font-style:normal;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:#eef1ff;color:#3a4aa8}
+.video-note{font-size:13px;color:#5c6b86;line-height:1.45}
+.video-empty{padding:22px;border-radius:18px;background:#f6f7ff;color:#44527a}
+.video-player-card{display:grid;gap:12px;padding:16px;border-radius:24px;background:#fff;box-shadow:0 10px 28px rgba(60,70,140,.14)}
+.video-player-card h2{margin:0}.video-back{justify-self:start;border-radius:999px;border:1px solid #d6dcf5;background:#f3f5fd;padding:8px 14px;min-height:40px;cursor:pointer;font-weight:700}
+.video-frame{position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#0f1330}
+.video-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-ended{position:absolute;inset:0;display:grid;place-content:center;gap:10px;text-align:center;color:#fff;background:linear-gradient(135deg,#5c6bc0,#8e5bd0);padding:18px}
+.video-ended span{font-size:52px}.video-ended p{margin:0;font-size:18px;font-weight:800}.video-ended div{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.video-description{margin:0;color:#4d5b78;line-height:1.55}
+.video-admin{display:grid;gap:14px}.video-form{display:grid;gap:12px;padding:16px;border-radius:18px;background:#f7f8ff;border:1px solid #e1e5fb}
+.video-form label{display:grid;gap:5px;font-weight:700;font-size:13px}.video-form input,.video-form textarea,.video-form select{padding:10px 12px;border-radius:10px;border:1px solid #cfd6f0;font:inherit}
+.video-form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.video-form-actions{display:flex;gap:10px;flex-wrap:wrap}
+.video-error{color:#a32323;font-weight:700}.video-notice{color:#1b6b3a;font-weight:700}
+.video-table-wrap{overflow-x:auto}.video-table{width:100%;border-collapse:collapse}.video-table th,.video-table td{padding:9px 10px;border-bottom:1px solid #e6e9f7;text-align:left;vertical-align:top}
+@media(prefers-reduced-motion:reduce){.video-card{transition:none}.video-card:hover{transform:none}}

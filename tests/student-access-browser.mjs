@@ -26,7 +26,8 @@ await page.addInitScript(()=>{
    }
    window.google={accounts:{id:{initialize(options){callback=options.callback},renderButton(container){for(const [name,credential] of [['Test operator sign-in','operator'],['Test learner sign-in','learner']]){const button=document.createElement('button');button.textContent=name;button.onclick=()=>callback({credential});container.append(button)}}}},script:{run:{withSuccessHandler(success){return {withFailureHandler:failure=>new Proxy({},{get:(_,method)=>(...args)=>{try{success(invoke(method,...args))}catch(e){failure(e)}}})}}}}};
   });
-  await page.goto(base);await page.getByRole('button',{name:'English',exact:true}).click();await page.getByRole('button',{name:'Continue',exact:true}).click();
+  await page.addInitScript(()=>localStorage.setItem('bijaklearn:ui-language:v1','en'));
+  await page.goto(base);
   await page.getByRole('button',{name:'Student sign-in',exact:true}).click();
   await page.getByRole('heading',{name:'Student sign-in',exact:true}).waitFor();
   await page.getByRole('button',{name:'Test learner sign-in'}).click();

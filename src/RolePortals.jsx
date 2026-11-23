@@ -5,7 +5,7 @@ import AccountAccessPanel from './AccountAccessPanel.jsx';
 import StudentAccessPanel from './StudentAccessPanel.jsx';
 import KasihReviewPanel from './KasihReviewPanel.jsx';
 import FamilyCommerce from './FamilyCommerce.jsx';
-import EducationalVideos from './EducationalVideos.jsx';
+import VideoAdminPanel from './VideoAdminPanel.jsx';
 import PremiumKasihApplication from './PremiumKasihApplication.jsx';
 import {setUiLang} from './i18n.js';
 import {PORTAL_LANGUAGES,portalText,readPortalLanguage,writePortalLanguage} from './portalLocale.js';
@@ -52,7 +52,7 @@ export function RolePortals({boot,request,onSignOut}){
  {admin&&page==='accounts'&&<><AccountAccessPanel request={request} revision={sheetRevision+refresh}/><StudentAccessPanel request={request} revision={sheetRevision+refresh}/></>}
  {admin&&page==='enrolments'&&<EnrolmentApprovals request={request} refresh={refresh+sheetRevision} mutate={mutate} busy={busy}/>}
  {admin&&data&&page==='tiers'&&<><p>These controls determine which learning modules each membership can use. Account blocking always takes priority.</p>{data.modules.map(module=><ModulePolicy key={module.moduleId+refresh} module={module} mutate={mutate} busy={busy}/>)}</>}
- {admin&&page==='videos'&&<EducationalVideos request={request} canManage/>}
+ {admin&&page==='videos'&&<VideoAdminPanel request={request}/>}
  {admin&&page==='payments'&&<FamilyCommerce revision={sheetRevision+refresh} request={request} admin section="payments"/>}
  {admin&&page==='offers'&&<FamilyCommerce revision={sheetRevision+refresh} request={request} admin section="offers"/>}
  {admin&&page==='kasih'&&<KasihReviewPanel request={request} revision={sheetRevision+refresh}/>}

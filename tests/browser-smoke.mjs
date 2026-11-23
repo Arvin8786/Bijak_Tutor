@@ -25,14 +25,13 @@ try{
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
  for(const width of [375,768,1280]){
   const page=await browser.newPage({viewport:{width,height:850}});
+  await page.addInitScript(()=>{if(!localStorage.getItem('bijaklearn:ui-language:v1'))localStorage.setItem('bijaklearn:ui-language:v1','en')});
   const exceptions=[];
   page.on('pageerror',e=>exceptions.push(e.message));
   const response=await page.goto(base,{waitUntil:'networkidle'});
   assert.ok(response?.ok(),`Production page did not load at ${base}`);
   assert.equal(new URL(page.url()).pathname,projectPath,'Expected the GitHub Pages project path');
-  const welcome=page.locator('.welcome-gate');
-  await welcome.getByRole('button',{name:/English/i}).click();
-  await welcome.getByRole('button',{name:/Continue/i}).click();
+  assert.equal(await page.locator('.welcome-gate').count(),0,'Language selection should not block startup');
   await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   assert.match(await page.locator('.signin .brand-credit').innerText(),/ProEase Studio/);
   assert.doesNotMatch(await page.locator('.signin').innerText(),/fictional profiles|pilot phase|Studio · [0-9a-f]{7}/i,'Customer sign-in must show product attribution, not development notices');
@@ -576,7 +575,7 @@ try{
  const offlineContext=await browser.newContext();
  const offlinePage=await offlineContext.newPage();
  await offlinePage.goto(base);
- await offlinePage.locator('.welcome-gate').getByRole('button',{name:'Teruskan'}).click();
+ await offlinePage.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
  await offlinePage.waitForFunction(()=>Boolean(navigator.serviceWorker.controller));
  await offlineContext.setOffline(true);
  await offlinePage.reload();
