@@ -5,7 +5,7 @@ export async function checkAccountSyncBrowser(browser,base){
   try{
    await page.route('https://accounts.google.com/gsi/client',r=>r.fulfill({status:200,contentType:'application/javascript',body:''}));
    await page.addInitScript(role=>{
-    window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';localStorage.setItem('bijaklearn:locale','en');let callback;
+    window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';localStorage.setItem('bijaklearn:ui-language:v1','en');let callback;
     const child={id:'fixture-child',name:'Original learner',year:2,school:'SK',language:'en',parentEmail:'parent@test.invalid',email:'wrong@test.invalid',status:'PROFILE_MISSING',missing:true,linkStatus:'REVOKED',revision:'one'};
     const account={id:'google:fixture-parent',name:'Test parent',email:'parent@test.invalid',status:'PENDING'},link={id:'email:wrong@test.invalid',email:child.email,childId:child.id,status:'REVOKED'};
     window.accountFixture={child,account,link};
@@ -28,7 +28,7 @@ export async function checkAccountSyncBrowser(browser,base){
     }
     window.google={accounts:{id:{initialize(o){callback=o.callback},renderButton(el){const b=document.createElement('button');b.textContent='Sync test Google';b.onclick=()=>callback({credential:'fictional'});el.append(b)}}},script:{run:{withSuccessHandler(ok){return {withFailureHandler:fail=>new Proxy({},{get:(_,method)=>(...args)=>{try{ok(invoke(method,...args))}catch(e){fail(e)}}})}}}}};
    },role);
-   await page.goto(base);const welcome=page.locator('.welcome-gate');if(await welcome.count()){await welcome.getByRole('button',{name:'English',exact:true}).click();await welcome.getByRole('button',{name:'Continue',exact:true}).click()}
+   await page.goto(base);
    await page.getByRole('button',{name:'Sync test Google',exact:true}).click();
    if(role==='ADMIN'){
     await page.getByRole('button',{name:'Access & family links',exact:true}).click();await page.getByRole('button',{name:'Approve',exact:true}).click();await page.getByRole('button',{name:'Grant access',exact:true}).click();await page.getByRole('status').filter({hasText:'Active:'}).waitFor();

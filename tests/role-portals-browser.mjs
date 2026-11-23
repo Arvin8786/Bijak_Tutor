@@ -7,7 +7,7 @@ export async function checkRolePortalsBrowser(browser,base){
   page.on('pageerror',error=>errors.push(error.message));
   await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({status:200,contentType:'application/javascript',body:'// Google identity is mocked in this test.'}));
 await page.addInitScript(role=>{
-   localStorage.setItem('bijaklearn:locale','en');window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';let signIn;
+   localStorage.setItem('bijaklearn:ui-language:v1','en');window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';let signIn;
    const child={id:'fictional-child',name:'Fictional learner',year:2,school:'SK',language:'en'};
    function invoke(method,...args){
     if(method==='getPortalBootstrap')return {role,user:{name:'Test account'},parent:{name:'Test parent',email:'parent@test.invalid'},canManageAccounts:role==='ADMIN',children:role==='STUDENT'?[child]:[],lessons:[],access:{active:false,plan:'FREE'},modules:[]};
@@ -25,7 +25,7 @@ await page.addInitScript(role=>{
    window.google={accounts:{id:{initialize(options){signIn=options.callback},renderButton(container){const button=document.createElement('button');button.textContent='Test Google account';button.onclick=()=>signIn({credential:'fictional-token'});container.append(button)}}},script:{run:{withSuccessHandler(success){return {withFailureHandler:failure=>new Proxy({},{get:(_,method)=>(...args)=>{try{success(invoke(method,...args))}catch(error){failure(error)}}})}}}}};
   },role);
   await page.goto(base,{waitUntil:'networkidle'});
-  const welcome=page.locator('.welcome-gate');if(await welcome.count()){await welcome.getByRole('button',{name:'English',exact:true}).click();await welcome.getByRole('button',{name:'Continue',exact:true}).click()}
+
   await page.getByRole('button',{name:'Test Google account',exact:true}).click();
   if(role==='ADMIN')await page.getByRole('heading',{name:'Service settings',exact:true}).waitFor();
   if(role==='PARENT')await page.getByText('75%',{exact:true}).waitFor();

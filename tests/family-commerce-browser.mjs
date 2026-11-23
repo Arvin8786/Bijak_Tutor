@@ -5,7 +5,7 @@ export async function checkFamilyCommerceBrowser(browser,base){
  try{
  await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({status:200,contentType:'application/javascript',body:''}));
  await page.addInitScript(admin=>{
-  window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';localStorage.setItem('bijaklearn:locale','en');let signIn;
+  window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';localStorage.setItem('bijaklearn:ui-language:v1','en');let signIn;
   const settings={commissionBps:1000,paymentInstructions:'Scan our verified Touch n Go QR',qrUploadId:''},orders=[],children=[],calls=[];window.commerceCalls=calls;
   const parent={name:'Test Parent',email:'parent@test.invalid'};
   function invoke(method,...args){calls.push([method,...args]);
@@ -23,7 +23,7 @@ export async function checkFamilyCommerceBrowser(browser,base){
   }
   window.google={accounts:{id:{initialize(o){signIn=o.callback},renderButton(container){const b=document.createElement('button');b.textContent='Test commerce Google';b.onclick=()=>signIn({credential:'fictional'});container.append(b)}}},script:{run:{withSuccessHandler(success){return {withFailureHandler:failure=>new Proxy({},{get:(_,method)=>(...args)=>{try{success(invoke(method,...args))}catch(e){failure(e)}}})}}}}};
  },admin);
- await page.goto(base);const welcome=page.locator('.welcome-gate');if(await welcome.count()){await welcome.getByRole('button',{name:'English',exact:true}).click();await welcome.getByRole('button',{name:'Continue',exact:true}).click()}
+ await page.goto(base);
  await page.getByRole('button',{name:'Test commerce Google',exact:true}).click();
  if(!admin){
   await page.getByRole('button',{name:'Enrol a child',exact:true}).click();await page.getByLabel('Child nickname',{exact:true}).fill('Fictional child');await page.getByLabel('Student Google email',{exact:true}).fill('student@test.invalid');await page.getByRole('checkbox',{name:/I am the parent or guardian and consent/}).check();await page.getByRole('button',{name:'Add child account',exact:true}).click();await page.getByText('Saved successfully.',{exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Remove child link',exact:true}).count(),0);

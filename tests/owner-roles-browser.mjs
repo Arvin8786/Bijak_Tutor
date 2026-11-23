@@ -5,7 +5,7 @@ export async function checkOwnerRolesBrowser(browser,base){
  try{
   await page.route('https://accounts.google.com/gsi/client',r=>r.fulfill({status:200,contentType:'application/javascript',body:''}));
   await page.addInitScript(()=>{
-   window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';localStorage.setItem('bijaklearn:locale','en');let callback;
+   window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';localStorage.setItem('bijaklearn:ui-language:v1','en');let callback;
    const child={id:'owner-child',name:'My learner',year:1,school:'SK',language:'en'};window.ownerRequests=[];
    function invoke(method,credential,...args){
     const role=method==='getPortalBootstrap'?args[0]:credential.role;
@@ -16,12 +16,13 @@ export async function checkOwnerRolesBrowser(browser,base){
     if(method==='getParentDashboard'&&role==='parent')return {parent:{name:'Owner',email:'owner@test.invalid'},access:{plan:'FREE'},children:[{...child,attempts:0,correct:0,mastered:0,reportedSeconds:0,dailyUsage:[],recent:[]}],enrolments:[],feedback:[]};
     if(method==='authorizeModule'&&role==='student')return {allowed:true,plan:'PREMIUM',title:args[0]};
     if(method==='recordStudentUsage'&&role==='student')return {recorded:true,seconds:0};
+    if(method==='getVideoLibrary'&&role==='student')throw Error('Unsupported account request');
     if(method==='getEducationalVideos'&&role==='student')return [];
     throw Error('Unexpected request '+method+' in '+role+' role');
    }
    window.google={accounts:{id:{initialize(o){callback=o.callback},renderButton(el){const b=document.createElement('button');b.textContent='Use my Google account';b.onclick=()=>callback({credential:'same-owner-google-token'});el.append(b)}}},script:{run:{withSuccessHandler(ok){return {withFailureHandler:fail=>new Proxy({},{get:(_,method)=>(...args)=>{try{ok(invoke(method,...args))}catch(e){fail(e)}}})}}}}};
   });
-  await page.goto(base);const welcome=page.locator('.welcome-gate');if(await welcome.count()){await welcome.getByRole('button',{name:'English',exact:true}).click();await welcome.getByRole('button',{name:'Continue',exact:true}).click()}await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
+  await page.goto(base);await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   const signInLayout=await page.locator('.signin-tabs').evaluate(el=>getComputedStyle(el).display);
   assert.equal(signInLayout,'grid','the published sign-in theme must load');
   const background=selector=>page.locator(selector).evaluate(el=>getComputedStyle(el).backgroundColor);
@@ -36,7 +37,8 @@ export async function checkOwnerRolesBrowser(browser,base){
     assert.equal(await background('.app .hero'),'rgb(22, 78, 70)','learner book cover');
     assert.equal(await page.locator('.app').evaluate(el=>getComputedStyle(el).display),'grid','learner desktop sidebar theme');
     await page.locator('nav.nav').getByRole('button',{name:'Science Lab',exact:true}).click();await page.locator('.science-lab').waitFor();
-    await page.locator('nav.nav').getByRole('button',{name:'Learning Videos',exact:true}).click();await page.getByText('No videos have been published yet.',{exact:true}).waitFor();
+    await page.locator('nav.nav').getByRole('button',{name:'Learning Videos',exact:true}).click();await page.getByText('No videos have been added yet. Please check again soon!',{exact:true}).waitFor();
+    assert.equal(await page.locator('.video-page').evaluate(el=>getComputedStyle(el).display),'grid','video styles must be loaded');
     assert.equal(await page.getByRole('button',{name:'Publish video',exact:true}).count(),0);
    }else {
     assert.equal(await page.locator('nav.nav').count(),0);
@@ -46,7 +48,7 @@ export async function checkOwnerRolesBrowser(browser,base){
    await page.getByRole('button',{name:'Sign out',exact:true}).click();await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   }
   const requests=await page.evaluate(()=>window.ownerRequests);
-  for(const method of ['getAdministrationOverview','getParentDashboard','authorizeModule','getEducationalVideos'])assert.ok(requests.some(r=>r.method===method&&r.scoped),method+' must retain the selected server role');
+  for(const method of ['getAdministrationOverview','getParentDashboard','authorizeModule','getVideoLibrary','getEducationalVideos'])assert.ok(requests.some(r=>r.method===method&&r.scoped),method+' must retain the selected server role');
   assert.deepEqual(errors,[]);
  }finally{await page.close()}
  console.log('Passed one-owner Google identity across real team, parent and student interfaces.');
