@@ -233,6 +233,14 @@ function PwaControls({language='ms'}){
   {!online&&<p className="install-help">{say(language,'offlineHelp')}</p>}
  </div>;
 }
+function HomeToolCard({icon,label,description,onOpen}){
+ return <button type="button" className="home-tool-card" onClick={onOpen}>
+  <span className="home-tool-icon" aria-hidden="true">{icon}</span>
+  <strong>{label}</strong>
+  {description&&<small>{description}</small>}
+ </button>;
+}
+
 function NavButton({icon,label,active,onClick}){return <button type="button" className={active?'active':''} aria-current={active?'page':undefined} onClick={onClick}><span aria-hidden="true">{icon}</span> {label}</button>}
 function App(){
  const [uiLanguage,setUiLanguage]=useState(()=>readLocale()||'ms');
@@ -441,6 +449,8 @@ function App(){
    throw error;
   }
  },[endSession]);
+ const loadGrowthTrack=useCallback(id=>authRequest('getGrowthModule',id),[authRequest]);
+ const checkGrowthAnswer=useCallback((id,answer)=>authRequest('checkGrowthAnswer',id,answer),[authRequest]);
  async function call(method,...args){
   setError('');setBusy(true);
   try{return await (isLive?authRequest(method,...args):api(method,token,...args))}
@@ -590,7 +600,7 @@ function App(){
  {page==='free-library'&&<FreeLibrary openWordTiles={()=>setPage('wordgame')} request={isLive&&boot?.role==='STUDENT'?authRequest:undefined}/>}
  {page==='arcade'&&<ActivityArcade edition={edition}/>}
  {page==='wordgame'&&<WordTilesGame/>}
- {page==='growth'&&<GrowthHub studentOnly={boot?.role==='STUDENT'} audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?id=>authRequest("getGrowthModule",id):null} checkAnswer={isLive?(lessonId,answerIndex)=>authRequest("checkGrowthAnswer",lessonId,answerIndex):null}/>}
+ {page==='growth'&&<GrowthHub studentOnly={boot?.role==='STUDENT'} audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?loadGrowthTrack:null} checkAnswer={isLive?checkGrowthAnswer:null}/>}
  {page==='mock-exams'&&isLive&&boot?.role==='STUDENT'&&<MockExams request={authRequest}/>}
  {page==='practice'&&<PracticeArena lessons={activeLessons} year={browseYear} school={browseSchool} language={uiLanguage} onOpenLesson={openLesson} onAttempt={isLive?undefined:recordPractice}/>}
  {page==='tutor'&&<StudyBuddy lessons={activeLessons} year={browseYear} subject={lesson?.subject||''} currentLesson={lesson} askOnline={isLive?(question,context)=>authRequest('askTutor',question,context):null}/>}
@@ -600,29 +610,29 @@ function App(){
   <div className="hero"><div><span className="eyebrow">{edition.label}</span>
    <h1>{edition===JUNIOR?say(uiLanguage,'heroTitle'):edition.name}</h1>
    <p>{edition===JUNIOR?say(uiLanguage,'heroText'):tx('Explore Years 4–6 lessons, practise across subjects and put your ideas to work in creative projects.')}</p></div>
-   {edition===JUNIOR?<><div className="hero-mascots"><MascotFriends language={uiLanguage} compact/></div><button type="button" className="preschool-launch" onClick={()=>setPage('preschool')}>🐣 {say(uiLanguage,'preschoolCta')}</button></>:<a className="hero-plus-link" href="#study-library">{say(uiLanguage,'browseLibrary')}</a>}
+   <div className="home-hero-actions">
+    <a className="hero-plus-link" href="#study-library">{say(uiLanguage,'browseLibrary')}</a>
+    {edition===JUNIOR&&<button type="button" className="preschool-launch" onClick={()=>setPage('preschool')}>🐣 {say(uiLanguage,'preschoolCta')}</button>}
+   </div>
   </div>
- <div className="studio-cards"><button type="button" className="studio-card science" onClick={()=>setPage('science-lab')}><span className="studio-card-icon" aria-hidden="true">🔬</span><span><strong>{say(uiLanguage,'science')}</strong><small>{say(uiLanguage,'sciCardSub')}</small></span><span aria-hidden="true">→</span></button><button type="button" className="studio-card maths" onClick={()=>setPage('maths-studio')}><span className="studio-card-icon" aria-hidden="true">🧮</span><span><strong>{say(uiLanguage,'maths')}</strong><small>{say(uiLanguage,'mathCardSub')}</small></span><span aria-hidden="true">→</span></button></div>{boot?.role==='STUDENT'?<section className="panel"><h2>Your learning profile</h2><p>{child?.name} · {Number(child?.year)===0?tx('Preschool'):'Tahun '+browseYear} · {child?.school}</p><p>Your parent or BijakLearn Team manages your profile and membership.</p></section>:<section className="panel"><h2>{say(uiLanguage,'personaliseTitle')}</h2><div className="demo-save-settings"><div><strong>⭐ {say(uiLanguage,'nickTitle')}</strong><p>{say(uiLanguage,'nickText')}</p></div><label className="demo-save-check"><input type="checkbox" checked={rememberDemo} onChange={e=>toggleDemoSave(e.target.checked)}/> {say(uiLanguage,'rememberDevice')}</label><button type="button" onClick={resetDemo}>{say(uiLanguage,'clearSaved')}</button></div>{boot?.children.length?<div className="chips">{boot.children.map(c=><button key={c.id} className={childId===c.id?'selected':''} onClick={()=>setChildId(c.id)}>{c.name} · {say(uiLanguage,'yearWord')} {c.year}</button>)}</div>:<p>{say(uiLanguage,'noProfileText')}</p>}<details><summary>{say(uiLanguage,'addNickname')}</summary><form onSubmit={createChild} className="form"><label>{say(uiLanguage,'fictionalNickname')}<input required maxLength={40} value={newName} onChange={e=>setNewName(e.target.value)}/></label><label>{say(uiLanguage,'yearWord')}<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>{say(uiLanguage,'yearLabel',{n:y})}</option>)}</select></label><label>{say(uiLanguage,'schoolWord')}<select value={school} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{say(uiLanguage,'languageWord')}<select value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(langLabels).map(([k,v])=><option value={k} key={k}>{v}</option>)}</select></label><button className="primary" disabled={busy}>{say(uiLanguage,'addProfile')}</button></form></details></section>}
+ {boot?.role==='STUDENT'?<section className="panel"><h2>Your learning profile</h2><p>{child?.name} · {Number(child?.year)===0?tx('Preschool'):'Tahun '+browseYear} · {child?.school}</p><p>Your parent or BijakLearn Team manages your profile and membership.</p></section>:<section className="panel"><h2>{say(uiLanguage,'personaliseTitle')}</h2><div className="demo-save-settings"><div><strong>⭐ {say(uiLanguage,'nickTitle')}</strong><p>{say(uiLanguage,'nickText')}</p></div><label className="demo-save-check"><input type="checkbox" checked={rememberDemo} onChange={e=>toggleDemoSave(e.target.checked)}/> {say(uiLanguage,'rememberDevice')}</label><button type="button" onClick={resetDemo}>{say(uiLanguage,'clearSaved')}</button></div>{boot?.children.length?<div className="chips">{boot.children.map(c=><button key={c.id} className={childId===c.id?'selected':''} onClick={()=>setChildId(c.id)}>{c.name} · {say(uiLanguage,'yearWord')} {c.year}</button>)}</div>:<p>{say(uiLanguage,'noProfileText')}</p>}<details><summary>{say(uiLanguage,'addNickname')}</summary><form onSubmit={createChild} className="form"><label>{say(uiLanguage,'fictionalNickname')}<input required maxLength={40} value={newName} onChange={e=>setNewName(e.target.value)}/></label><label>{say(uiLanguage,'yearWord')}<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>{say(uiLanguage,'yearLabel',{n:y})}</option>)}</select></label><label>{say(uiLanguage,'schoolWord')}<select value={school} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{say(uiLanguage,'languageWord')}<select value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(langLabels).map(([k,v])=><option value={k} key={k}>{v}</option>)}</select></label><button className="primary" disabled={busy}>{say(uiLanguage,'addProfile')}</button></form></details></section>}
 
  {!isLive&&<ContinueLearning lastLesson={lastLesson} activities={currentProgress.activities.length} quizzes={currentProgress.quizzes.length}
   missed={missed.length} onOpen={openLesson} onReview={()=>setPage('review')} onPaths={()=>setPage('paths')}/>}
- <div className="study-shortcuts" aria-label={say(uiLanguage,'navLearn')}>
-  <a href="#study-library">📚 {say(uiLanguage,'browseLibrary')}</a>
-  <button type="button" onClick={()=>setPage('dictionary')}>📖 Picture Dictionary</button>
-  <button type="button" onClick={()=>setPage('discovery')}>🧩 {say(uiLanguage,'discovery')}</button>
-  {isLive&&<button type="button" onClick={()=>setPage('paths')}>{say(uiLanguage,'learningPaths')}</button>}
-  <button type="button" onClick={()=>setPage('practice')}>🎯 {say(uiLanguage,'startQuiz')}</button>
-  <button type="button" onClick={()=>setPage('arcade')}>🎪 {say(uiLanguage,'playGame')}</button>
- </div>
- <button type="button" className="arcade-home-teaser" onClick={()=>setPage('arcade')}><span aria-hidden="true">🎪</span><span><strong>{say(uiLanguage,'arcade')}</strong><small>{say(uiLanguage,'arcadeSub')}</small></span><span aria-hidden="true">→</span></button>
- <button type="button" className="word-bot-home" onClick={()=>setPage('wordgame')}><span aria-hidden="true">🔡</span><span><strong>{say(uiLanguage,'wordGame')}</strong><small>{say(uiLanguage,'wordBotSub')}</small></span><span aria-hidden="true">→</span></button>
- <div className="growth-home-spotlight"><button type="button" className="growth-home-card" onClick={()=>{setGrowthAudience('junior');setGrowthKind('ai');setPage('growth')}}><span className="growth-spot-icon" aria-hidden="true">🤖</span><span><strong>{say(uiLanguage,'learnAI')}</strong><small>{say(uiLanguage,'aiSub')}</small></span></button><button type="button" className="growth-home-card" onClick={()=>{setGrowthAudience('junior');setGrowthKind('hobby');setPage('growth')}}><span className="growth-spot-icon" aria-hidden="true">🌿</span><span><strong>{say(uiLanguage,'hobbies')}</strong><small>{say(uiLanguage,'hobbiesSub')}</small></span></button></div>
- <div className="home-mascot-band"><div><span className="mini-label">{edition.name}</span><h2>{say(uiLanguage,'greeting')}</h2><p>{say(uiLanguage,'touch')}</p></div><MascotFriends language={uiLanguage} compact/></div>
- <div className="tutor-teaser"><span aria-hidden="true">🤖</span><div><strong>{say(uiLanguage,'tutorTeaserTitle')}</strong><p>{say(uiLanguage,'tutorTeaserText')}</p></div><button type="button" className="primary" onClick={()=>setPage('tutor')}>{say(uiLanguage,'askBuddy')}</button></div>
- <div className="home-packs-teaser"><div><span className="mini-label">{say(uiLanguage,'practiceTeaserEyebrow')}</span><h2>{say(uiLanguage,'practiceTeaserTitle')}</h2><p>{say(uiLanguage,'practiceTeaserText')}</p></div><button type="button" className="primary" onClick={()=>setPage('practice')}>{say(uiLanguage,'openPractice')}</button></div>
- <div className="home-packs-teaser"><div><span className="mini-label">{say(uiLanguage,'packsTeaserEyebrow')}</span><h2>{say(uiLanguage,'packsTeaserTitle')}</h2><p>{say(uiLanguage,'packsTeaserText')}</p></div><button type="button" className="primary" onClick={()=>setPage('packs')}>{say(uiLanguage,'openPacks')}</button></div>
+ <section className="home-tools" aria-labelledby="home-study-tools">
+  <h2 id="home-study-tools">{tx('Study and practise')}</h2>
+  <div className="home-tool-grid">
+   {[
+    ['packs','📚','packs','packsTeaserText'],
+    ['practice','🎯','practice','practiceTeaserText'],
+    ['tutor','🤖','tutorTeaserTitle','tutorTeaserText'],
+    ['maths-studio','🧮','maths','mathCardSub'],
+    ['science-lab','🔬','science','sciCardSub'],
+    ...(isLive?[['paths','🧭','learningPaths']]:[])
+   ].map(([route,icon,label,description])=><HomeToolCard key={route} icon={icon} label={say(uiLanguage,label)} description={description&&say(uiLanguage,description)} onOpen={()=>setPage(route)}/>)}
+  </div>
+ </section>
  <section className="library-section" id="study-library">
-   <button type="button" onClick={()=>setPage('free-library')}>📚 Open Free Library</button>
    <div className="section-heading"><div><span className="mini-label">{say(uiLanguage,'libraryEyebrow')}</span><h2>{say(uiLanguage,'explore')}</h2><p>{say(uiLanguage,'libraryText')}</p></div><span className="heading-spark" aria-hidden="true">🌟</span></div>
    <div className="library-filters"><label>{tx("Learning pathway")} <select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{tx("School year")} <select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{primaryYears.map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><span className="library-hint">{child?'Showing subjects for '+child.name:'Browse without creating a learner'}</span></div>
    <div className="optional-subject-toggle"><button type="button" aria-pressed={showOptional} onClick={()=>setShowOptional(v=>!v)}>{showOptional?'Hide optional-language catalogues':'Show additional optional languages'} <span aria-hidden="true">{showOptional?'−':'+'}</span></button><small>{tx("Optional subjects vary by school.")}</small></div>
@@ -641,7 +651,20 @@ function App(){
      {total>0&&<span className="ready-dot">{say(uiLanguage,'lesson')} →</span>}
     </button>;
    })}</div>
- </section></>}
+ </section>
+ <section className="home-tools" aria-labelledby="home-explore-tools">
+  <h2 id="home-explore-tools">{tx('Explore more')}</h2>
+  <div className="home-tool-grid">
+   <HomeToolCard icon="📚" label="Free Library" description="Read EPUB books and find learning games." onOpen={()=>setPage('free-library')}/>
+   <HomeToolCard icon="📖" label="Picture Dictionary" onOpen={()=>setPage('dictionary')}/>
+   <HomeToolCard icon="🧩" label={say(uiLanguage,'discovery')} onOpen={()=>setPage('discovery')}/>
+   <HomeToolCard icon="🎪" label={say(uiLanguage,'arcade')} description={say(uiLanguage,'arcadeSub')} onOpen={()=>setPage('arcade')}/>
+   <HomeToolCard icon="🔡" label={say(uiLanguage,'wordGame')} description={say(uiLanguage,'wordBotSub')} onOpen={()=>setPage('wordgame')}/>
+   {[['ai','🤖','learnAI','aiSub'],['hobby','🌿','hobbies','hobbySub']].map(([kind,icon,label,description])=><HomeToolCard key={kind} icon={icon} label={say(uiLanguage,label)} description={say(uiLanguage,description)} onOpen={()=>{setGrowthAudience('junior');setGrowthKind(kind);setPage('growth')}}/>)}
+  </div>
+ </section>
+ <div className="home-mascot-band"><div><h2>{say(uiLanguage,'greeting')}</h2><p>{say(uiLanguage,'touch')}</p></div><MascotFriends language={uiLanguage} compact/></div>
+ </>}
 
  {(page==='map'||page==='subject')&&<section className={page==='subject'?'subject-page':'curriculum-map'}><div className="section-heading"><div><span className="mini-label">{tx("🗺️ EXPLORE ALL LESSONS")}</span><h1>{page==='subject'?browseSubject:tx('My Learning Adventure')}</h1><p>{page==='subject'
  ? 'Tahun '+browseYear+' · '+browseSchool+' · '+subjectLessons.length+' '+(subjectLessons.length===1?tx('lesson'):tx('lessons'))

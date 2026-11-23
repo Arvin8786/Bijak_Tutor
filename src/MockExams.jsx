@@ -37,10 +37,18 @@ function ExamSession({attempt,request,onUpdate}){
   const timer=window.setInterval(tick,250);
   document.addEventListener('visibilitychange',tick);
   return ()=>{window.clearInterval(timer);document.removeEventListener('visibilitychange',tick)};
- },[]);
+ },[attempt.endsAt,attempt.serverNow]);
  async function results(){
   setBusy(true);setError('');
-  try{onUpdate(await request('mockExamRequest','state',{attemptId:attempt.id}));}
+  try{
+   const state=await request('mockExamRequest','state',{attemptId:attempt.id});
+   if(!state.finished){
+    clocksStarted.current={monotonic:performance.now(),wall:Date.now()};
+    deadlineChecked.current=false;
+    setRemaining(state.endsAt-state.serverNow);
+   }
+   onUpdate(state);
+  }
   catch(e){setError(e.message)}
   finally{setBusy(false)}
  }

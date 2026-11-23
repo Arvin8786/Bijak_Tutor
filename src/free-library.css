@@ -5,7 +5,7 @@ body .app .free-library > header {display:block; position:static; padding:clamp(
 .free-library > section,.free-library .free-play {min-width:0; background:white; border:1px solid #dbe4ea; border-radius:1rem; padding:clamp(1rem,3vw,1.55rem)}
 .free-library .free-play {background:#f5f8fa}
 .free-library h2 {margin:.6rem 0}
-.free-library .free-grid {display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr)); gap:.75rem; margin-top:.9rem}
+.free-library .free-grid {display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,13rem),1fr)); gap:.75rem; margin-top:.9rem}
 .free-grid > button,.free-grid > article {border:1px solid #dbe4ea; border-radius:.85rem; padding:1rem; text-align:start; background:#f5f8fa; color:#152b41}
 .free-grid > button small,.free-grid > button strong {display:block; margin:.2rem 0}
 .free-library .free-controls {display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin:.6rem 0}

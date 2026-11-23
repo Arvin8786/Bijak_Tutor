@@ -166,17 +166,12 @@ body .app .illustrated-lesson .lesson-art { background: var(--section-soft); bor
 body .app .illustrated-lesson::before { height: 3px; background: var(--section-color); }
 body .app :is(.lesson-link, .ready-dot) { color: var(--section-hover); }
 body .app .library-filters { background: #fff; border: 1px solid var(--bijak-line); border-radius: 12px; box-shadow: none; }
-body .app :is(.home-packs-teaser, .tutor-teaser, .arcade-home-teaser, .word-bot-home, .home-mascot-band, .growth-home-card) {
+body .app .home-mascot-band {
+ background: var(--section-soft);
  border: 1px solid var(--bijak-line);
  border-radius: var(--bijak-radius);
  box-shadow: var(--bijak-shadow);
 }
-body .app .home-packs-teaser { background: var(--module-blue); }
-body .app .tutor-teaser { background: var(--section-soft); }
-body .app .arcade-home-teaser { background: var(--module-warm); }
-body .app .word-bot-home { background: var(--module-blue); }
-body .app .home-mascot-band { background: var(--section-soft); }
-body .app .growth-home-card { background: #fff; color: var(--bijak-ink); }
 
 /* Lesson reading, quizzes and interactive modules */
 body .app .colourful-lessonhead {
@@ -398,3 +393,57 @@ body .portal-admin .portal-welcome h1 { font: 800 clamp(1.8rem, 4vw, 3.1rem)/1.1
 body .portal-admin .portal-main .panel { background: #fff; border: 1px solid var(--bijak-line); border-radius: 18px; box-shadow: var(--bijak-shadow); }
 body .portal-admin .statgrid .stat { background: var(--tint); border-radius: 14px; box-shadow: none; }
 body .portal-admin .portal-footer { background: #f2f7f6; color: var(--bijak-muted); }
+
+/* Home uses one card system across study tools and activities. */
+body .app .home-tools { margin-block: 1.5rem; min-width: 0; }
+body .app .home-tools h2 { margin: 0 0 .7rem; }
+body .app .home-tool-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(min(100%, 12.5rem), 1fr));
+ gap: .75rem;
+ align-items: stretch;
+}
+body .app .home-tool-card {
+ display: flex;
+ flex-direction: column;
+ align-items: flex-start;
+ gap: .35rem;
+ min-width: 0;
+ padding: .85rem;
+ text-align: start;
+ overflow-wrap: anywhere;
+ background: var(--bijak-surface);
+ color: var(--bijak-ink);
+ border: 1px solid var(--bijak-line);
+ border-radius: var(--bijak-radius);
+ box-shadow: var(--bijak-shadow);
+}
+body .app .home-tool-card:hover { border-color: var(--section-color); }
+body .app .home-tool-card strong { line-height: 1.3; }
+body .app .home-tool-card small { color: var(--bijak-muted); line-height: 1.45; }
+body .app .home-tool-icon {
+ display: grid;
+ place-items: center;
+ width: 2.4rem;
+ height: 2.4rem;
+ margin-bottom: .2rem;
+ border-radius: .65rem;
+ background: var(--section-soft);
+ font-size: 1.15rem;
+}
+body .app .home-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+body .app .hero .home-hero-actions :is(a,button) { max-width: 100%; margin: 0; padding: .55rem .8rem; white-space: normal; text-decoration: none; font-weight: 700; }
+body .app #study-library { scroll-margin-top: 5rem; }
+body .portal-shell .child-directory-card { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+body .portal-shell .child-directory-card > div { margin-top: auto; flex-wrap: wrap; padding-top: .5rem; }
+body .portal-shell .portal-main .stat { min-width: 0; overflow-wrap: anywhere; }
+body .portal-shell .portal-main .statgrid { align-items: stretch; }
+body .portal-shell .service-status-grid { grid-template-columns: repeat(auto-fit,minmax(min(100%,15rem),1fr)); }
+body .portal-shell .service-status { min-width: 0; overflow-wrap: anywhere; }
+body .portal-shell .service-status-dot { flex-shrink: 0; }
+body .portal-shell .portal-main .portal-table { max-width: 100%; }
+@media (max-width:760px) {
+ body .app .home-tool-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: .55rem; }
+ body .app .home-tool-card { padding: .7rem; }
+ body .app #study-library { scroll-margin-top: 1rem; }
+}

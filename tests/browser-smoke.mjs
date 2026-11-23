@@ -222,6 +222,19 @@ try{
   }
   await page.getByRole('heading',{name:/Choose a subject/i}).waitFor();
   assert.equal(await page.getByRole('button',{name:/Explore local demo/i}).count(),0,'Public showcase must not show demo gate');
+  const homeGrids=page.locator('.home-tool-grid');
+  assert.equal(await homeGrids.count(),2);
+  assert.equal(await page.locator('main a[href="#study-library"]').count(),1,'one shortcut to the lesson catalogue');
+  assert.equal(await page.locator('main .mascot-friends').count(),1,'one interactive mascot pair');
+  const cardAlignment=await homeGrids.evaluateAll(grids=>grids.every(grid=>{
+   const boundary=grid.getBoundingClientRect();
+   const cards=[...grid.children].map(card=>card.getBoundingClientRect());
+   return cards.every((card,index)=>card.left>=boundary.left-1&&card.right<=boundary.right+1&&
+    cards.slice(index+1).every(next=>Math.abs(card.top-next.top)>1||
+     (Math.abs(card.width-next.width)<1&&Math.abs(card.bottom-next.bottom)<1&&next.left>=card.right-1)));
+  }));
+  assert.ok(cardAlignment,'Home cards should align without overflow at '+width+'px');
+  if(process.env.BIJAK_SCREENSHOT_DIR&&width===375)await page.screenshot({path:process.env.BIJAK_SCREENSHOT_DIR+'/audited-home-mobile.png',fullPage:true});
   const pair=page.locator('.home-mascot-band');
   await pair.locator('.mascot-boy').click();
   assert.ok(await pair.locator('.mascot-speech').isVisible(),'The schoolboy should greet when tapped');

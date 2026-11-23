@@ -84,6 +84,8 @@ export async function checkRolePortalsBrowser(browser,base){
    await page.getByRole('button',{name:'Save profile',exact:true}).click();
    await directory.getByText('Updated learner',{exact:true}).waitFor();
    await page.getByRole('button',{name:'Enrol a child',exact:true}).click();await page.getByLabel('Student Google email (optional)',{exact:true}).waitFor();await page.getByText('parent@test.invalid',{exact:true}).waitFor();
+   assert.equal(await directory.count(),0,'Only Child reports displays the child directory');
+   assert.equal(await page.getByRole('button',{name:'Refresh records',exact:true}).count(),1);
    await page.getByRole('button',{name:'Comments & suggestions',exact:true}).click();await page.getByLabel('Your message',{exact:true}).fill('Fictional suggestion for testing');await page.getByRole('button',{name:'Send to BijakLearn Team',exact:true}).click();await page.getByText('Saved successfully.',{exact:true}).waitFor();
    await page.locator('.portal-language select').selectOption('ta');await page.getByRole('button',{name:'வெளியேறு',exact:true}).waitFor();await page.locator('.portal-language select').selectOption('en');await page.getByRole('button',{name:'Sign out',exact:true}).waitFor();
   }else if(year===2){
