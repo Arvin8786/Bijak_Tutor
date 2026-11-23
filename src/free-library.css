@@ -1,0 +1,24 @@
+.free-library {display:grid; gap:1.1rem; min-width:0; padding-bottom:2rem}
+body .app .free-library > header {display:block; position:static; padding:clamp(1.25rem,4vw,2.5rem); border:0; border-radius:1.25rem; background:#123943; color:#fff; box-shadow:none}
+.free-library > header h1 {margin:0; font-size:clamp(2rem,5vw,3.2rem); color:inherit}
+.free-library > header p {margin:.4rem 0 0; color:inherit}
+.free-library > section,.free-library .free-play {min-width:0; background:white; border:1px solid #dbe4ea; border-radius:1rem; padding:clamp(1rem,3vw,1.55rem)}
+.free-library .free-play {background:#f5f8fa}
+.free-library h2 {margin:.6rem 0}
+.free-library .free-grid {display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr)); gap:.75rem; margin-top:.9rem}
+.free-grid > button,.free-grid > article {border:1px solid #dbe4ea; border-radius:.85rem; padding:1rem; text-align:start; background:#f5f8fa; color:#152b41}
+.free-grid > button small,.free-grid > button strong {display:block; margin:.2rem 0}
+.free-library .free-controls {display:flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin:.6rem 0}
+.free-library button,.free-library select {min-height:44px}
+.free-library button[aria-pressed=true] {background:#143c56; color:white}
+.free-library button:focus-visible,.free-library select:focus-visible,.free-library a:focus-visible {outline:3px solid #01796f; outline-offset:3px}
+.free-library .free-pair-grid {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; max-width:26rem}
+.free-pair-grid button {display:block; width:100%; margin:.4rem 0}
+.free-sudoku,.free-robot {display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.3rem; width:min(100%,18rem)}
+.free-sudoku select {padding:.35rem; text-align:center; width:100%}
+.free-sudoku select:nth-child(2n) {margin-right:.1rem; border-right:3px solid #223961}
+.free-sudoku select:nth-child(n+5):nth-child(-n+8) {border-bottom:3px solid #223961}
+.free-robot span {display:grid; place-items:center; min-height:42px; border:1px solid #c6d6df; border-radius:.35rem}
+.free-book article {max-width:42rem; background:#fcf8ed; border-radius:1rem; padding:1.25rem; font:1.15rem/1.65 Georgia,serif}
+.free-library .free-match-form {display:grid; gap:.6rem; max-width:26rem}
+.free-match-form label {display:grid; gap:.25rem}

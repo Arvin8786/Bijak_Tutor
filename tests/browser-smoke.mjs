@@ -75,6 +75,19 @@ try{
    assert.deepEqual(await page.locator('.library-filters select').nth(1).locator('option').evaluateAll(options=>options.map(option=>option.value)),['1','2','3']);
   }
   if(width===375){
+    await page.locator('nav.nav').getByRole('button',{name:'Free Library',exact:true}).click();
+    const free=page.locator('.free-library');
+    await free.getByRole('button',{name:/Nila and the Rain Gauge/}).click();
+    await free.getByRole('heading',{name:'Three Drops',exact:true}).waitFor();
+    await free.getByRole('button',{name:'Next',exact:true}).click();
+    await free.getByRole('heading',{name:'The Measuring Cup',exact:true}).waitFor();
+    await free.getByRole('button',{name:'Learning games',exact:true}).click();
+    await free.getByRole('button',{name:/Sudoku 4/}).click();
+    await free.getByRole('button',{name:'Check puzzle',exact:true}).click();
+    await free.getByRole('status').filter({hasText:'Fill every empty square first.'}).waitFor();
+    await free.getByRole('button',{name:'Physical games',exact:true}).click();
+    await free.getByRole('heading',{name:'Mirror Moves',exact:true}).waitFor();
+    await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
     const motion=page.getByRole('button',{name:'Calm mode',exact:true});
     await motion.click();
     assert.equal(await motion.getAttribute('aria-pressed'),'false');

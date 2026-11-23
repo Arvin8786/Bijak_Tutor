@@ -40,6 +40,7 @@ import './practice.css';
 import GrowthHub from './GrowthHub.jsx';
 import './growth.css';
 import WordTilesGame from './WordTilesGame.jsx';
+import FreeLibrary from './FreeLibrary.jsx';
 import './word-tiles.css';
 import ActivityArcade from './ActivityArcade.jsx';
 import LearningMission from './LearningMission.jsx';
@@ -107,7 +108,7 @@ async function localCall(method,args){
  if(method==='getParentReport'){if(args[2]!==mockPin)throw Error('Incorrect parent PIN');const childId=args[1];const skills=Object.entries(mockAttempts).filter(([k])=>k.startsWith(childId+'/'));const attempts=skills.flatMap(([,s])=>s.attempts);return {attempts:attempts.length,errors:attempts.filter(a=>!a.correct).length,independent:attempts.filter(a=>a.correct&&!a.hints&&a.mode!=='choice').length,mastered:skills.filter(([,s])=>evaluateSkill(s).mastered).length,topics:skills.map(([k,s])=>({lessonId:k.split('/')[1],...evaluateSkill(s)})),recent:attempts.slice(-20)};}
  throw Error('Unsupported demo operation: '+method)
 }
-const directMethods=new Set(['getPasswordSettings','saveParentPassword','saveChildPassword','passwordSignIn','passwordSignOut']);
+const directMethods=new Set(['getPasswordSettings','saveParentPassword','saveChildPassword','passwordSignIn','passwordSignOut','friendMatch']);
 let accountUsesDirect=false;
 function api(method,...args){const pending=!isLive?localCall(method,args):directMethods.has(method)||accountUsesDirect?directAccountCall(method,...args):!nativeAccountService?remoteAccountCall(method,...args):new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));return pending.catch(error=>{if(error instanceof AccountConnectionError)throw error;throw new Error(String(error.message||error).replace(/\badministrator\b/gi,'BijakLearn Team'))});}
 function accountNotice(error) {
@@ -533,6 +534,7 @@ function App(){
    <NavButton icon="🗺️" label={say(uiLanguage,'map')} active={page==='map'} onClick={()=>setPage('map')}/>
    <NavButton icon="🤖" label={say(uiLanguage,'tutor')} active={page==='tutor'} onClick={()=>setPage('tutor')}/>
    <NavButton icon="🔬" label={say(uiLanguage,'science')} active={page==='science-lab'} onClick={()=>setPage('science-lab')}/>
+   <NavButton icon="📚" label="Free Library" active={page==='free-library'} onClick={()=>setPage('free-library')}/>
    <NavButton icon="📖" label="Picture Dictionary" active={page==='dictionary'} onClick={()=>setPage('dictionary')}/>
    <NavButton icon="📺" label="Learning Videos" active={page==='videos'} onClick={()=>setPage('videos')}/>
    <NavButton icon="🧮" label={say(uiLanguage,'maths')} active={page==='maths-studio'} onClick={()=>setPage('maths-studio')}/>
@@ -572,6 +574,7 @@ function App(){
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<><AccountAccessPanel request={authRequest}/><StudentAccessPanel request={authRequest}/><KasihReviewPanel request={authRequest}/></>}
  {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={activeLessons} initialYear={browseYear} years={primaryYears} school={browseSchool} onOpenLesson={openLesson}/>}
  {page==='science-lab'&&<ScienceLab language={uiLanguage}/>}
+ {page==='free-library'&&<FreeLibrary request={isLive&&boot?.role==='STUDENT'?authRequest:undefined}/>}
  {page==='arcade'&&<ActivityArcade edition={edition}/>}
  {page==='wordgame'&&<WordTilesGame/>}
  {page==='growth'&&<GrowthHub studentOnly={boot?.role==='STUDENT'} audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?id=>authRequest("getGrowthModule",id):null} checkAnswer={isLive?(lessonId,answerIndex)=>authRequest("checkGrowthAnswer",lessonId,answerIndex):null}/>}
@@ -605,6 +608,7 @@ function App(){
  <div className="home-packs-teaser"><div><span className="mini-label">{say(uiLanguage,'practiceTeaserEyebrow')}</span><h2>{say(uiLanguage,'practiceTeaserTitle')}</h2><p>{say(uiLanguage,'practiceTeaserText')}</p></div><button type="button" className="primary" onClick={()=>setPage('practice')}>{say(uiLanguage,'openPractice')}</button></div>
  <div className="home-packs-teaser"><div><span className="mini-label">{say(uiLanguage,'packsTeaserEyebrow')}</span><h2>{say(uiLanguage,'packsTeaserTitle')}</h2><p>{say(uiLanguage,'packsTeaserText')}</p></div><button type="button" className="primary" onClick={()=>setPage('packs')}>{say(uiLanguage,'openPacks')}</button></div>
  <section className="library-section" id="study-library">
+   <button type="button" onClick={()=>setPage('free-library')}>📚 Open Free Library</button>
    <div className="section-heading"><div><span className="mini-label">{say(uiLanguage,'libraryEyebrow')}</span><h2>{say(uiLanguage,'explore')}</h2><p>{say(uiLanguage,'libraryText')}</p></div><span className="heading-spark" aria-hidden="true">🌟</span></div>
    <div className="library-filters"><label>{tx("Learning pathway")} <select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{tx("School year")} <select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{primaryYears.map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><span className="library-hint">{child?'Showing subjects for '+child.name:'Browse without creating a learner'}</span></div>
    <div className="optional-subject-toggle"><button type="button" aria-pressed={showOptional} onClick={()=>setShowOptional(v=>!v)}>{showOptional?'Hide optional-language catalogues':'Show additional optional languages'} <span aria-hidden="true">{showOptional?'−':'+'}</span></button><small>{tx("Optional subjects vary by school.")}</small></div>
