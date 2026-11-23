@@ -1,3 +1,4 @@
+import fs from 'node:fs/promises';
 import {checkPasswordBrowser} from './password-browser.mjs';
 import {checkAccountSyncBrowser} from './account-sync-browser.mjs';
 import {checkOwnerRolesBrowser} from './owner-roles-browser.mjs';
@@ -47,14 +48,18 @@ try{
   assert.equal(await page.locator('.welcome-gate').count(),0,'Language selection should not block startup');
   await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   await page.getByText('BijakLearn Junior Plus',{exact:true}).waitFor();
-  assert.match(await page.locator('.signin .brand-credit').innerText(),/ProEase Studio/);
-  assert.doesNotMatch(await page.locator('.signin').innerText(),/fictional profiles|pilot phase|Studio · [0-9a-f]{7}/i,'Customer sign-in must show product attribution, not development notices');
+  if(process.env.BIJAK_SCREENSHOT_DIR&&(width===375||width===1280)){
+   await fs.mkdir(process.env.BIJAK_SCREENSHOT_DIR,{recursive:true});
+   await page.screenshot({path:process.env.BIJAK_SCREENSHOT_DIR+'/signin-'+width+'.png',fullPage:true});
+  }
+  assert.match(await page.locator('.signin-page .brand-credit').innerText(),/ProEase Studio/);
+  assert.doesNotMatch(await page.locator('.signin-page').innerText(),/fictional profiles|pilot phase|Studio · [0-9a-f]{7}/i,'Customer sign-in must show product attribution, not development notices');
   if(!await page.getByRole('button',{name:'Explore learning demo',exact:true}).count()){
    assert.equal(await page.locator('nav.nav').count(),0,'Learning must stay behind the gate');
    await page.getByRole('button',{name:'BijakLearn Team',exact:true}).click();
    await page.getByRole('heading',{name:'BijakLearn Team sign-in',exact:true}).waitFor();
    assert.equal(await page.getByRole('button',{name:'Manage account access',exact:true}).count(),0);
-   assert.ok(await page.locator('.signin').evaluate(el=>el.scrollWidth<=window.innerWidth),'Login gate must fit viewport');
+   assert.ok(await page.locator('.signin-page').evaluate(el=>el.scrollWidth<=window.innerWidth),'Login gate must fit viewport');
    assert.deepEqual(exceptions,[]);
    await page.close();
    console.log(`Passed production login gate at ${width}px`);

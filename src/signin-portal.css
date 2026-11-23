@@ -1,109 +1,229 @@
-body .signin.signin-portal {
+body:has(.signin-page) {
+ background: #f6f4ee;
+}
+.signin-page {
+ --signin-ink: #172943;
+ --signin-quiet: #516179;
+ --signin-rule: #dce3ea;
+ --signin-accent: #244c86;
+ color: var(--signin-ink);
+ width: min(calc(100% - 64px), 1100px);
+ max-width: none;
+ padding: 0;
+ margin: 0 auto;
+}
+.signin-page .signin-brandbar {
+ min-height: 82px;
+ padding: 0;
+ background: transparent;
+ box-shadow: none;
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: 12px;
+ border-bottom: 1px solid #d9dcd9;
+}
+.signin-page .signin-brandbar .bl-brand-icon {
+ width: 42px;
+ height: 42px;
+ flex-basis: 42px;
+ border-radius: 12px;
+}
+.signin-page .signin-brandbar strong { color: var(--signin-ink); }
+.signin-page .signin-brandbar em { color: var(--signin-accent); }
+.signin-page .signin-brandbar .pwa-controls { padding: 0; background: transparent; min-height: 0; }
+.signin-layout {
  display: grid;
- grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
- grid-template-areas: "brand brand" "programmes form";
- width: min(100% - 32px, 1050px);
- min-height: 0;
- margin: clamp(10px, 4vh, 42px) auto 42px;
- border: 1px solid #dbe4e9;
- border-radius: 24px;
- background: #fff;
- color: #122834;
- box-shadow: 0 22px 60px #18394513;
- overflow: hidden;
+ grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+ grid-template-areas: 'programmes form';
+ gap: clamp(26px, 4vw, 64px);
+ align-items: start;
+ padding: clamp(28px, 5vh, 58px) 0 0;
 }
-.signin-portal .signin-brandbar {
- grid-area: brand;
- padding: 18px clamp(18px, 4vw, 46px);
- border-bottom: 1px solid #dbe4e9;
-}
-.signin-portal .signin-programmes {
+.signin-page .signin-programmes {
  grid-area: programmes;
+ min-width: 0;
+ overflow: hidden;
+ background: #182d4c;
+ border-radius: 24px;
+ box-shadow: 0 18px 46px #17294322;
+}
+.signin-programme-copy {
  position: relative;
  isolation: isolate;
- display: flex;
- flex-direction: column;
- justify-content: center;
- min-width: 0;
- padding: clamp(24px, 4.2vw, 55px);
- background: radial-gradient(ellipse at 120% 110%, #147969, transparent 65%), #0d333a;
- color: #fff;
- overflow: hidden;
+ padding: clamp(28px, 5vw, 55px);
+ background: radial-gradient(ellipse at 100% 0%, #2e5482, transparent 75%);
 }
-.signin-portal .signin-programmes::before {
- content: "";
+.signin-programme-copy::before {
+ content: '';
  position: absolute;
  z-index: -1;
- width: 360px;
- height: 360px;
- border: 1px solid #b8efe041;
- border-radius: 50%;
- right: -210px;
- bottom: -190px;
- box-shadow: 0 0 0 28px #b8efe023, 0 0 0 65px #b8efe014;
+ width: 380px;
+ height: 155px;
+ inset-inline-end: -164px;
+ top: -32px;
+ border: 1px solid #bedaff36;
+ border-radius: 36px;
+ box-shadow: 0 26px 0 #bedaff15, 0 52px 0 #bedaff0d, 0 78px 0 #bedaff09;
+ transform: rotate(-21deg);
+ pointer-events: none;
 }
-.signin-portal .signin-programmes h2 {
- margin: 0;
+.signin-programme-copy h2 {
+ color: #fff9ec;
+ font: 400 clamp(2rem, 4vw, 3.35rem)/1.03 Georgia, serif;
+ letter-spacing: -.035em;
+ margin: 0 0 20px;
  max-width: 16ch;
- font: 750 clamp(1.65rem, 3.3vw, 2.55rem)/1.12 system-ui, sans-serif;
- letter-spacing: -.035em;
 }
-.signin-portal .signin-programmes p { color: #d2e7e4; line-height: 1.6; }
-.signin-portal .signin-programmes .learning-edition-list { grid-template-columns: minmax(0, 1fr); margin-bottom: 0; }
-.signin-portal .learning-edition-list li { padding: .8rem 1rem; border-inline-start-width: 4px; }
-body .signin.signin-portal .signin-form {
+.signin-page .learning-edition-list { margin: 0; }
+.signin-page .learning-edition-list li {
+ color: #f4f9ff;
+ background: #ffffff10;
+ border: 1px solid #ffffff31;
+ border-radius: 11px;
+ padding: .8rem .85rem;
+ box-shadow: inset 3px 0 #77c7b2;
+}
+.signin-page .learning-edition-list li[data-edition='junior-plus'] {
+ box-shadow: inset 3px 0 #edbf87;
+}
+.signin-page .learning-edition-list span { color: #d3e0f1; }
+.signin-page .signin-form {
  grid-area: form;
- gap: 0;
- align-self: start;
- padding: clamp(22px, 4vw, 46px);
+ min-width: 0;
+ padding: clamp(22px, 3vw, 34px);
+ background: #fff;
+ border: 1px solid #dbe2e9;
+ border-radius: 22px;
+ box-shadow: 0 12px 36px #1c304510;
 }
-.signin-portal #signin-heading {
- margin: 1.35rem 0 .4rem;
- color: #102a34;
- font: 800 clamp(1.85rem, 3.2vw, 2.55rem)/1.1 system-ui, sans-serif;
- letter-spacing: -.035em;
+.signin-page #signin-heading {
+ margin: 0 0 .4rem;
+ color: var(--signin-ink);
+ font: 790 clamp(1.8rem, 3.5vw, 2.8rem)/1.04 system-ui, sans-serif;
+ letter-spacing: -.049em;
+ text-wrap: balance;
 }
-.signin-portal .signin-form > p { margin-top: 0; }
-body .signin.signin-portal .signin-tabs { padding: .25rem; border-radius: 12px; }
-body .signin.signin-portal .signin-tabs button {
- min-height: 42px;
- padding: .35rem;
+.signin-page .signin-form > p {
+ color: var(--signin-quiet);
+ line-height: 1.52;
+ margin: 0 0 1.15rem;
+}
+.signin-page .signin-tabs {
+ display: grid;
+ grid-template-columns: repeat(3, minmax(0, 1fr));
+ gap: 4px;
+ padding: 4px;
+ margin-bottom: 1rem;
+ background: #eff3f8;
+ border: 1px solid #e4eaf1;
+ border-radius: 13px;
+}
+.signin-page .signin-tabs button {
+ display: flex;
+ flex-direction: column;
+ align-items: center;
+ justify-content: center;
+ gap: 5px;
+ border: 1px solid transparent;
  border-radius: 9px;
+ min-height: 55px;
+ padding: .35rem .2rem;
+ font-size: .76rem;
  line-height: 1.2;
+ font-weight: 720;
+ color: #344c6a;
+ background: transparent;
 }
-.signin-portal .signin-tabs button svg { display: none; }
-.signin-portal .signin-password { margin-top: .55rem; padding-top: 0; border: 0; gap: .85rem; }
-.signin-portal .signin-password label { font-size: .92rem; }
-.signin-portal .signin-password input {
- padding: .6rem .75rem;
- border: 1px solid #b5c8cf;
+.signin-page .signin-tabs button svg { width: 17px; height: 17px; }
+.signin-page .signin-tabs button[aria-pressed='true'] {
+ background: #fff;
+ border-color: #c5d3e8;
+ color: #1d477d;
+ box-shadow: 0 2px 5px #243c6313;
+}
+.signin-page .signin-password {
+ margin: 0;
+ padding: 0;
+ border: 0;
+ gap: .85rem;
+}
+.signin-page .signin-password label {
+ font-size: .88rem;
+ font-weight: 720;
+ color: var(--signin-ink);
+}
+.signin-page .signin-password input {
+ width: 100%;
+ box-sizing: border-box;
+ min-height: 46px;
+ padding: .65rem .75rem;
+ border: 1px solid #b8c5d4;
  border-radius: 9px;
  background: #fff;
- color: #102a34;
- font-size: 16px;
+ color: var(--signin-ink);
+ font: 400 16px/1.2 system-ui, sans-serif;
 }
-.signin-portal .signin-password button {
+.signin-page .signin-password-field { display: grid; gap: .25rem; }
+.signin-page .signin-password-input { position: relative; }
+.signin-page .signin-password-input input { padding-inline-end: 70px; }
+.signin-page .signin-password-input button {
+ position: absolute;
+ inset-inline-end: 4px;
+ top: 3px;
+ bottom: 3px;
+ border: 0;
+ border-radius: 6px;
+ color: var(--signin-accent);
+ background: transparent;
+ padding: 0 .7rem;
+ font-size: .79rem;
+}
+.signin-page .signin-password button.primary {
  justify-self: stretch;
- min-height: 45px;
+ min-height: 47px;
+ border: 1px solid transparent;
  border-radius: 9px;
+ background: var(--signin-accent);
+ color: white;
+ box-shadow: 0 4px 10px #244c8629;
 }
-.signin-portal .signin-divider { display: flex; align-items: center; gap: .6rem; margin-top: 1rem; color: #4c646e; font-size: .8rem; }
-.signin-portal .signin-divider::before,
-.signin-portal .signin-divider::after { content: ""; flex: 1; border-top: 1px solid #dbe4e9; }
-.signin-portal .signin-action { margin: .4rem 0 .8rem; }
-body .signin.signin-portal #google-signin { min-height: 36px; margin: 2px 0; }
-body .signin.signin-portal .signin-note { margin: .6rem 0; padding: 0; border: 0; background: transparent; font-size: .85rem; }
-.signin-portal .brand-credit { margin-top: .8rem; }
-.signin-portal :is(input,button):focus-visible { outline: 3px solid #18746e; outline-offset: 3px; }
+.signin-page .signin-password button.primary:hover:not(:disabled) { background: #1d3d6b; }
+.signin-page button:disabled { opacity: .64; }
+.signin-page .signin-divider {
+ display: flex;
+ align-items: center;
+ gap: .7rem;
+ margin: .8rem 0 .6rem;
+ color: var(--signin-quiet);
+ font-size: .8rem;
+}
+.signin-page .signin-divider::before,
+.signin-page .signin-divider::after { content: ''; flex: 1; border-top: 1px solid var(--signin-rule); }
+.signin-page .signin-action { margin-bottom: .75rem; }
+.signin-page #google-signin { min-height: 34px; max-width: 100%; }
+.signin-page .signin-note { color: var(--signin-quiet); font-size: .84rem; line-height: 1.45; }
+.signin-page .signin-form > .signin-note { margin: .35rem 0 0; }
+.signin-page .signin-form > .error { margin: .6rem 0; color: #851e39; }
+.signin-page .signin-footer { padding: 18px 0 30px; text-align: center; color: var(--signin-quiet); background: transparent; }
+.signin-page :is(input,button):focus-visible { outline: 3px solid #4082ca; outline-offset: 2px; }
 @media (max-width: 760px) {
- body .signin.signin-portal {
+ .signin-page { width: min(calc(100% - 32px), 510px); }
+ .signin-page .signin-brandbar { min-height: 66px; flex-wrap: wrap; }
+ .signin-page .signin-brandbar .pwa-controls { gap: 4px; }
+ .signin-page .signin-brandbar .install-button { padding: 5px 8px; font-size: .72rem; }
+ .signin-layout {
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "brand" "form" "programmes";
-  max-width: 520px;
-  border-radius: 18px;
+  grid-template-areas: 'form' 'programmes';
+  gap: 22px;
+  padding-top: 16px;
  }
- .signin-portal .signin-brandbar { padding-block: 12px; }
- .signin-portal .signin-programmes { padding: 18px; }
- .signin-portal .signin-programmes h2 { max-width: none; font-size: 1.3rem; }
- .signin-portal .signin-programmes p { margin: .38rem 0 .65rem; }
+ .signin-page .signin-form { padding: 19px; border-radius: 17px; }
+ .signin-page .signin-programmes { border-radius: 17px; }
+ .signin-programme-copy h2 { font-size: 1.95rem; max-width: none; margin-bottom: 14px; }
+ .signin-programme-copy { padding: 20px; }
+}
+@media (max-width: 359px) {
+ .signin-page { width: calc(100% - 20px); }
+ .signin-page .signin-form { padding: 14px; }
 }

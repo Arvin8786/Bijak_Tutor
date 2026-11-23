@@ -131,7 +131,7 @@ function signInFailure(error,role){
  }
  return 'BijakLearn could not load your account. Please try signing in again.';
 }
-function GoogleLogin({onToken,onPassword,notice,signingIn}){
+function GoogleLogin({onToken,onPassword,notice,signingIn,language}){
  const [issue,setIssue]=useState(''),[googleReady,setGoogleReady]=useState(false);
  const externalGoogle=isLive&&!window.location.hostname.endsWith('-script.googleusercontent.com');
  const initialRole=['parent','student','admin'].includes(window.BIJAKLEARN_LOGIN_ROLE)?window.BIJAKLEARN_LOGIN_ROLE:'parent';
@@ -161,21 +161,20 @@ function GoogleLogin({onToken,onPassword,notice,signingIn}){
   },250);
   return()=>clearInterval(timer);
  },[onToken]);
- return <main className="signin signin-portal">
-  <header className="signin-brandbar"><Brand subtitle="Family learning portal"/></header>
-  <aside className="signin-programmes" aria-labelledby="signin-programmes-title">
-   <h2 id="signin-programmes-title">Find the right learning section</h2>
-   <p>Lessons, practice and creative projects for your child’s school year.</p>
-   <LearningEditionList/>
-  </aside>
+ return <main className="signin-page">
+  <header className="signin-brandbar">
+   <Brand/>
+   <PwaControls language={language}/>
+  </header>
+  <div className="signin-layout">
   <section className="signin-form" aria-labelledby="signin-heading">
+   <h1 id="signin-heading">{admin?'BijakLearn Team sign-in':student?'Student sign-in':'Welcome back'}</h1>
+   <p>{admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Sign in to open your lessons and activities.':'Choose your account and sign in to continue.'}</p>
    <div className="signin-tabs" role="group" aria-label="Sign-in type">
     <button type="button" aria-pressed={loginRole==='parent'} disabled={signingIn} onClick={()=>chooseRole('parent')}><PortalGlyph name="accounts"/>Parent sign-in</button>
     <button type="button" aria-pressed={student} disabled={signingIn} onClick={()=>chooseRole('student')}><PortalGlyph name="tiers"/>Student sign-in</button>
     <button type="button" aria-pressed={admin} disabled={signingIn} onClick={()=>chooseRole('admin')}><PortalGlyph name="overview"/>BijakLearn Team</button>
    </div>
-   <h1 id="signin-heading">{admin?'BijakLearn Team sign-in':student?'Student sign-in':'Welcome back'}</h1>
-   <p>{admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Use your student account to open your learning section.':'Sign in to see your child’s progress, manage profiles and view parent notices.'}</p>
    {isLive&&!admin&&<PasswordSignIn key={loginRole} role={loginRole} onSubmit={onPassword} disabled={signingIn}/>}
    {isLive&&!admin&&<div className="signin-divider"><span>or</span></div>}
    <div className="signin-action">
@@ -188,8 +187,15 @@ function GoogleLogin({onToken,onPassword,notice,signingIn}){
    {issue&&<p className="error" role="alert">{issue}</p>}
    {!admin&&!student&&<p className="signin-note">New parent accounts need approval from the BijakLearn Team.</p>}
    {!isLive&&demoEnabled&&<button type="button" onClick={()=>onToken('DEMO')}>Explore learning demo</button>}
-   <BrandCredit/>
   </section>
+  <aside className="signin-programmes" aria-labelledby="signin-programmes-title">
+   <div className="signin-programme-copy">
+    <h2 id="signin-programmes-title">Learning for every school year</h2>
+    <LearningEditionList/>
+   </div>
+  </aside>
+  </div>
+  <footer className="signin-footer"><BrandCredit/></footer>
  </main>;
 }
 function PwaControls({language='ms'}){
@@ -514,7 +520,7 @@ function App(){
  async function savePin(){try{await call('setParentPin',pin,oldPin);alert('Parent PIN saved. Keep it private.')}catch{}}
 
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
- if(!token)return <><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} onPassword={login} notice={loginNotice} signingIn={signingIn}/></>;
+ if(!token)return <GoogleLogin onToken={login} onPassword={login} notice={loginNotice} signingIn={signingIn} language={uiLanguage}/>;
  if(portalV2&&['ADMIN','PARENT'].includes(boot?.role))return <RolePortals boot={boot} request={authRequest} onSignOut={()=>endSession()} language={uiLanguage}/>;
  return <div className="app" data-edition={edition.id}><header><button className="logo" onClick={()=>setPage('home')}><Brand edition={edition} subtitle={edition.label}/></button><div className="topactions"><StreakChip language={uiLanguage}/>{isLive&&boot?.role==='STUDENT'&&<button disabled={busy} onClick={()=>refresh().catch(()=>{})}>Refresh account details</button>}<button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}

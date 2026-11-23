@@ -5,7 +5,7 @@ import fs from 'node:fs';
 test('public site requires the login gate and limits demo access to explicit builds',()=>{
  const src=fs.readFileSync('src/main.jsx','utf8');
  assert.ok(!src.includes("api('getBootstrap','PUBLIC_SHOWCASE')"));
- assert.match(src,/if\(!token\)return <>/);
+ assert.match(src,/if\(!token\)return <GoogleLogin/);
  assert.match(src,/VITE_ENABLE_DEMO==='true'/);
  assert.match(src,/!isLive&&demoEnabled/);
  assert.match(fs.readFileSync('src/accountTransport.js','utf8'),/VITE_ACCOUNT_APP_URL/);
