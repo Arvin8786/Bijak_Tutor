@@ -590,7 +590,7 @@ function App(){
  {page==='lab'&&selectedPath&&<PracticeLab key={selectedPath.id} path={selectedPath} onComplete={()=>updateProgress('activities',selectedPath.id)}/>}
  {page==='review'&&!isLive&&<ReviewQuestions items={selectedPath?missed.filter(item=>selectedPath.lessons.includes(item.lesson.id)):missed}
   onRetry={(id,questionId)=>openLesson(id,{questionId})}/>}
- {['dictionary','creative-projects'].includes(page)&&<PictureDictionary key={page} initialYear={child?.year??browseYear} years={edition.years} initialLanguage={uiLanguage} initialView={page==='creative-projects'?'projects':'words'}/>}
+ {['dictionary','creative-projects'].includes(page)&&<PictureDictionary key={page} initialYear={child?.year??browseYear} years={edition.years} initialLanguage={uiLanguage} initialView={page==='creative-projects'?'projects':'words'} onOpenModule={setPage}/>}
  {page==='videos'&&<VideoLibrary request={isLive?authRequest:null} language={uiLanguage} years={primaryYears}/>}
  {page==='discovery'&&<DiscoveryLibrary availableLessons={bootLessons||[]} onOpen={openLesson}/>}
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<><AccountAccessPanel request={authRequest}/><StudentAccessPanel request={authRequest}/><KasihReviewPanel request={authRequest}/></>}
@@ -600,7 +600,7 @@ function App(){
  {page==='free-library'&&<FreeLibrary openWordTiles={()=>setPage('wordgame')} request={isLive&&boot?.role==='STUDENT'?authRequest:undefined}/>}
  {page==='arcade'&&<ActivityArcade edition={edition}/>}
  {page==='wordgame'&&<WordTilesGame/>}
- {page==='growth'&&<GrowthHub studentOnly={boot?.role==='STUDENT'} audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?loadGrowthTrack:null} checkAnswer={isLive?checkGrowthAnswer:null}/>}
+ {page==='growth'&&<GrowthHub key={growthAudience+'-'+growthKind} studentOnly={boot?.role==='STUDENT'} audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?loadGrowthTrack:null} checkAnswer={isLive?checkGrowthAnswer:null}/>}
  {page==='mock-exams'&&isLive&&boot?.role==='STUDENT'&&<MockExams request={authRequest}/>}
  {page==='practice'&&<PracticeArena lessons={activeLessons} year={browseYear} school={browseSchool} language={uiLanguage} onOpenLesson={openLesson} onAttempt={isLive?undefined:recordPractice}/>}
  {page==='tutor'&&<StudyBuddy lessons={activeLessons} year={browseYear} subject={lesson?.subject||''} currentLesson={lesson} askOnline={isLive?(question,context)=>authRequest('askTutor',question,context):null}/>}

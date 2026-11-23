@@ -22,7 +22,7 @@ function WritingPad({model,language}){
  function draw(event){
   if(active.current!==event.pointerId)return;
   const next=point(event);
-  setPaths(previous=>[...previous.slice(0,-1),[...previous.at(-1),next]]);
+  setPaths(previous=>previous.length?[...previous.slice(0,-1),[...previous.at(-1),next]]:previous);
  }
  function stop(event){if(active.current===event.pointerId)active.current=null}
  return <>
@@ -35,7 +35,7 @@ function WritingPad({model,language}){
     <polyline key={index} points={path.map(pair=>pair.join(',')).join(' ')} fill="none" stroke="#173e5d" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>)}
   </svg>
   </div>
-  <div className="language-controls"><button type="button" onClick={()=>setPaths([])} disabled={!paths.length}>Clear drawing</button>
+  <div className="language-controls"><button type="button" onClick={()=>{active.current=null;setPaths([])}} disabled={!paths.length}>Clear drawing</button>
    <label>Type a copy <input dir={language.direction} lang={language.locale} autoComplete="off" spellCheck="false"/></label></div>
  </>;
 }

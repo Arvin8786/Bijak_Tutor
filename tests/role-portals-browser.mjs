@@ -28,12 +28,21 @@ export async function checkRolePortalsBrowser(browser,base){
     if(method==='getAdministrationOverview')return {settings:{clientIdConfigured:true},children:1,reportedSeconds7Days:300,activityEvents:3,parents:[],modules:[],payments:[]};
     if(method==='getParentDashboard')return {parent:{name:'Test parent',email:'parent@test.invalid'},access:{plan:'FREE'},children:[{...child,attempts:4,correct:3,accuracy:75,mastered:1,reportedSeconds:120,dailyUsage:[{date:'2026-11-17',seconds:120}],recent:[]}],enrolments:[],feedback:[]};
     if(['listAccountAccess','listStudentProfiles','listStudentAccounts','listEnrolments','listKasihApplications','listParentFeedback'].includes(method))return [];
-    if(method==='authorizeModule')return {allowed:true,plan:'FREE',title:'Test module'};
+    if(method==='authorizeModule'){
+     if(role==='STUDENT'&&year===2&&args[1]==='creative-projects')return {allowed:false,plan:'FREE',title:'Creative Projects',reason:'learner'};
+     if(role==='STUDENT'&&year===6&&args[1]==='picture-dictionary')return {allowed:false,plan:'FREE',title:'Picture Dictionary',reason:'learner'};
+     return {allowed:true,plan:'FREE',title:'Test module'};
+    }
+    if(method==='getGrowthModule')return {id:'junior-ai',title:'Fictional AI studio',lessons:[1,2].map(n=>({
+     id:'topic-'+n,title:'Fictional topic '+n,summary:'A short topic.',steps:['Try one example.'],challenge:'Practise a skill.',
+     quiz:{question:'Which option fits?',options:['One','Two'],why:'Use the example.'}
+    }))};
+    if(method==='checkGrowthAnswer')return {correct:true,why:'Fictional feedback for the earlier topic.'};
     if(method==='recordStudentUsage')return {recorded:true,seconds:0};
     if(method==='submitParentFeedback')return {id:'test-feedback'};
     throw Error('Unexpected mocked request: '+method);
    }
-   window.google={accounts:{id:{initialize(options){signIn=options.callback},renderButton(container){const button=document.createElement('button');button.textContent='Test Google account';button.onclick=()=>signIn({credential:'fictional-token'});container.append(button)}}},script:{run:{withSuccessHandler(success){return {withFailureHandler:failure=>new Proxy({},{get:(_,method)=>(...args)=>{const respond=()=>{try{success(invoke(method,...args))}catch(error){failure(error)}};if(method==='getPortalBootstrap')setTimeout(respond,400);else respond()}})}}}}};
+   window.google={accounts:{id:{initialize(options){signIn=options.callback},renderButton(container){const button=document.createElement('button');button.textContent='Test Google account';button.onclick=()=>signIn({credential:'fictional-token'});container.append(button)}}},script:{run:{withSuccessHandler(success){return {withFailureHandler:failure=>new Proxy({},{get:(_,method)=>(...args)=>{const respond=()=>{try{success(invoke(method,...args))}catch(error){failure(error)}};if(method==='getPortalBootstrap')setTimeout(respond,400);else if(method==='checkGrowthAnswer')window.releaseGrowthResult=respond;else respond()}})}}}}};
   },{role,year});
   await page.goto(base,{waitUntil:'networkidle'});
 
@@ -92,6 +101,7 @@ export async function checkRolePortalsBrowser(browser,base){
    await page.getByRole('heading',{name:/Learn, explore and grow/}).waitFor();
    await page.locator('nav.nav').getByRole('button',{name:'Picture Dictionary',exact:true}).click();
    await page.getByRole('heading',{name:'Picture Dictionary',exact:true}).waitFor();
+   await page.setViewportSize({width:375,height:900});
    await page.getByLabel('Learning level',{exact:true}).selectOption('0');
    await page.getByRole('button',{name:'Hear apple',exact:true}).click();
    assert.deepEqual(await page.evaluate(()=>window.playedWords),[['apple','en-GB']]);
@@ -105,6 +115,21 @@ export async function checkRolePortalsBrowser(browser,base){
    await page.getByLabel('Challenge',{exact:true}).selectOption('audio');
    await page.getByRole('button',{name:'Play the mystery word',exact:false}).waitFor();
    assert.deepEqual(await page.getByLabel('Learning level',{exact:true}).locator('option').evaluateAll(options=>options.map(option=>option.value)),['0','1','2','3']);
+   assert.ok(await page.locator('.picture-dictionary').evaluate(root=>root.scrollWidth<=root.clientWidth),'Dictionary stays within a phone viewport');
+   await page.getByRole('button',{name:'Open Creative Projects',exact:true}).click();
+   await page.getByText('Creative Projects is restricted for this learner profile.',{exact:true}).waitFor();
+   assert.equal(await page.locator('.dictionary-project').count(),0);
+   await page.setViewportSize({width:1280,height:900});
+   await page.locator('nav.nav').getByRole('button',{name:'Learn AI',exact:true}).click();
+   await page.getByRole('heading',{name:'Fictional topic 1',exact:true}).waitFor();
+   await page.getByRole('button',{name:'One',exact:true}).click();
+   await page.getByRole('button',{name:'Check answer',exact:true}).click();
+   await page.waitForFunction(()=>typeof window.releaseGrowthResult==='function');
+   await page.getByRole('button',{name:/Fictional topic 2/}).click();
+   await page.evaluate(()=>window.releaseGrowthResult());
+   await page.getByRole('heading',{name:'Fictional topic 2',exact:true}).waitFor();
+   assert.equal(await page.getByText('Fictional feedback for the earlier topic.',{exact:true}).count(),0);
+   assert.ok(await page.getByRole('button',{name:'One',exact:true}).isEnabled());
    assert.equal(await page.locator('.portal-shell').count(),0);
   }else{
    await page.getByRole('heading',{name:'BijakLearn Junior Plus',exact:true}).waitFor();
@@ -118,6 +143,10 @@ export async function checkRolePortalsBrowser(browser,base){
    await page.getByLabel('Choose a project',{exact:true}).selectOption('bonus');
    await page.getByRole('heading',{name:'Design a message from space',exact:true}).waitFor();
    assert.equal(await page.locator('.dictionary-project input:checked').count(),0);
+   assert.equal(await page.getByLabel('Word language',{exact:true}).count(),0);
+   await page.getByRole('button',{name:'Open Picture Dictionary',exact:true}).click();
+   await page.getByText('Picture Dictionary is restricted for this learner profile.',{exact:true}).waitFor();
+   assert.equal(await page.locator('.dictionary-grid').count(),0);
    await page.locator('nav.nav').getByRole('button',{name:'Activity Playground',exact:true}).click();
    await page.locator('.arcade-hero').getByText('BijakLearn Junior Plus · Activity Playground',{exact:true}).waitFor();
    assert.equal(await page.locator('.portal-shell').count(),0);assert.equal(await page.getByRole('button',{name:'Manage account access',exact:true}).count(),0);

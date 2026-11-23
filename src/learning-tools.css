@@ -56,3 +56,14 @@ body .app .dictionary-intro { background: linear-gradient(118deg,#e5f7ed,#fff5df
 .dictionary-project fieldset { border: 1px solid #c9e5d9; border-radius: 14px; }
 .dictionary-project fieldset label { display: flex; align-items: center; gap: .5rem; min-height: 44px; }
 .dictionary-audio-status { margin: 0; }
+
+body .app .picture-dictionary > .panel { margin: 0; min-width: 0; }
+.dictionary-filters label { flex: 0 1 12rem; min-width: 0; max-width: 100%; }
+.dictionary-filters select,.dictionary-project select { width: 100%; min-width: 0; max-width: 100%; }
+.dictionary-quiz .dictionary-grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.dictionary-project fieldset { min-width: 0; }
+.dictionary-project fieldset label { overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+ .dictionary-filters label { flex: 1 1 9rem; }
+ .dictionary-quiz .dictionary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}

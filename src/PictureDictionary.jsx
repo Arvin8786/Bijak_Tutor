@@ -10,7 +10,8 @@ function shuffled(items){
  return choices;
 }
 
-export default function PictureDictionary({initialYear,initialLanguage,initialView,years=WORDS_BY_YEAR.map((_,year)=>year)}){
+export default function PictureDictionary({initialYear,initialLanguage,initialView='words',onOpenModule,years=WORDS_BY_YEAR.map((_,year)=>year)}){
+ const projects=initialView==='projects';
  const [year,setYear]=useState(()=>years.includes(Number(initialYear))?Number(initialYear):years[0]);
  const [language,setLanguage]=useState(()=>Math.max(0,DICTIONARY_LANGUAGES.findIndex(([code])=>code===initialLanguage)));
  const [view,setView]=useState(initialView),[audioStatus,setAudioStatus]=useState('');
@@ -62,15 +63,16 @@ export default function PictureDictionary({initialYear,initialLanguage,initialVi
 
  return <section className="picture-dictionary">
   <header className="panel dictionary-intro">
-   <h1>{initialView==='projects'?'Creative Projects':'Picture Dictionary'}</h1>
-   <p>Tap a picture to hear its word, find the matching picture, or make something with the words you learn.</p>
+   <h1>{projects?'Creative Projects':'Picture Dictionary'}</h1>
+   <p>{projects?'Choose a project for your learning level and follow the checklist.':'Tap a picture to hear its word, or find the picture that matches a clue.'}</p>
    <div className="dictionary-filters">
     <label>Learning level<select aria-label="Learning level" value={year} onChange={event=>chooseYear(Number(event.target.value))}>{years.map(index=><option key={index} value={index}>{index===0?'Preschool':'Year '+index}</option>)}</select></label>
-    <label>Word language<select aria-label="Word language" value={language} onChange={event=>{setLanguage(Number(event.target.value));setAudioStatus('');restart();window.speechSynthesis?.cancel()}}>{DICTIONARY_LANGUAGES.map(([value,label],index)=><option key={value} value={index}>{label}</option>)}</select></label>
+    {!projects&&<label>Word language<select aria-label="Word language" value={language} onChange={event=>{setLanguage(Number(event.target.value));setAudioStatus('');restart();window.speechSynthesis?.cancel()}}>{DICTIONARY_LANGUAGES.map(([value,label],index)=><option key={value} value={index}>{label}</option>)}</select></label>}
    </div>
   </header>
-  <div className="chapter-chips dictionary-tabs" role="group" aria-label="Dictionary activities">
-   {[['words','Picture words'],['quiz','Word detective'],['projects','Creative projects']].map(([id,label])=><button key={id} type="button" aria-pressed={view===id} className={view===id?'selected':''} onClick={()=>setView(id)}>{label}</button>)}
+  <div className="chapter-chips dictionary-tabs" role="group" aria-label={projects?'Project tools':'Dictionary activities'}>
+   {!projects&&[['words','Picture words'],['quiz','Word detective']].map(([id,label])=><button key={id} type="button" aria-pressed={view===id} className={view===id?'selected':''} onClick={()=>setView(id)}>{label}</button>)}
+   {onOpenModule&&<button type="button" onClick={()=>onOpenModule(projects?'dictionary':'creative-projects')}>{projects?'Open Picture Dictionary':'Open Creative Projects'}</button>}
   </div>
   {audioStatus&&<p role="status" className="dictionary-audio-status">{audioStatus}</p>}
   {view==='words'&&<div className="dictionary-grid">

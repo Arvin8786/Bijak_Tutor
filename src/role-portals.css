@@ -16,3 +16,7 @@ body:has(.portal-shell) .playful-scene{display:none}
  .portal-shell .portal-header .portal-language{order:2;flex:1 1 100%;width:100%;max-width:none;margin:4px 0 0}
  .portal-shell .portal-header .portal-language select{width:100%;max-width:none}
 }
+
+.private-document { max-height: min(92vh, 92dvh); overflow: auto; overscroll-behavior: contain; }
+.private-document header { flex-wrap: wrap; }
+.private-document object { max-width: 100%; }
