@@ -134,7 +134,7 @@ try{
     await languageStudio.getByLabel('Conversation topic').selectOption({label:'Food and drink'});
     await languageStudio.getByRole('button',{name:'Hear Water, please slowly',exact:true}).waitFor();
     await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
-    const motion=page.getByRole('button',{name:'Calm mode',exact:true});
+    const motion=page.locator('.topactions').getByRole('button',{name:'Calm mode',exact:true});
     await motion.click();
     assert.equal(await motion.getAttribute('aria-pressed'),'false');
     assert.equal(await page.locator('.scene-cloud').first().evaluate(node=>getComputedStyle(node).animationName),'none');

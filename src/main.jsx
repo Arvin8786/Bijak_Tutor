@@ -543,7 +543,7 @@ function App(){
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
  if(!token)return <GoogleLogin onToken={login} onPassword={login} notice={loginNotice} signingIn={signingIn} language={uiLanguage}/>;
  if(portalV2&&['ADMIN','PARENT'].includes(boot?.role))return <RolePortals boot={boot} request={authRequest} onSignOut={()=>endSession()} language={uiLanguage}/>;
- return <div className="app" data-edition={edition.id}><header><button className="logo" onClick={()=>setPage('home')}><Brand edition={edition} subtitle={edition.label}/></button><div className="topactions"><StreakChip language={uiLanguage}/>{isLive&&boot?.role==='STUDENT'&&<button disabled={busy} onClick={()=>refresh().catch(()=>{})}>Refresh account details</button>}<button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
+ return <div className="app" data-edition={edition.id}><header><button className="logo" onClick={()=>setPage('home')}><Brand edition={edition} subtitle={edition.label}/></button><div className="topactions"><PlayfulScene/><StreakChip language={uiLanguage}/>{isLive&&boot?.role==='STUDENT'&&<button disabled={busy} onClick={()=>refresh().catch(()=>{})}>Refresh account details</button>}<button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
  {portalV2&&isLive&&boot?.role==='STUDENT'&&<StudentUsage request={authRequest} page={page}/>}
  <nav className="nav" aria-label={say(uiLanguage,'navLabel')}>
@@ -715,5 +715,5 @@ function App(){
  </ModuleGate>
  </main><footer><div>{say(uiLanguage,'footerLine',{edition:edition.name,mode:say(uiLanguage,isLive?'modeLive':'modePreview')})}</div><div className="proease-footer">{say(uiLanguage,'footerRights',{year:new Date().getFullYear()})}</div></footer></div>
 }
-createRoot(document.getElementById('root')).render(<AppBoundary><PlayfulScene/><App/>{!nativeAccountService&&<ReleaseUpdates/>}</AppBoundary>);
+createRoot(document.getElementById('root')).render(<AppBoundary><App/>{!nativeAccountService&&<ReleaseUpdates/>}</AppBoundary>);
 

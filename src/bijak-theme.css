@@ -447,3 +447,5 @@ body .portal-shell .portal-main .portal-table { max-width: 100%; }
  body .app .home-tool-card { padding: .7rem; }
  body .app #study-library { scroll-margin-top: 1rem; }
 }
+
+body .app .topactions .scene-tools { position: static; }
