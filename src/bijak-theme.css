@@ -242,7 +242,7 @@ body .portal-shell .portal-header {
  border: 0;
  box-shadow: none;
 }
-body .portal-shell .portal-header :is(.bl-brand-copy strong, .bl-brand-copy em, .bl-brand-copy small, .portal-user-copy strong) { color: #fff; }
+body .portal-shell .portal-header :is(.bl-brand-copy strong, .bl-brand-copy em, .bl-brand-copy small, .portal-user-copy strong, .portal-language > span) { color: #fff; }
 body .portal-shell .portal-user > button { background: #fff; border-radius: 8px; color: var(--cover-dark); }
 body .portal-shell .portal-nav { background: #fff; border-color: var(--bijak-line); }
 body .portal-shell .portal-nav button { border-radius: 9px; color: var(--bijak-ink); box-shadow: none; }
