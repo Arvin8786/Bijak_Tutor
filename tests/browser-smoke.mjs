@@ -96,12 +96,14 @@ try{
     await languageStudio.getByLabel('Type a copy').fill('あ');
     const pad=languageStudio.getByRole('img',{name:/Tracing model/});
     await pad.scrollIntoViewIfNeeded();
+    await pad.click({position:{x:25,y:25}});
+    await pad.locator('circle').waitFor({state:'attached'});
     const box=await pad.boundingBox();
     await page.mouse.move(box.x+25,box.y+25);
     await page.mouse.down();
     await page.mouse.move(box.x+80,box.y+70,{steps:3});
     await page.mouse.up();
-    await pad.locator('polyline').waitFor();
+    await pad.locator('polyline').waitFor({state:'attached'});
     await languageStudio.getByRole('button',{name:'Clear drawing',exact:true}).click();
     assert.equal(await pad.locator('polyline').count(),0);
     await languageStudio.getByRole('button',{name:'Next · Learn basic words',exact:true}).click();

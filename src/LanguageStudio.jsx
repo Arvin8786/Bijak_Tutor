@@ -27,12 +27,14 @@ function WritingPad({model,language}){
  function stop(event){if(active.current===event.pointerId)active.current=null}
  return <>
   <p>Trace the model with your finger or mouse. You can also copy it on paper or type it below.</p>
-  <svg className="language-pad" viewBox="0 0 200 200" role="img" aria-label={'Tracing model '+model} onPointerDown={start} onPointerMove={draw} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}>
+  <div className="language-pad" role="img" aria-label={'Tracing model '+model} onPointerDown={start} onPointerMove={draw} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}>
+  <svg viewBox="0 0 200 200" aria-hidden="true">
    <path d="M100 0v200 M0 100h200" stroke="#b7c7d4" strokeDasharray="4 5"/>
    <text x="100" y="143" textAnchor="middle" lang={language.locale} fontSize={model.length>3?72:108} fill="#94a8b4">{model}</text>
    {paths.map((path,index)=>path.length===1?<circle key={index} cx={path[0][0]} cy={path[0][1]} r="3" fill="#173e5d"/>:
     <polyline key={index} points={path.map(pair=>pair.join(',')).join(' ')} fill="none" stroke="#173e5d" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>)}
   </svg>
+  </div>
   <div className="language-controls"><button type="button" onClick={()=>setPaths([])} disabled={!paths.length}>Clear drawing</button>
    <label>Type a copy <input dir={language.direction} lang={language.locale} autoComplete="off" spellCheck="false"/></label></div>
  </>;
