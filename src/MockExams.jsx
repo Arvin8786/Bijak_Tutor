@@ -116,7 +116,7 @@ export default function MockExams({request}){
     <h2>{catalog.active?'Continue your exam':'Choose a paper'}</h2>
     {catalog.active?<button className="primary" disabled={busy} onClick={()=>open('state',{attemptId:catalog.active})}>Resume timed exam</button>:
      <form onSubmit={e=>{e.preventDefault();open('start',{paperId:paper})}}>
-      <label>Subject <select required value={paper} onChange={e=>setPaper(e.target.value)}><option value="">Choose a subject</option>{catalog.papers.map(p=><option key={p.id} value={p.id}>{p.title} · Year {p.year}</option>)}</select></label>
+      <label>Subject <select aria-label="Subject" required value={paper} onChange={e=>setPaper(e.target.value)}><option value="">Choose a subject</option>{catalog.papers.map(p=><option key={p.id} value={p.id}>{p.title} · Year {p.year}</option>)}</select></label>
       <p>The 60-minute timer starts when you open the paper and continues if you leave the screen.</p>
       <button className="primary" disabled={busy||!paper}>Start one-hour exam</button>
      </form>}
