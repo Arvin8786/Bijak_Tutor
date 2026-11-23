@@ -49,8 +49,16 @@ export async function checkOwnerRolesBrowser(browser,base){
     assert.equal(await page.getByRole('button',{name:'Publish video',exact:true}).count(),0);
    }else {
     assert.equal(await page.locator('nav.nav').count(),0);
-    assert.match(await page.locator('.portal-welcome').evaluate(el=>getComputedStyle(el).backgroundImage),role==='admin'?/rgb\(37, 74, 114\)/:/rgb\(84, 65, 120\)/,'role-specific header colors');
-    assert.equal(await background('.portal-header'),role==='admin'?'rgb(23, 50, 79)':'rgb(48, 33, 66)','family and team header theme');
+    assert.match(await page.locator('.portal-welcome').evaluate(el=>getComputedStyle(el).backgroundImage),role==='admin'?/rgb\(53, 71, 128\)/:/rgb\(84, 65, 120\)/,'role-specific header colors');
+    if(role==='admin'){
+     assert.match(await page.locator('.portal-header').evaluate(el=>getComputedStyle(el).backgroundImage),/rgb\(32, 46, 88\)/,'classic team header');
+     await page.setViewportSize({width:390,height:850});
+     const nav=page.getByRole('navigation',{name:'BijakLearn Team navigation'});
+     const layout=await nav.evaluate(el=>({display:getComputedStyle(el).display,columns:getComputedStyle(el).gridTemplateColumns.split(' ').length,overflow:el.scrollWidth>el.clientWidth}));
+     assert.deepEqual(layout,{display:'grid',columns:3,overflow:false},'all administrator sections fit the classic mobile menu');
+     if(process.env.BIJAK_SCREENSHOT_DIR)await page.screenshot({path:process.env.BIJAK_SCREENSHOT_DIR+'/classic-admin-mobile.png',fullPage:true,animations:'disabled'});
+     await page.setViewportSize({width:1280,height:900});
+    }else assert.equal(await background('.portal-header'),'rgb(48, 33, 66)','parent header theme');
    }
    await page.getByRole('button',{name:'Sign out',exact:true}).click();await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   }

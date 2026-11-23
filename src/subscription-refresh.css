@@ -5,11 +5,11 @@
  --refresh-accent:#5c3694;
  --refresh-border:#ded4eb;
 }
-body .app,body .portal-shell,body .signin-page {
+body .app,body .portal-shell.portal-parent,body .signin-page {
  color:var(--refresh-ink);
  background:var(--refresh-paper);
 }
-body .app[data-edition],body .portal-shell {
+body .app[data-edition],body .portal-shell.portal-parent {
  --cover:#544178;
  --cover-dark:#302142;
  --tint:var(--refresh-lavender);
@@ -17,7 +17,7 @@ body .app[data-edition],body .portal-shell {
  --section-hover:#462775;
  --section-dark:#302142;
 }
-body .app[data-edition="junior-plus"],body .portal-shell.portal-admin {
+body .app[data-edition="junior-plus"] {
  --cover:#254a72;
  --cover-dark:#17324f;
  --tint:#e0efff;
@@ -25,12 +25,12 @@ body .app[data-edition="junior-plus"],body .portal-shell.portal-admin {
  --section-hover:#163756;
  --section-dark:#17324f;
 }
-body .app .hero,body .portal-shell .portal-welcome,body .signin-page .signin-programmes {
+body .app .hero,body .portal-shell.portal-parent .portal-welcome,body .signin-page .signin-programmes {
  position:relative;
  overflow:hidden;
  isolation:isolate;
 }
-body .app .hero::after,body .portal-shell .portal-welcome::after,body .signin-page .signin-programmes::after {
+body .app .hero::after,body .portal-shell.portal-parent .portal-welcome::after,body .signin-page .signin-programmes::after {
  content:"";
  position:absolute;
  z-index:-1;
@@ -57,10 +57,10 @@ body .signin-page .signin-tabs button[aria-pressed=true] {
  background:#f1e9ff;
  border-color:#c8afe9;
 }
-body .app .nav button[aria-current="page"],body .portal-shell .portal-nav button[aria-current="page"] {
+body .app .nav button[aria-current="page"],body .portal-shell.portal-parent .portal-nav button[aria-current="page"] {
  border-radius:999px;
 }
-body .app :is(.free-grid>button,.subject-picker,.language-cards article),body .portal-shell .panel {
+body .app :is(.free-grid>button,.subject-picker,.language-cards article),body .portal-shell.portal-parent .panel {
  transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
 }
 @media (hover:hover) {
@@ -70,7 +70,7 @@ body .app :is(.free-grid>button,.subject-picker,.language-cards article),body .p
  to {transform:translate(-32px,-20px) rotate(27deg)}
 }
 @media (prefers-reduced-motion:reduce) {
- body .app .hero::after,body .portal-shell .portal-welcome::after,body .signin-page .signin-programmes::after {animation:none}
+ body .app .hero::after,body .portal-shell.portal-parent .portal-welcome::after,body .signin-page .signin-programmes::after {animation:none}
 }
 .subscription-dialog {width:min(calc(100% - 2rem),31rem);border:1px solid var(--refresh-border);border-radius:1.1rem;padding:1.5rem;color:var(--refresh-ink)}
 .subscription-dialog::backdrop {background:#20152b87}
