@@ -69,7 +69,7 @@ function makeWorld() {
   };
   vm.createContext(ctx);
   const read = f => fs.readFileSync(new URL('../apps-script/' + f, import.meta.url), 'utf8');
-  for (const f of ['Code.gs', 'AccountAccess.gs', 'TierAccess.gs', 'PremiumKasih.gs', 'StudentAccess.gs', 'ModuleService.gs', 'AdminOperations.gs', 'TutorAI.gs', 'Commerce.gs', 'RolePortals.gs', 'CurriculumImport.gs']) vm.runInContext(read(f), ctx, {filename: f});
+  for (const f of ['Code.gs', 'AccountAccess.gs', 'TierAccess.gs', 'PremiumKasih.gs', 'StudentAccess.gs', 'ModuleService.gs', 'AdminOperations.gs', 'TutorAI.gs', 'Commerce.gs', 'SubscriptionBilling.gs', 'RolePortals.gs', 'CurriculumImport.gs']) vm.runInContext(read(f), ctx, {filename: f});
   const marking = fs.readFileSync(new URL('../src/answerMarking.js', import.meta.url), 'utf8').replaceAll('export ', '').replace(/\b(markPractice|normalizedAnswer|numericValue)\b/g, '$1_');
   vm.runInContext(marking, ctx);
   props.set('GOOGLE_CLIENT_ID', 'client-1');
@@ -139,14 +139,14 @@ test('a submitted order keeps blocking new orders after its quote window ends', 
   assert.throws(() => w.run(`getPortalBootstrap('${parent}','parent')`), /ACCOUNT_PENDING/);
   w.run(`setAccountAccess('${admin}','google:800000000000000000002','ACTIVE','')`);
   w.run(`getPortalBootstrap('${parent}','parent')`);
-  const order = w.run(`createFamilyOrder('${parent}',{kind:'LIFETIME_PREMIUM'})`);
-  assert.equal(order.totalCents, 10000);
+  const order = w.run(`createFamilyOrder('${parent}',{kind:'MONTHLY_PREMIUM'})`);
+  assert.equal(order.totalCents, 6990);
   w.run(`submitOrderProof('${parent}','${order.id}','000778899',{mimeType:'image/png',data:'${PNG}'})`);
   w.run(`update_('Orders','orderId','${order.id}',{expiresAt:'2000-01-01T00:00:00.000Z'})`);
-  assert.throws(() => w.run(`createFamilyOrder('${parent}',{kind:'LIFETIME_PREMIUM'})`), /reviewed|current order/);
+  assert.throws(() => w.run(`createFamilyOrder('${parent}',{kind:'MONTHLY_PREMIUM'})`), /reviewed|current order/);
   assert.equal(w.run("rows_('Orders')[0].reference"), '000778899', 'receipt reference keeps its leading zeros');
   w.run(`reviewFamilyOrder('${admin}','${order.id}','REJECTED','Receipt unreadable')`);
-  const again = w.run(`createFamilyOrder('${parent}',{kind:'LIFETIME_PREMIUM'})`);
+  const again = w.run(`createFamilyOrder('${parent}',{kind:'MONTHLY_PREMIUM'})`);
   assert.equal(again.status, 'QUOTED');
 });
 
@@ -159,9 +159,9 @@ test('a receipt reference cannot be reused even when it is all digits', () => {
     assert.throws(() => w.run(`getPortalBootstrap('${t}','parent')`), /ACCOUNT_PENDING/);
     w.run(`setAccountAccess('${admin}','google:${sub}','ACTIVE','')`);
   }
-  const first = w.run(`createFamilyOrder('${a}',{kind:'LIFETIME_PREMIUM'})`);
+  const first = w.run(`createFamilyOrder('${a}',{kind:'MONTHLY_PREMIUM'})`);
   w.run(`submitOrderProof('${a}','${first.id}','12345678',{mimeType:'image/png',data:'${PNG}'})`);
-  const second = w.run(`createFamilyOrder('${b}',{kind:'LIFETIME_PREMIUM'})`);
+  const second = w.run(`createFamilyOrder('${b}',{kind:'MONTHLY_PREMIUM'})`);
   assert.throws(() => w.run(`submitOrderProof('${b}','${second.id}','12345678',{mimeType:'image/png',data:'${PNG}'})`), /already submitted/);
 });
 

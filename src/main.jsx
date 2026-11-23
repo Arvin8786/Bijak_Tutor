@@ -79,6 +79,7 @@ import './signin-portal.css';
 import LearningEditionList from './LearningEditionList.jsx';
 import {JUNIOR,learningEditionForYear,inLearningEdition} from './learningEditions.js';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
+import './subscription-refresh.css';
 
 function LessonSearch({query, onChange, count}) {
  return <div className="lesson-search">
@@ -681,5 +682,8 @@ function App(){
  </ModuleGate>
  </main><footer><div>{say(uiLanguage,'footerLine',{edition:edition.name,mode:say(uiLanguage,isLive?'modeLive':'modePreview')})}</div><div className="proease-footer">{say(uiLanguage,'footerRights',{year:new Date().getFullYear()})}</div></footer></div>
 }
+document.getElementById('root').addEventListener('contextmenu',event=>{
+ if(!event.target.closest('input, textarea, select, [contenteditable=true]'))event.preventDefault();
+});
 createRoot(document.getElementById('root')).render(<AppBoundary><PlayfulScene/><App/>{!nativeAccountService&&<ReleaseUpdates/>}</AppBoundary>);
 

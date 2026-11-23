@@ -37,6 +37,7 @@ fs.writeFileSync('release/ModuleAccess.csv',Object.keys(APP_MODULES[0]).join(','
 for(const name of ['RolePortals.gs','Transport.html','EducationalVideos.gs','ParentNotices.gs','PasswordAccounts.gs','AccountHttp.gs','PasswordLearningSetup.gs','FriendMatches.gs'])fs.copyFileSync('apps-script/'+name,'release/'+name);
 
 fs.copyFileSync('apps-script/Commerce.gs','release/Commerce.gs');
+fs.copyFileSync('apps-script/SubscriptionBilling.gs','release/SubscriptionBilling.gs');
 fs.writeFileSync('release/ArithmeticCheck.gs',fs.readFileSync('src/arithmetic.js','utf8').replaceAll('export ','').replace(/\b(arithmeticExpression|calculateExpression)\b/g,'$1_'));
 
 // Complete Sheet-bound maintenance source, with a separate least-privilege manifest.

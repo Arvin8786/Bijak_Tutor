@@ -1,8 +1,9 @@
 /** Family purchases are operator-verified ledger records, never a payment gateway. */
 function commerceSettings_(){
- const out={baseCents:10000,includedChildren:2,extraChildCents:3000,commissionBps:0,whatsapp:'601154443154',paymentInstructions:'Scan the administrator’s Touch ’n Go QR, pay the exact quoted amount and upload a redacted receipt.',qrUploadId:''};
- rows_('CommerceSettings').forEach(r=>{if(Object.prototype.hasOwnProperty.call(out,r.key))out[r.key]=['commissionBps'].includes(r.key)?Number(r.value):['baseCents','includedChildren','extraChildCents'].includes(r.key)?out[r.key]:String(r.value)});
+ const out={baseCents:10000,monthlyPromotion:true,annualDiscountPercent:0,includedChildren:2,extraChildCents:3000,commissionBps:0,whatsapp:'601154443154',paymentInstructions:'Scan the administrator’s Touch ’n Go QR, pay the exact quoted amount and upload a redacted receipt.',qrUploadId:''};
+ rows_('CommerceSettings').forEach(r=>{if(Object.prototype.hasOwnProperty.call(out,r.key))out[r.key]=['commissionBps','annualDiscountPercent'].includes(r.key)?Number(r.value):r.key==='monthlyPromotion'?trueCell_(r.value):['baseCents','includedChildren','extraChildCents'].includes(r.key)?out[r.key]:String(r.value)});
  if(!Number.isInteger(out.commissionBps)||out.commissionBps<0||out.commissionBps>10000)out.commissionBps=0;
+ if(!Number.isInteger(out.annualDiscountPercent)||out.annualDiscountPercent<0||out.annualDiscountPercent>90)out.annualDiscountPercent=0;
  return out;
 }
 /** Deployment-specific values come from Script Properties; the defaults keep the current setup working. */
@@ -15,7 +16,8 @@ function premiumSlots_(sub){const orders=paidFamilyOrders_(sub);return 2+orders.
 function commerceAccess_(user,subscription,legacy){
  const sub=user.role==='STUDENT'?user.familySub:user.sub,orders=paidFamilyOrders_(sub),base=orders.filter(o=>o.kind==='LIFETIME_PREMIUM').slice(-1)[0];
  const override=subscription&&(!base||Date.parse(subscription.updatedAt)>=Date.parse(base.reviewedAt));
- let access=legacy;
+ const timed=typeof subscriptionAccess_==='function'?subscriptionAccess_(orders,subscription,Date.now()):null;
+ let access=timed&&(!legacy.active||legacy.plan==='PREMIUM')?timed:legacy;
  if(override&&trueCell_(subscription.lifetime)&&subscription.plan==='PREMIUM'&&subscription.status==='ACTIVE')access={active:true,plan:'PREMIUM',expiresAt:null,lifetime:true};
  else if(base&&!override)access={active:true,plan:'PREMIUM',expiresAt:null,lifetime:true};
  if(user.role==='STUDENT'&&access.plan==='PREMIUM'){
@@ -42,13 +44,13 @@ function registerReferralOnboarding_(user,code){
   append_('Referrals',{referredSub:user.sub,referrerSub:affiliate?String(affiliate.parentSub):'',referrerName:affiliate?affiliate.name:'',referrerEmail:affiliate?affiliate.email:'',code:affiliate?affiliate.code:'',createdAt:new Date().toISOString()});
  }finally{lock.releaseLock()}
 }
-function orderSummary_(o,own){return {id:o.orderId,kind:o.kind,slots:Number(o.slots),listCents:Number(o.listCents),discountCents:Number(o.discountCents),totalCents:Number(o.totalCents),status:o.status,createdAt:o.createdAt,expiresAt:o.expiresAt,reference:o.reference||'',proofId:o.proofId||'',note:o.note||'',...(own?{parentSub:o.parentSub,referrerSub:o.referrerSub,commissionBps:Number(o.commissionBps),commissionCents:Number(o.commissionCents),reviewedAt:o.reviewedAt}:{} )}}
+function orderSummary_(o,own){return {id:o.orderId,kind:o.kind,slots:Number(o.slots),listCents:Number(o.listCents),discountCents:Number(o.discountCents),totalCents:Number(o.totalCents),status:o.status,createdAt:o.createdAt,expiresAt:o.expiresAt,reference:o.reference||'',proofId:o.proofId||'',note:o.note||'',invoice:typeof billingDocument_==='function'?billingDocument_(o,'invoice'):null,receipt:typeof billingDocument_==='function'?billingDocument_(o,'receipt'):null,...(own?{parentSub:o.parentSub,referrerSub:o.referrerSub,commissionBps:Number(o.commissionBps),commissionCents:Number(o.commissionCents),reviewedAt:o.reviewedAt}:{} )}}
 function getFamilyCommerce(token){
  const user=requirePortalParent_(token),affiliate=affiliateFor_(user),settings=commerceSettings_(),access=access_(user),children=activeFamilyChildren_(user.sub),slots=premiumSlots_(user.sub);
  const orders=rows_('Orders'),payoutItems=paidOutOrderIds_(),payouts=rows_('CommissionPayouts').filter(p=>String(p.referrerSub)===user.sub),links=latestStudentLinks_(),allParents=rows_('Parents');
  const referrals=rows_('Referrals').filter(r=>String(r.referrerSub)===user.sub).map(r=>{
   const buyer=allParents.find(p=>String(p.googleSub)===String(r.referredSub));
-  const order=orders.find(o=>String(o.parentSub)===String(r.referredSub)&&String(o.referrerSub)===user.sub&&o.kind==='LIFETIME_PREMIUM'&&o.status==='PAID');
+  const order=orders.find(o=>String(o.parentSub)===String(r.referredSub)&&String(o.referrerSub)===user.sub&&['LIFETIME_PREMIUM','MONTHLY_PREMIUM','ANNUAL_PREMIUM'].includes(o.kind)&&o.status==='PAID');
   return {name:String(buyer?.displayName||'New parent'),joinedAt:r.createdAt,status:order?'PAID':'ONBOARDED',commissionCents:order?Number(order.commissionCents):0,paidOut:!!order&&payoutItems.has(String(order.orderId)),month:order?malaysiaMonth_(order.reviewedAt):null};
  });
  return {settings,access,children:children.map((c,index)=>({id:String(c.childId),name:c.nickname,email:links.find(l=>String(l.childId)===String(c.childId))?.email||'',status:links.find(l=>String(l.childId)===String(c.childId))?.status||'UNLINKED',plan:access.plan==='PREMIUM'&&index>=slots?'FREE':access.plan})),premiumSlots:slots,affiliateUrl:publicAppUrl_()+'?ref='+affiliate.code,referrals,payouts:payouts.map(p=>({month:p.throughMonth,amountCents:Number(p.amountCents),reference:p.reference})),orders:orders.filter(o=>String(o.parentSub)===user.sub).slice(-100).reverse().map(o=>orderSummary_(o,false)),referredBy:rows_('Referrals').find(r=>String(r.referredSub)===user.sub)?.referrerName||null,uploadsConfigured:!!props_().getProperty('KASIH_DOCUMENTS_FOLDER_ID')};
@@ -110,22 +112,25 @@ function saveDiscountCampaign(token,input){
  try{if(rows_('DiscountCampaigns').some(c=>String(c.code)===code))throw Error('Discount code already exists');const campaignId=Utilities.getUuid();append_('DiscountCampaigns',{campaignId,code,percent,startsAt:new Date(start).toISOString(),endsAt:new Date(end).toISOString(),maxUses:max,enabled:'TRUE',createdAt:new Date().toISOString(),createdBy:accountKey_(admin.sub)});return {id:campaignId}}finally{lock.releaseLock()}
 }
 function createFamilyOrder(token,input){
+ let created;
  const user=requirePortalParent_(token),kind=input?.kind,slots=Number(input?.slots||1),code=String(input?.discountCode||'').trim().toUpperCase();
- if(!['LIFETIME_PREMIUM','EXTRA_CHILD'].includes(kind)||!Number.isInteger(slots)||slots<1||slots>100||(kind==='LIFETIME_PREMIUM'&&slots!==1))throw Error('Choose a membership or 1–100 additional child slots');
+ if(!['MONTHLY_PREMIUM','ANNUAL_PREMIUM','EXTRA_CHILD'].includes(kind)||!Number.isInteger(slots)||slots<1||slots>100||(kind!=='EXTRA_CHILD'&&slots!==1))throw Error('Choose a membership or 1–100 additional child slots');
  const lock=LockService.getScriptLock();lock.waitLock(10000);
  try{
   const history=rows_('Orders'),paid=paidFamilyOrders_(user.sub),now=Date.now();
-  if(kind==='LIFETIME_PREMIUM'&&paid.some(o=>o.kind==='LIFETIME_PREMIUM'))throw Error('Lifetime Premium is already purchased');
+  if(kind!=='EXTRA_CHILD'&&access_(user).lifetime)throw Error('Lifetime Premium is already active.');
   if(kind==='EXTRA_CHILD'&&!paid.some(o=>o.kind==='LIFETIME_PREMIUM')&&access_(user).plan!=='PREMIUM')throw Error('Activate Premium before purchasing extra child slots');
   // A submitted receipt stays pending until an administrator reviews it, however long that takes.
   if(history.some(o=>String(o.parentSub)===user.sub&&(o.status==='SUBMITTED'||o.status==='QUOTED'&&Date.parse(o.expiresAt)>now)))throw Error('Finish your current order or wait for it to be reviewed or to expire before creating another');
-  let discount=null;const prices=commerceSettings_(),listCents=kind==='LIFETIME_PREMIUM'?prices.baseCents:slots*prices.extraChildCents;
+  let discount=null;const prices=commerceSettings_(),price=subscriptionQuote_(kind,prices),listCents=price?.listCents??slots*prices.extraChildCents;
   if(code){discount=rows_('DiscountCampaigns').find(c=>String(c.code)===code&&trueCell_(c.enabled)&&Date.parse(c.startsAt)<=now&&Date.parse(c.endsAt)>now);if(!discount)throw Error('Discount is inactive or expired');const reserved=history.filter(o=>String(o.discountId)===String(discount.campaignId)&&(o.status==='PAID'||o.status==='SUBMITTED'||o.status==='QUOTED'&&Date.parse(o.expiresAt)>now)).length;if(reserved>=Number(discount.maxUses))throw Error('Discount usage limit reached')}
-  const discountCents=discount?Math.round(listCents*Number(discount.percent)/100):0,referral=rows_('Referrals').find(r=>String(r.referredSub)===user.sub),referrer=referral?.referrerSub&&String(referral.referrerSub)!==user.sub?String(referral.referrerSub):'';
-  const settings=commerceSettings_(),commissionBps=kind==='LIFETIME_PREMIUM'&&referrer?settings.commissionBps:0,orderId=Utilities.getUuid();
+  const discountCents=Math.max(price?.discountCents||0,discount?Math.round(listCents*Number(discount.percent)/100):0),referral=rows_('Referrals').find(r=>String(r.referredSub)===user.sub),referrer=referral?.referrerSub&&String(referral.referrerSub)!==user.sub?String(referral.referrerSub):'';
+  const settings=commerceSettings_(),commissionBps=price&&referrer&&!paid.some(o=>['LIFETIME_PREMIUM','MONTHLY_PREMIUM','ANNUAL_PREMIUM'].includes(o.kind))?settings.commissionBps:0,orderId=Utilities.getUuid();
   const order={orderId,parentSub:user.sub,kind,slots,listCents,discountCents,totalCents:listCents-discountCents,discountId:discount?.campaignId||'',referrerSub:referrer,commissionBps,commissionCents:Math.round((listCents-discountCents)*commissionBps/10000),status:'QUOTED',createdAt:new Date(now).toISOString(),expiresAt:new Date(Math.min(now+30*60000,discount?Date.parse(discount.endsAt):Infinity)).toISOString()};
-  append_('Orders',order);return orderSummary_(order,false);
+  append_('Orders',order);created=orderSummary_(order,false);
  }finally{lock.releaseLock()}
+ if(created.invoice)sendSubscriptionEmail_(user.email,'BijakLearn invoice '+created.invoice.number,billingEmailBody_(created.invoice));
+ return created;
 }
 function storePrivateUpload_(user,purpose,recordId,document){
  const upload=kasihDocument_(document),folder=privateKasihFolder_(),uploadId=Utilities.getUuid();
@@ -140,8 +145,10 @@ function submitOrderProof(token,orderId,reference,document){
   if(!order||order.status!=='QUOTED'||Date.parse(order.expiresAt)<=Date.now())throw Error('Order is unavailable or expired. Request a new quote.');
   if(rows_('Orders').some(o=>String(o.reference)===ref&&['SUBMITTED','PAID'].includes(o.status))||rows_('Payments').some(p=>String(p.reference)===ref))throw Error('Payment reference already submitted');
   const proofId=Number(order.totalCents)===0&&!document?'':storePrivateUpload_(user,'PAYMENT',orderId,document);
-  update_('Orders','orderId',orderId,{reference:ref,proofId,submittedAt:new Date().toISOString()});update_('Orders','orderId',orderId,{status:'SUBMITTED'});return {ok:true};
+  update_('Orders','orderId',orderId,{reference:ref,proofId,submittedAt:new Date().toISOString()});update_('Orders','orderId',orderId,{status:'SUBMITTED'});
  }finally{lock.releaseLock()}
+ if(typeof sendSubscriptionEmail_==='function')sendSubscriptionEmail_(adminEmail_(),'BijakLearn payment ready for review','A parent submitted payment proof. Open Payment controls to review order '+orderId+' at '+publicAppUrl_());
+ return {ok:true};
 }
 function uploadPaymentQr(token,document){const admin=requireAccountAdmin_(token);if(!['image/png','image/jpeg'].includes(document?.mimeType))throw Error('Upload a PNG or JPEG QR image');const lock=LockService.getScriptLock();lock.waitLock(30000);try{const id=storePrivateUpload_(admin,'PAYMENT_QR','CURRENT',document);saveCommerceSetting_('qrUploadId',id,admin);return {ok:true}}finally{lock.releaseLock()}}
 function getPrivateUpload(token,id){
@@ -156,22 +163,22 @@ function reviewFamilyOrder(token,id,decision,note){
  const lock=LockService.getScriptLock();lock.waitLock(30000);
  try{
   const order=rows_('Orders').find(o=>String(o.orderId)===id);if(!order)throw Error('Order not found');if(order.status===decision)return {status:decision};
-  if(decision==='REFUNDED'){if(order.status!=='PAID'||paidOutOrderIds_().has(id))throw Error('Only paid orders without recorded commission payouts can be reversed. Reconcile paid commissions first.');}
+  if(decision==='REFUNDED'){if(order.kind==='TECHNICAL_CREDIT')throw Error('Technical credits do not have a payment to refund.');if(order.status!=='PAID'||paidOutOrderIds_().has(id))throw Error('Only paid orders without recorded commission payouts can be reversed. Reconcile paid commissions first.');}
   else if(order.status!=='SUBMITTED')throw Error('Only submitted orders can be reviewed');
   if(decision==='PAID'){
    if(Number(order.totalCents)>0&&!order.proofId)throw Error('Payment proof is required');
    if(order.kind==='LIFETIME_PREMIUM'&&paidFamilyOrders_(String(order.parentSub)).some(o=>o.kind==='LIFETIME_PREMIUM'))throw Error('This family already has a paid lifetime membership');
    if(order.kind==='EXTRA_CHILD'&&!paidFamilyOrders_(String(order.parentSub)).some(o=>o.kind==='LIFETIME_PREMIUM')&&access_({sub:String(order.parentSub)}).plan!=='PREMIUM')throw Error('Family Premium is not active');
   }
-  update_('Orders','orderId',id,{note:message,reviewedAt:new Date().toISOString(),reviewedBy:accountKey_(admin.sub)});update_('Orders','orderId',id,{status:decision});
+  update_('Orders','orderId',id,decision==='REFUNDED'?{note:message}:{note:message,reviewedAt:new Date().toISOString(),reviewedBy:accountKey_(admin.sub)});update_('Orders','orderId',id,{status:decision});
   append_('Audit',{timestamp:new Date().toISOString(),actor:accountKey_(admin.sub),action:'ORDER_'+decision,reference:id});return {status:decision};
  }finally{lock.releaseLock()}
 }
 function malaysiaMonth_(date){return Utilities.formatDate(new Date(date),'Asia/Kuala_Lumpur','yyyy-MM')}
 function paidOutOrderIds_(){const ids=new Set(rows_('PayoutItems').map(i=>String(i.orderId)));rows_('CommissionPayouts').forEach(p=>{const values=JSON.parse(String(p.orderIdsJson||'[]'));if(!Array.isArray(values))throw Error('Payout ledger needs administrator repair');values.forEach(id=>ids.add(String(id)))});return ids}
-function eligibleCommissions_(){const month=malaysiaMonth_(new Date()),items=paidOutOrderIds_();return rows_('Orders').filter(o=>o.status==='PAID'&&o.kind==='LIFETIME_PREMIUM'&&o.referrerSub&&Number(o.commissionCents)>0&&malaysiaMonth_(o.reviewedAt)<month&&!items.has(String(o.orderId)))}
+function eligibleCommissions_(){const month=malaysiaMonth_(new Date()),items=paidOutOrderIds_();return rows_('Orders').filter(o=>o.status==='PAID'&&['LIFETIME_PREMIUM','MONTHLY_PREMIUM','ANNUAL_PREMIUM'].includes(o.kind)&&o.referrerSub&&Number(o.commissionCents)>0&&malaysiaMonth_(o.reviewedAt)<month&&!items.has(String(o.orderId)))}
 function getCommerceAdministration(token){
- requireAccountAdmin_(token);const parents=rows_('Parents'),settings=commerceSettings_();return {settings,discounts:rows_('DiscountCampaigns'),orders:rows_('Orders').slice(-200).reverse().map(o=>({...orderSummary_(o,true),parentEmail:parents.find(p=>String(p.googleSub)===String(o.parentSub))?.email||'',referrerEmail:parents.find(p=>String(p.googleSub)===String(o.referrerSub))?.email||''})),commissions:eligibleCommissions_().map(o=>({orderId:o.orderId,referrerSub:o.referrerSub,email:parents.find(p=>String(p.googleSub)===String(o.referrerSub))?.email||'',month:malaysiaMonth_(o.reviewedAt),amountCents:Number(o.commissionCents)})),payouts:rows_('CommissionPayouts'),uploadsConfigured:!!props_().getProperty('KASIH_DOCUMENTS_FOLDER_ID')};
+ requireAccountAdmin_(token);const parents=rows_('Parents'),settings=commerceSettings_();return {settings,billingParents:parents.map(row=>({id:accountKey_(String(row.googleSub)),email:row.email})),discounts:rows_('DiscountCampaigns'),orders:rows_('Orders').slice(-200).reverse().map(o=>({...orderSummary_(o,true),parentEmail:parents.find(p=>String(p.googleSub)===String(o.parentSub))?.email||'',referrerEmail:parents.find(p=>String(p.googleSub)===String(o.referrerSub))?.email||''})),commissions:eligibleCommissions_().map(o=>({orderId:o.orderId,referrerSub:o.referrerSub,email:parents.find(p=>String(p.googleSub)===String(o.referrerSub))?.email||'',month:malaysiaMonth_(o.reviewedAt),amountCents:Number(o.commissionCents)})),payouts:rows_('CommissionPayouts'),uploadsConfigured:!!props_().getProperty('KASIH_DOCUMENTS_FOLDER_ID')};
 }
 function recordCommissionPayout(token,referrerSub,reference){
  const admin=requireAccountAdmin_(token),ref=String(reference||'').trim();if(ref.length<3||ref.length>100)throw Error('Enter the actual transfer reference');

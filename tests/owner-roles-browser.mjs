@@ -31,14 +31,14 @@ export async function checkOwnerRolesBrowser(browser,base){
   const background=selector=>page.locator(selector).evaluate(el=>getComputedStyle(el).backgroundColor);
   assert.equal(await background('.signin-form'),'rgb(255, 255, 255)','sign-in form surface');
   await page.waitForFunction(()=>document.querySelector('.signin-brandbar img')?.naturalWidth>0);
-  assert.equal(await background('.signin-programmes'),'rgb(24, 45, 76)','programme panel surface');
+  assert.equal(await background('.signin-programmes'),'rgb(53, 32, 71)','programme panel surface');
   for(const [choice,role,heading] of [['BijakLearn Team','admin','Overview & usage'],['Parent sign-in','parent','Child reports'],['Student sign-in','student','Your learning profile']]){
    await page.getByRole('button',{name:choice,exact:true}).click();await page.getByRole('button',{name:'Use my Google account',exact:true}).click();
    await page.getByRole('heading',{name:heading,exact:true}).waitFor();
    if(role==='parent')await page.getByText('No tests yet',{exact:true}).waitFor();
    if(role==='student'){
     assert.equal(await page.locator('.portal-shell').count(),0);
-    assert.equal(await background('.app .hero'),'rgb(17, 59, 60)','learner header surface');
+    assert.equal(await background('.app .hero'),'rgb(48, 33, 66)','learner header surface');
     assert.equal(await page.locator('.app').evaluate(el=>getComputedStyle(el).display),'grid','learner desktop sidebar theme');
     await page.locator('nav.nav').getByRole('button',{name:'Maths Studio',exact:true}).click();
     await page.getByText('Maths Studio is restricted for this learner profile.',{exact:true}).waitFor();
@@ -49,8 +49,8 @@ export async function checkOwnerRolesBrowser(browser,base){
     assert.equal(await page.getByRole('button',{name:'Publish video',exact:true}).count(),0);
    }else {
     assert.equal(await page.locator('nav.nav').count(),0);
-    assert.match(await page.locator('.portal-welcome').evaluate(el=>getComputedStyle(el).backgroundImage),role==='admin'?/rgb\(54, 84, 138\)/:/rgb\(36, 95, 87\)/,'role-specific header colors');
-    assert.equal(await background('.portal-header'),role==='admin'?'rgb(34, 57, 98)':'rgb(22, 66, 61)','family and team header theme');
+    assert.match(await page.locator('.portal-welcome').evaluate(el=>getComputedStyle(el).backgroundImage),role==='admin'?/rgb\(37, 74, 114\)/:/rgb\(84, 65, 120\)/,'role-specific header colors');
+    assert.equal(await background('.portal-header'),role==='admin'?'rgb(23, 50, 79)':'rgb(48, 33, 66)','family and team header theme');
    }
    await page.getByRole('button',{name:'Sign out',exact:true}).click();await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   }

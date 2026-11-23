@@ -1,0 +1,81 @@
+:root {
+ --refresh-ink:#241b37;
+ --refresh-paper:#f6f2fa;
+ --refresh-lavender:#ebe2ff;
+ --refresh-accent:#5c3694;
+ --refresh-border:#ded4eb;
+}
+body .app,body .portal-shell,body .signin-page {
+ color:var(--refresh-ink);
+ background:var(--refresh-paper);
+}
+body .app[data-edition],body .portal-shell {
+ --cover:#544178;
+ --cover-dark:#302142;
+ --tint:var(--refresh-lavender);
+ --section-color:var(--refresh-accent);
+ --section-hover:#462775;
+ --section-dark:#302142;
+}
+body .app[data-edition="junior-plus"],body .portal-shell.portal-admin {
+ --cover:#254a72;
+ --cover-dark:#17324f;
+ --tint:#e0efff;
+ --section-color:#24517e;
+ --section-hover:#163756;
+ --section-dark:#17324f;
+}
+body .app .hero,body .portal-shell .portal-welcome,body .signin-page .signin-programmes {
+ position:relative;
+ overflow:hidden;
+ isolation:isolate;
+}
+body .app .hero::after,body .portal-shell .portal-welcome::after,body .signin-page .signin-programmes::after {
+ content:"";
+ position:absolute;
+ z-index:-1;
+ pointer-events:none;
+ width:15rem;
+ aspect-ratio:1;
+ inset:auto -2rem -7rem auto;
+ border-radius:38%;
+ border:1px solid #ffffff54;
+ box-shadow:0 0 0 18px #ffffff12,0 0 0 39px #ffffff0c;
+ animation:bijak-orbit 12s ease-in-out infinite alternate;
+}
+body .signin-page .signin-programmes {
+ background:#352047 linear-gradient(140deg,#352047,#64428b 65%,#8665af);
+ border-radius:1.3rem;
+}
+body .signin-page .signin-form {
+ border-color:var(--refresh-border);
+ border-radius:1.3rem;
+ box-shadow:0 14px 34px #2c174811;
+}
+body .signin-page .signin-tabs button[aria-pressed=true] {
+ color:#4b257f;
+ background:#f1e9ff;
+ border-color:#c8afe9;
+}
+body .app .nav button[aria-current="page"],body .portal-shell .portal-nav button[aria-current="page"] {
+ border-radius:999px;
+}
+body .app :is(.free-grid>button,.subject-picker,.language-cards article),body .portal-shell .panel {
+ transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+@media (hover:hover) {
+ body .app :is(.free-grid>button,.subject-picker):hover {transform:translateY(-3px);box-shadow:0 8px 20px #351d5220}
+}
+@keyframes bijak-orbit {
+ to {transform:translate(-32px,-20px) rotate(27deg)}
+}
+@media (prefers-reduced-motion:reduce) {
+ body .app .hero::after,body .portal-shell .portal-welcome::after,body .signin-page .signin-programmes::after {animation:none}
+}
+.subscription-dialog {width:min(calc(100% - 2rem),31rem);border:1px solid var(--refresh-border);border-radius:1.1rem;padding:1.5rem;color:var(--refresh-ink)}
+.subscription-dialog::backdrop {background:#20152b87}
+.subscription-alert {margin:0 0 .9rem;border-radius:.7rem;background:#fff4d4;padding:.55rem}
+.billing-document {margin:.6rem 0;padding:.8rem;border:1px solid var(--refresh-border);border-radius:.8rem;overflow-wrap:anywhere}
+.billing-document summary {cursor:pointer;font-weight:650}
+.billing-document dl {display:grid;grid-template-columns:auto 1fr;gap:.4rem .7rem}
+.billing-document dd {margin:0}
