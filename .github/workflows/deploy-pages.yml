@@ -36,7 +36,11 @@ jobs:
       - name: Install browser test tools
         run: npm install --no-save playwright@1.56.1
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: |
+          if ! timeout --kill-after=10s 90s npx playwright install --with-deps chromium; then
+            echo "::warning::System dependency setup stalled; using the runner's installed libraries."
+            npx playwright install chromium
+          fi
       - name: Check production browser flows before publishing
         run: node tests/browser-smoke.mjs
       - name: Compile explicit demo build for learning regression checks
