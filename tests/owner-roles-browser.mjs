@@ -50,7 +50,7 @@ export async function checkOwnerRolesBrowser(browser,base){
    }else {
     assert.equal(await page.locator('nav.nav').count(),0);
     assert.match(await page.locator('.portal-welcome').evaluate(el=>getComputedStyle(el).backgroundImage),role==='admin'?/rgb\(54, 84, 138\)/:/rgb\(36, 95, 87\)/,'role-specific header colors');
-    assert.match(await page.locator('.portal-header').evaluate(el=>getComputedStyle(el).backgroundImage),/gradient/,'family and team header theme');
+    assert.equal(await background('.portal-header'),role==='admin'?'rgb(34, 57, 98)':'rgb(22, 66, 61)','family and team header theme');
    }
    await page.getByRole('button',{name:'Sign out',exact:true}).click();await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   }
