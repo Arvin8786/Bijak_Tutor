@@ -196,7 +196,41 @@ try{
   await page.locator('.curriculum-map .illustrated-lesson').first().click();
   await page.locator('.lesson-reader').waitFor();
   assert.ok((await page.locator('.lesson-reader h1').textContent()).length>2);
-  if(width===1280){await pageControls.getByRole('button',{name:'Back',exact:true}).click();for(const stream of ['SK','SJKC','SJKT']){await page.locator('.curriculum-map select').first().selectOption(stream);if(stream==='SJKT'){await page.waitForFunction(()=>document.documentElement.lang==='ta');await page.locator('.language-switch').click();await page.getByRole('button',{name:'English',exact:true}).click();await page.getByRole('button',{name:'Continue',exact:true}).click();await page.waitForFunction(()=>document.documentElement.lang==='en')}for(let y=1;y<=6;y++){await page.locator('.curriculum-map select').nth(1).selectOption(String(y));await page.locator('.curriculum-map select').nth(2).selectOption('Matematik');const cards=page.locator('.curriculum-map .illustrated-lesson');assert.ok(await cards.count()>0,stream+' year '+y+' has no lessons');await cards.first().click();await page.locator('.lesson-reader').waitFor();await pageControls.getByRole('button',{name:'Back',exact:true}).click()}}}
+  if(width===1280){
+    const learningMap=page.locator('nav.nav').getByRole('button',{name:/Learning map/i});
+    const sectionPicker=page.getByRole('list',{name:'Learning sections'});
+    const openSection=async name=>{
+      await page.locator('nav.nav').getByRole('button',{name:'Home',exact:true}).click();
+      await sectionPicker.getByRole('button',{name,exact:true}).click();
+      await learningMap.click();
+    };
+    for(const [name,years] of [
+      ['BijakLearn Junior Preschool–Year 3',[1,2,3]],
+      ['BijakLearn Junior Plus Years 4–6',[4,5,6]]
+    ]){
+      await openSection(name);
+      for(const stream of ['SK','SJKC','SJKT']){
+        await page.locator('.curriculum-map select').first().selectOption(stream);
+        if(stream==='SJKT'){
+          await page.waitForFunction(()=>document.documentElement.lang==='ta');
+          await page.locator('.language-switch').click();
+          await page.getByRole('button',{name:'English',exact:true}).click();
+          await page.getByRole('button',{name:'Continue',exact:true}).click();
+          await page.waitForFunction(()=>document.documentElement.lang==='en');
+        }
+        for(const level of years){
+          await page.locator('.curriculum-map select').nth(1).selectOption(String(level));
+          await page.locator('.curriculum-map select').nth(2).selectOption('Matematik');
+          const cards=page.locator('.curriculum-map .illustrated-lesson');
+          assert.ok(await cards.count()>0,stream+' year '+level+' has no lessons');
+          await cards.first().click();
+          await page.locator('.lesson-reader').waitFor();
+          await pageControls.getByRole('button',{name:'Back',exact:true}).click();
+        }
+      }
+    }
+    await openSection('BijakLearn Junior Preschool–Year 3');
+  }
   if(width===1280){
     // Audit real selected subject/year lesson cards rather than only checking source data.
     await page.locator('nav.nav').getByRole('button',{name:/Learning map/i}).click();
