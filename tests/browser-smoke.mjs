@@ -45,6 +45,7 @@ try{
   assert.equal(new URL(page.url()).pathname,projectPath,'Expected the GitHub Pages project path');
   assert.equal(await page.locator('.welcome-gate').count(),0,'Language selection should not block startup');
   await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
+  await page.getByText('BijakLearn Junior Plus',{exact:true}).waitFor();
   assert.match(await page.locator('.signin .brand-credit').innerText(),/ProEase Studio/);
   assert.doesNotMatch(await page.locator('.signin').innerText(),/fictional profiles|pilot phase|Studio · [0-9a-f]{7}/i,'Customer sign-in must show product attribution, not development notices');
   if(!await page.getByRole('button',{name:'Explore learning demo',exact:true}).count()){
@@ -59,6 +60,14 @@ try{
    continue;
   }
   await page.getByRole('button',{name:'Explore learning demo',exact:true}).click();
+  if(width===375){
+   const editions=page.getByRole('list',{name:'Learning sections'});
+   await editions.getByRole('button',{name:'BijakLearn Junior Plus Years 4–6',exact:true}).click();
+   await page.getByRole('heading',{name:'BijakLearn Junior Plus',exact:true}).waitFor();
+   assert.deepEqual(await page.locator('.library-filters select').nth(1).locator('option').evaluateAll(options=>options.map(option=>option.value)),['4','5','6']);
+   await editions.getByRole('button',{name:'BijakLearn Junior Preschool–Year 3',exact:true}).click();
+   assert.deepEqual(await page.locator('.library-filters select').nth(1).locator('option').evaluateAll(options=>options.map(option=>option.value)),['1','2','3']);
+  }
   if(width===375){
     const motion=page.getByRole('button',{name:'Calm mode',exact:true});
     await motion.click();

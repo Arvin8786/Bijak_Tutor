@@ -66,11 +66,11 @@ function Detective({language,year}){
  </div>;
 }
 
-function Board({language,year,onStars}){
+function Board({language,year,maxYear,onStars}){
  const t=(key,vars)=>say(language,key,vars);
  const [seed,setSeed]=useState(1),[working,setWorking]=useState(''),[answer,setAnswer]=useState('');
  const [feedback,setFeedback]=useState(null),[hints,setHints]=useState(0),[attempts,setAttempts]=useState(0),[showSteps,setShowSteps]=useState(false),[stars,setStars]=useState(()=>readStreak().stars),[combo,setCombo]=useState(0),[blocks,setBlocks]=useState(false),[burst,setBurst]=useState(0),[boardLines,setBoardLines]=useState([]),[live,setLive]=useState(null);
- const bonus=isBonusRound(combo),problem=useMemo(()=>makeProblem(bonus?bonusYear(year):year,seed),[year,seed,bonus]);
+ const bonus=isBonusRound(combo),problem=useMemo(()=>makeProblem(bonus?Math.min(maxYear,bonusYear(year)):year,seed),[year,maxYear,seed,bonus]);
  const solved=feedback?.status==='correct';
  // The guide reads what is typed on the board (Type tool) or in the boxes. A lone number on the last line counts as the answer.
  const typedLines=working.trim()?working.split('\n'):boardLines;
@@ -154,7 +154,7 @@ function Board({language,year,onStars}){
  </div>;
 }
 
-function Practice({language,lessons,year,setYear,school,onOpenLesson}){
+function Practice({language,lessons,year,setYear,years,school,onOpenLesson}){
  const t=(key,vars)=>say(language,key,vars);
  const [topic,setTopic]=useState('all'),[count,setCount]=useState(5),[session,setSession]=useState(null),[index,setIndex]=useState(0),[choice,setChoice]=useState(''),[answers,setAnswers]=useState([]),[checked,setChecked]=useState(false),[history,setHistory]=useState([]),[showHistory,setShowHistory]=useState(false),[round,setRound]=useState(0);
  const answered=useRef(false);
@@ -167,7 +167,7 @@ function Practice({language,lessons,year,setYear,school,onOpenLesson}){
  return <div className="math-practice">
   <p>{t('practiceIntro')} {t('teacherNote')}</p>
   {!session&&<><div className="library-filters">
-   <label>{t('practiceYear')}<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>{t('yearLabel',{n:y})}</option>)}</select></label>
+   <label>{t('practiceYear')}<select value={year} onChange={e=>setYear(Number(e.target.value))}>{years.map(y=><option key={y} value={y}>{t('yearLabel',{n:y})}</option>)}</select></label>
    <label>{t('mathsTopic')}<select value={topic} onChange={e=>setTopic(e.target.value)}>{TOPICS.map(([id,key])=><option key={id} value={id}>{t(key)}</option>)}</select></label>
    <label>{t('perSession')}<select value={count} onChange={e=>setCount(Number(e.target.value))}>{[5,10,15,20].map(n=><option key={n}>{n}</option>)}</select></label>
   </div>
@@ -182,20 +182,20 @@ function Practice({language,lessons,year,setYear,school,onOpenLesson}){
  </div>;
 }
 
-export default function MathsStudio({lessons,initialYear=1,school='SK',onOpenLesson,language='ms'}){
+export default function MathsStudio({lessons,initialYear=1,years=[1,2,3,4,5,6],school='SK',onOpenLesson,language='ms'}){
  const t=(key,vars)=>say(language,key,vars);
- const [tab,setTab]=useState('board'),[year,setYear]=useState(initialYear);
+ const [tab,setTab]=useState('board'),[year,setYear]=useState(years.includes(initialYear)?initialYear:years[0]);
  return <section className="panel maths-studio" aria-label={t('maths')}>
   <div className="studio-head">
    <div><h1><span aria-hidden="true">🧮</span> {t('mathTitle')}</h1><p>{t('mathIntro')}</p></div>
-   <label className="studio-year">{t('chooseYear')}<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>{t('yearLabel',{n:y})}</option>)}</select></label>
+   <label className="studio-year">{t('chooseYear')}<select value={year} onChange={e=>setYear(Number(e.target.value))}>{years.map(y=><option key={y} value={y}>{t('yearLabel',{n:y})}</option>)}</select></label>
   </div>
   <div className="studio-tabs" role="group" aria-label={t('mathTitle')}>
    <button type="button" className={tab==='board'?'on':''} aria-pressed={tab==='board'} onClick={()=>setTab('board')}><span aria-hidden="true">📝</span> {t('tabBoard')}</button>
    <button type="button" className={tab==='puzzle'?'on':''} aria-pressed={tab==='puzzle'} onClick={()=>setTab('puzzle')}><span aria-hidden="true">🕵️</span> {t('tabPuzzle')}</button>
    <button type="button" className={tab==='practice'?'on':''} aria-pressed={tab==='practice'} onClick={()=>setTab('practice')}><span aria-hidden="true">🎯</span> {t('tabPractice')}</button>
   </div>
-  {tab==='board'?<Board key={year} language={language} year={year}/>:tab==='puzzle'?<Detective key={year} language={language} year={year}/>:<Practice language={language} lessons={lessons} year={year} setYear={setYear} school={school} onOpenLesson={onOpenLesson}/>}
+  {tab==='board'?<Board key={year} language={language} year={year} maxYear={years.at(-1)}/>:tab==='puzzle'?<Detective key={year} language={language} year={year}/>:<Practice language={language} lessons={lessons} year={year} setYear={setYear} years={years} school={school} onOpenLesson={onOpenLesson}/>}
   <p className="studio-foot">{t('aiNote')}</p>
  </section>;
 }

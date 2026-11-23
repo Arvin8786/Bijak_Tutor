@@ -26,7 +26,7 @@ function Player({video,language,onBack}){
  </section>;
 }
 
-export default function VideoLibrary({request,language='en'}){
+export default function VideoLibrary({request,language='en',years}){
  const [videos,setVideos]=useState(null),[error,setError]=useState(''),[current,setCurrent]=useState(null),[subject,setSubject]=useState('');
  useEffect(()=>{
   let live=true;
@@ -38,9 +38,10 @@ export default function VideoLibrary({request,language='en'}){
   }).then(list=>{if(live)setVideos(Array.isArray(list)?list:[])}).catch(failure=>{if(live){setVideos([]);setError(failure?.message||'error')}});
   return()=>{live=false};
  },[request]);
- const subjects=[...new Set((videos||[]).map(v=>v.subject).filter(Boolean))];
- const shown=(videos||[]).filter(v=>!subject||v.subject===subject);
- const playing=videos?.find(v=>v.id===current);
+ const catalogue=(videos||[]).filter(video=>!video.year||!years||years.includes(Number(video.year)));
+ const subjects=[...new Set(catalogue.map(v=>v.subject).filter(Boolean))];
+ const shown=catalogue.filter(v=>!subject||v.subject===subject);
+ const playing=catalogue.find(v=>v.id===current);
  return <section className="video-page" aria-label={say(language,'videosTitle')}>
   <div className="video-hero"><span className="mini-label">🎬 {say(language,'videos').toUpperCase()}</span><h1>{say(language,'videosTitle')}</h1><p>{say(language,'videosIntro')}</p></div>
   {playing?<Player video={playing} language={language} onBack={()=>setCurrent(null)}/>:<>

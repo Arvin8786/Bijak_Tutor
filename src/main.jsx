@@ -72,6 +72,9 @@ import './studio-refresh.css';
 import './design-system.css';
 import './studio.css';
 import './bijak-theme.css';
+import './learning-editions.css';
+import LearningEditionList from './LearningEditionList.jsx';
+import {JUNIOR,learningEditionForYear,inLearningEdition} from './learningEditions.js';
 import {markPractice, normalizedAnswer} from './practiceBank.js';
 
 function LessonSearch({query, onChange, count}) {
@@ -160,9 +163,9 @@ function GoogleLogin({onToken,onPassword,notice,signingIn}){
  return <main className="signin">
   <section className="signin-intro">
    <Brand/>
-   <span className="signin-kicker">Preschool · Primary Years 1–6</span>
    <h1>Make room<br/> for <span>curiosity.</span></h1>
    <p>Explore lessons, practise new skills, and play learning games at your own pace.</p>
+   <LearningEditionList/>
    <div className="signin-art" aria-hidden="true"><img src="./icons/icon.svg" width="200" height="200" alt=""/></div>
   </section>
   <section className="signin-form">
@@ -227,10 +230,19 @@ function App(){
  const [welcomeDone,setWelcomeDone]=useState(true);
  useEffect(()=>{document.documentElement.lang=uiLanguage},[uiLanguage]);
  const [token,setToken]=useState(''),[boot,setBoot]=useState(null),[childId,setChildId]=useState(''),[qIndex,setQIndex]=useState(0),[answer,setAnswer]=useState(''),[hints,setHints]=useState(0),[result,setResult]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[pin,setPin]=useState(''),[oldPin,setOldPin]=useState(''),[report,setReport]=useState(null),[newName,setNewName]=useState(''),[year,setYear]=useState(1),[school,setSchool]=useState('SK'),[language,setLanguage]=useState('ms');
- const schoolNow=boot?.children?.find(x=>x.id===childId)?.school||school;
- const activeLessons=useMemo(()=>schoolNow==='SJKT'?lessonsForSchool(RAW_LESSONS,'SJKT',TAMIL_CONTENT):LESSONS,[schoolNow]);
+ const child=boot?.children?.find(x=>x.id===childId);
+ const [previewEdition,setPreviewEdition]=useState(JUNIOR);
+ const edition=child?learningEditionForYear(child.year)||JUNIOR:previewEdition;
+ const primaryYears=useMemo(()=>edition.years.filter(level=>level>0),[edition]);
+ const schoolNow=child?.school||school;
+ const activeLessons=useMemo(()=>{
+  const catalogue=schoolNow==='SJKT'?lessonsForSchool(RAW_LESSONS,'SJKT',TAMIL_CONTENT):LESSONS;
+  return catalogue.filter(item=>inLearningEdition(edition,item.year));
+ },[schoolNow,edition]);
  liveLessons=activeLessons;
- const bootLessons=useMemo(()=>isLive?boot?.lessons:activeLessons.map(listLesson),[isLive,boot,activeLessons]);
+ const bootLessons=useMemo(()=>isLive?
+  (boot?.lessons||[]).filter(item=>inLearningEdition(edition,item.year)):
+  activeLessons.map(listLesson),[boot,activeLessons,edition]);
  // Choosing an SJKT pathway switches the whole app to Tamil (the child can still change language afterwards).
  const lastSchool=useRef(schoolNow);
  useEffect(()=>{
@@ -238,7 +250,18 @@ function App(){
   lastSchool.current=schoolNow;
  },[schoolNow]);
  const [routes,setRoutes]=useState([{page:'home'}]);
- const route=routes.at(-1);
+ const learningRoute=routes.at(-1);
+ const route=learningRoute.editionId&&learningRoute.editionId!==edition.id?routes[0]:learningRoute;
+ const editionRef=useRef(edition);
+ useEffect(()=>{
+  editionRef.current=edition;
+  setRoutes(history=>history[1]&&history[1].editionId!==edition.id?history.slice(0,1):history);
+ },[edition]);
+ useEffect(()=>{
+  if(!token||portalV2&&boot?.role!=='STUDENT')return;
+  document.title=edition.name;
+  return()=>{document.title=JUNIOR.name};
+ },[edition,token,boot?.role]);
  const {page,lesson}=route;
  const mainRef=useRef(null);
  const restoreSubject=useRef(null);
@@ -248,7 +271,7 @@ function App(){
    if(next==='home')return history.length===1?history:history.slice(0,1);
    const current=history.at(-1);
    if(current.page===next&&current.lesson===context.lesson&&current.subject===context.subject&&current.pathId===context.pathId)return history;
-   return [...history,{page:next,...context}];
+   return [...history,{page:next,editionId:edition.id,...context}];
   });
  }
  function resetLessonPractice() {
@@ -280,7 +303,7 @@ function App(){
  const [progress,setProgress]=useState(mockProgress);
  const learner=childId||'guest';
  const currentProgress=progress[learner]||{lastLesson:null,activities:[],quizzes:[]};
- const selectedPath=PATHS.find(path=>path.id===route.pathId);
+ const selectedPath=PATHS.find(path=>path.id===route.pathId&&inLearningEdition(edition,path.year));
  const missed=!isLive&&(page==='home'||page==='review')?missedQuestions(mockAttempts,childId,activeLessons):[];
  const lastLesson=bootLessons?.find(item=>item.id===currentProgress.lastLesson);
  const relatedLessons=(bootLessons||[]).filter(item=>lesson&&item.subject===lesson.subject&&item.year===lesson.year&&(!item.school||item.school==='ALL'||item.school===(lesson.school||school)));
@@ -345,8 +368,10 @@ function App(){
   wipeUsage();setUsageReport(summariseUsage(childId));
  };
 
- const child=boot?.children.find(x=>x.id===childId),q=lesson?.questions[qIndex];
- const browseYear=child?.year||year,browseSchool=child?.school||school;
+ const q=lesson?.questions[qIndex];
+ const requestedYear=Number(child?.year??year);
+ const browseYear=primaryYears.includes(requestedYear)?requestedYear:primaryYears[0];
+ const browseSchool=schoolNow;
  const [showOptional,setShowOptional]=useState(false);
  const [lessonQuery,setLessonQuery]=useState('');
  const setBrowseSubject=subject=>{chooseSubject(subject);setLessonQuery('')};
@@ -457,11 +482,12 @@ function App(){
  async function openLesson(id,{quiz=false,questionId}={}){
   setError('');
   const listed=activeLessons.find(item=>item.id===id);
-  if(!listed&&!(isLive&&boot?.lessons?.some(item=>item.id===id))){setError('This study topic could not be found. Please choose another lesson.');return}
+  if(!listed&&!(isLive&&bootLessons.some(item=>item.id===id))){setError('This study topic could not be found. Please choose another lesson.');return}
   try{
     // Reading is available to everyone in demo mode, even before a profile is made.
     // Never bypass authenticated access controls in the live backend.
     const l=isLive?await call('getLesson',childId,id):{...listed,questions:(listed.check||[]).map(q=>({id:q.id,mode:q.mode,text:q.text,options:q.options||[],transfer:!!q.transfer}))};
+    if(editionRef.current!==edition||!inLearningEdition(edition,l.year))return;
     resetLessonPractice();
     if(quiz||questionId){
      setStudyTab('quiz');
@@ -489,13 +515,13 @@ function App(){
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
  if(!token)return <><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} onPassword={login} notice={loginNotice} signingIn={signingIn}/></>;
  if(portalV2&&['ADMIN','PARENT'].includes(boot?.role))return <RolePortals boot={boot} request={authRequest} onSignOut={()=>endSession()} language={uiLanguage}/>;
- return <div className="app"><header><button className="logo" onClick={()=>setPage('home')}><Brand subtitle="Discover something wonderful"/></button><div className="topactions"><StreakChip language={uiLanguage}/>{isLive&&boot?.role==='STUDENT'&&<button disabled={busy} onClick={()=>refresh().catch(()=>{})}>Refresh account details</button>}<button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
+ return <div className="app" data-edition={edition.id}><header><button className="logo" onClick={()=>setPage('home')}><Brand edition={edition} subtitle={edition.label}/></button><div className="topactions"><StreakChip language={uiLanguage}/>{isLive&&boot?.role==='STUDENT'&&<button disabled={busy} onClick={()=>refresh().catch(()=>{})}>Refresh account details</button>}<button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
  {portalV2&&isLive&&boot?.role==='STUDENT'&&<StudentUsage request={authRequest} page={page}/>}
  <nav className="nav" aria-label={say(uiLanguage,'navLabel')}>
   <div className="nav-group" role="group" aria-label={say(uiLanguage,'navLearn')}><span className="nav-title">{say(uiLanguage,'navLearn')}</span>
    <NavButton icon="🏠" label={say(uiLanguage,'home')} active={page==='home'} onClick={()=>setPage('home')}/>
-   <NavButton icon="🐣" label={say(uiLanguage,'preschool')} active={page==='preschool'} onClick={()=>setPage('preschool')}/>
+   {edition===JUNIOR&&<NavButton icon="🐣" label={say(uiLanguage,'preschool')} active={page==='preschool'} onClick={()=>setPage('preschool')}/>}
    <NavButton icon="🚀" label={say(uiLanguage,'packs')} active={page==='packs'} onClick={()=>setPage('packs')}/>
    <NavButton icon="🗺️" label={say(uiLanguage,'map')} active={page==='map'} onClick={()=>setPage('map')}/>
    <NavButton icon="🤖" label={say(uiLanguage,'tutor')} active={page==='tutor'} onClick={()=>setPage('tutor')}/>
@@ -526,27 +552,33 @@ function App(){
   <button type="button" onClick={()=>setPage('home')}><span aria-hidden="true">🏠</span> {say(uiLanguage,'goHome')}</button>
  </nav>}
  {timeConsent&&<p className="time-child-notice" role="status">⏱️ {say(uiLanguage,'timeNotice')}</p>}
- <ModuleGate moduleId={isLive?moduleForPage(page,growthAudience,growthKind):null} request={authRequest} onMembership={()=>setPage('membership')}>
- {page==='paths'&&<LearningPaths lessons={bootLessons||[]} onOpen={openLesson} finished={currentProgress.activities}
+  {page==='home'&&!child&&<LearningEditionList active={edition} onChange={next=>{setPreviewEdition(next);setYear(next.years.find(level=>level>0));setLessonQuery('');setBrowseChapter('all')}}/>}
+ <ModuleGate key={edition.id} moduleId={isLive?moduleForPage(page,growthAudience,growthKind):null} request={authRequest} onMembership={()=>setPage('membership')}>
+ {page==='paths'&&<LearningPaths lessons={bootLessons} years={primaryYears} onOpen={openLesson} finished={currentProgress.activities}
   onLab={pathId=>setPage('lab',{pathId})} onReview={isLive?undefined:pathId=>setPage('review',{pathId})}/>}
  {page==='lab'&&selectedPath&&<PracticeLab key={selectedPath.id} path={selectedPath} onComplete={()=>updateProgress('activities',selectedPath.id)}/>}
  {page==='review'&&!isLive&&<ReviewQuestions items={selectedPath?missed.filter(item=>selectedPath.lessons.includes(item.lesson.id)):missed}
   onRetry={(id,questionId)=>openLesson(id,{questionId})}/>}
- {['dictionary','creative-projects'].includes(page)&&<PictureDictionary key={page} initialYear={child?.year??browseYear} initialLanguage={uiLanguage} initialView={page==='creative-projects'?'projects':'words'}/>}
- {page==='videos'&&<VideoLibrary request={isLive?authRequest:null} language={uiLanguage}/>}
+ {['dictionary','creative-projects'].includes(page)&&<PictureDictionary key={page} initialYear={child?.year??browseYear} years={edition.years} initialLanguage={uiLanguage} initialView={page==='creative-projects'?'projects':'words'}/>}
+ {page==='videos'&&<VideoLibrary request={isLive?authRequest:null} language={uiLanguage} years={primaryYears}/>}
  {page==='discovery'&&<DiscoveryLibrary availableLessons={bootLessons||[]} onOpen={openLesson}/>}
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<><AccountAccessPanel request={authRequest}/><StudentAccessPanel request={authRequest}/><KasihReviewPanel request={authRequest}/></>}
- {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={activeLessons} initialYear={browseYear} school={browseSchool} onOpenLesson={openLesson}/>}
+ {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={activeLessons} initialYear={browseYear} years={primaryYears} school={browseSchool} onOpenLesson={openLesson}/>}
  {page==='science-lab'&&<ScienceLab language={uiLanguage}/>}
  {page==='arcade'&&<ActivityArcade/>}
  {page==='wordgame'&&<WordTilesGame/>}
  {page==='growth'&&<GrowthHub studentOnly={boot?.role==='STUDENT'} audience={growthAudience} initialKind={growthKind} onAudience={setGrowthAudience} onKind={setGrowthKind} loadTrack={isLive?id=>authRequest("getGrowthModule",id):null} checkAnswer={isLive?(lessonId,answerIndex)=>authRequest("checkGrowthAnswer",lessonId,answerIndex):null}/>}
  {page==='practice'&&<PracticeArena lessons={activeLessons} year={browseYear} school={browseSchool} language={uiLanguage} onOpenLesson={openLesson} onAttempt={isLive?undefined:recordPractice}/>}
  {page==='tutor'&&<StudyBuddy lessons={activeLessons} year={browseYear} subject={lesson?.subject||''} currentLesson={lesson} askOnline={isLive?(question,context)=>authRequest('askTutor',question,context):null}/>}
- {page==='packs'&&<><div className="library-filters"><label>Learning pathway<select value={browseSchool} disabled={!!child} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Year<select value={browseYear} disabled={!!child} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>Tahun {y}</option>)}</select></label><span className="library-hint">Short learning adventures created from available lessons</span></div><AdventurePacks lessons={LESSONS.filter(l=>(!l.school||l.school==='ALL'||l.school===browseSchool))} year={browseYear} school={browseSchool} childId={childId} attempts={isLive?{}:mockAttempts} onOpen={openLesson} onPreschool={()=>setPage('preschool')}/></>}
- {page==='preschool'&&<PreschoolStudio/>}
- {page==='home'&&<><div className="hero"><div><span className="eyebrow">{say(uiLanguage,'heroEyebrow')}</span><h1>{say(uiLanguage,'heroTitle')}</h1><p>{say(uiLanguage,'heroText')}</p></div><div className="hero-mascots"><MascotFriends language={uiLanguage} compact/></div><button type="button" className="preschool-launch" onClick={()=>setPage("preschool")}>🐣 {say(uiLanguage,'preschoolCta')}</button></div>
- <div className="studio-cards"><button type="button" className="studio-card science" onClick={()=>setPage('science-lab')}><span className="studio-card-icon" aria-hidden="true">🔬</span><span><strong>{say(uiLanguage,'science')}</strong><small>{say(uiLanguage,'sciCardSub')}</small></span><span aria-hidden="true">→</span></button><button type="button" className="studio-card maths" onClick={()=>setPage('maths-studio')}><span className="studio-card-icon" aria-hidden="true">🧮</span><span><strong>{say(uiLanguage,'maths')}</strong><small>{say(uiLanguage,'mathCardSub')}</small></span><span aria-hidden="true">→</span></button></div>{boot?.role==='STUDENT'?<section className="panel"><h2>Your learning profile</h2><p>{child?.name} · Tahun {child?.year} · {child?.school}</p><p>Your parent or BijakLearn Team manages your profile and membership.</p></section>:<section className="panel"><h2>{say(uiLanguage,'personaliseTitle')}</h2><div className="demo-save-settings"><div><strong>⭐ {say(uiLanguage,'nickTitle')}</strong><p>{say(uiLanguage,'nickText')}</p></div><label className="demo-save-check"><input type="checkbox" checked={rememberDemo} onChange={e=>toggleDemoSave(e.target.checked)}/> {say(uiLanguage,'rememberDevice')}</label><button type="button" onClick={resetDemo}>{say(uiLanguage,'clearSaved')}</button></div>{boot?.children.length?<div className="chips">{boot.children.map(c=><button key={c.id} className={childId===c.id?'selected':''} onClick={()=>setChildId(c.id)}>{c.name} · {say(uiLanguage,'yearWord')} {c.year}</button>)}</div>:<p>{say(uiLanguage,'noProfileText')}</p>}<details><summary>{say(uiLanguage,'addNickname')}</summary><form onSubmit={createChild} className="form"><label>{say(uiLanguage,'fictionalNickname')}<input required maxLength={40} value={newName} onChange={e=>setNewName(e.target.value)}/></label><label>{say(uiLanguage,'yearWord')}<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>{say(uiLanguage,'yearLabel',{n:y})}</option>)}</select></label><label>{say(uiLanguage,'schoolWord')}<select value={school} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{say(uiLanguage,'languageWord')}<select value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(langLabels).map(([k,v])=><option value={k} key={k}>{v}</option>)}</select></label><button className="primary" disabled={busy}>{say(uiLanguage,'addProfile')}</button></form></details></section>}
+ {page==='packs'&&<><div className="library-filters"><label>Learning pathway<select value={browseSchool} disabled={!!child} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>Year<select value={browseYear} disabled={!!child} onChange={e=>setYear(Number(e.target.value))}>{primaryYears.map(y=><option key={y} value={y}>Tahun {y}</option>)}</select></label><span className="library-hint">Short learning adventures created from available lessons</span></div><AdventurePacks lessons={activeLessons.filter(l=>(!l.school||l.school==='ALL'||l.school===browseSchool))} year={browseYear} school={browseSchool} childId={childId} attempts={isLive?{}:mockAttempts} onOpen={openLesson} onPreschool={edition===JUNIOR?()=>setPage('preschool'):undefined}/></>}
+ {page==='preschool'&&edition===JUNIOR&&<PreschoolStudio/>}
+ {page==='home'&&<>
+  <div className="hero"><div><span className="eyebrow">{edition.label}</span>
+   <h1>{edition===JUNIOR?say(uiLanguage,'heroTitle'):edition.name}</h1>
+   <p>{edition===JUNIOR?say(uiLanguage,'heroText'):tx('Explore Years 4–6 lessons, practise across subjects and put your ideas to work in creative projects.')}</p></div>
+   {edition===JUNIOR?<><div className="hero-mascots"><MascotFriends language={uiLanguage} compact/></div><button type="button" className="preschool-launch" onClick={()=>setPage('preschool')}>🐣 {say(uiLanguage,'preschoolCta')}</button></>:<a className="hero-plus-link" href="#study-library">{say(uiLanguage,'browseLibrary')}</a>}
+  </div>
+ <div className="studio-cards"><button type="button" className="studio-card science" onClick={()=>setPage('science-lab')}><span className="studio-card-icon" aria-hidden="true">🔬</span><span><strong>{say(uiLanguage,'science')}</strong><small>{say(uiLanguage,'sciCardSub')}</small></span><span aria-hidden="true">→</span></button><button type="button" className="studio-card maths" onClick={()=>setPage('maths-studio')}><span className="studio-card-icon" aria-hidden="true">🧮</span><span><strong>{say(uiLanguage,'maths')}</strong><small>{say(uiLanguage,'mathCardSub')}</small></span><span aria-hidden="true">→</span></button></div>{boot?.role==='STUDENT'?<section className="panel"><h2>Your learning profile</h2><p>{child?.name} · {Number(child?.year)===0?tx('Preschool'):'Tahun '+browseYear} · {child?.school}</p><p>Your parent or BijakLearn Team manages your profile and membership.</p></section>:<section className="panel"><h2>{say(uiLanguage,'personaliseTitle')}</h2><div className="demo-save-settings"><div><strong>⭐ {say(uiLanguage,'nickTitle')}</strong><p>{say(uiLanguage,'nickText')}</p></div><label className="demo-save-check"><input type="checkbox" checked={rememberDemo} onChange={e=>toggleDemoSave(e.target.checked)}/> {say(uiLanguage,'rememberDevice')}</label><button type="button" onClick={resetDemo}>{say(uiLanguage,'clearSaved')}</button></div>{boot?.children.length?<div className="chips">{boot.children.map(c=><button key={c.id} className={childId===c.id?'selected':''} onClick={()=>setChildId(c.id)}>{c.name} · {say(uiLanguage,'yearWord')} {c.year}</button>)}</div>:<p>{say(uiLanguage,'noProfileText')}</p>}<details><summary>{say(uiLanguage,'addNickname')}</summary><form onSubmit={createChild} className="form"><label>{say(uiLanguage,'fictionalNickname')}<input required maxLength={40} value={newName} onChange={e=>setNewName(e.target.value)}/></label><label>{say(uiLanguage,'yearWord')}<select value={year} onChange={e=>setYear(Number(e.target.value))}>{[1,2,3,4,5,6].map(y=><option key={y} value={y}>{say(uiLanguage,'yearLabel',{n:y})}</option>)}</select></label><label>{say(uiLanguage,'schoolWord')}<select value={school} onChange={e=>setSchool(e.target.value)}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{say(uiLanguage,'languageWord')}<select value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(langLabels).map(([k,v])=><option value={k} key={k}>{v}</option>)}</select></label><button className="primary" disabled={busy}>{say(uiLanguage,'addProfile')}</button></form></details></section>}
 
  {!isLive&&<ContinueLearning lastLesson={lastLesson} activities={currentProgress.activities.length} quizzes={currentProgress.quizzes.length}
   missed={missed.length} onOpen={openLesson} onReview={()=>setPage('review')} onPaths={()=>setPage('paths')}/>}
@@ -561,13 +593,13 @@ function App(){
  <button type="button" className="arcade-home-teaser" onClick={()=>setPage('arcade')}><span aria-hidden="true">🎪</span><span><strong>{say(uiLanguage,'arcade')}</strong><small>{say(uiLanguage,'arcadeSub')}</small></span><span aria-hidden="true">→</span></button>
  <button type="button" className="word-bot-home" onClick={()=>setPage('wordgame')}><span aria-hidden="true">🔡</span><span><strong>{say(uiLanguage,'wordGame')}</strong><small>{say(uiLanguage,'wordBotSub')}</small></span><span aria-hidden="true">→</span></button>
  <div className="growth-home-spotlight"><button type="button" className="growth-home-card" onClick={()=>{setGrowthAudience('junior');setGrowthKind('ai');setPage('growth')}}><span className="growth-spot-icon" aria-hidden="true">🤖</span><span><strong>{say(uiLanguage,'learnAI')}</strong><small>{say(uiLanguage,'aiSub')}</small></span></button><button type="button" className="growth-home-card" onClick={()=>{setGrowthAudience('junior');setGrowthKind('hobby');setPage('growth')}}><span className="growth-spot-icon" aria-hidden="true">🌿</span><span><strong>{say(uiLanguage,'hobbies')}</strong><small>{say(uiLanguage,'hobbiesSub')}</small></span></button></div>
- <div className="home-mascot-band"><div><span className="mini-label">🌟 BIJAKLEARN JUNIOR</span><h2>{say(uiLanguage,'greeting')}</h2><p>{say(uiLanguage,'touch')}</p></div><MascotFriends language={uiLanguage} compact/></div>
+ <div className="home-mascot-band"><div><span className="mini-label">{edition.name}</span><h2>{say(uiLanguage,'greeting')}</h2><p>{say(uiLanguage,'touch')}</p></div><MascotFriends language={uiLanguage} compact/></div>
  <div className="tutor-teaser"><span aria-hidden="true">🤖</span><div><strong>{say(uiLanguage,'tutorTeaserTitle')}</strong><p>{say(uiLanguage,'tutorTeaserText')}</p></div><button type="button" className="primary" onClick={()=>setPage('tutor')}>{say(uiLanguage,'askBuddy')}</button></div>
  <div className="home-packs-teaser"><div><span className="mini-label">{say(uiLanguage,'practiceTeaserEyebrow')}</span><h2>{say(uiLanguage,'practiceTeaserTitle')}</h2><p>{say(uiLanguage,'practiceTeaserText')}</p></div><button type="button" className="primary" onClick={()=>setPage('practice')}>{say(uiLanguage,'openPractice')}</button></div>
  <div className="home-packs-teaser"><div><span className="mini-label">{say(uiLanguage,'packsTeaserEyebrow')}</span><h2>{say(uiLanguage,'packsTeaserTitle')}</h2><p>{say(uiLanguage,'packsTeaserText')}</p></div><button type="button" className="primary" onClick={()=>setPage('packs')}>{say(uiLanguage,'openPacks')}</button></div>
  <section className="library-section" id="study-library">
    <div className="section-heading"><div><span className="mini-label">{say(uiLanguage,'libraryEyebrow')}</span><h2>{say(uiLanguage,'explore')}</h2><p>{say(uiLanguage,'libraryText')}</p></div><span className="heading-spark" aria-hidden="true">🌟</span></div>
-   <div className="library-filters"><label>{tx("Learning pathway")} <select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{tx("School year")} <select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{[1,2,3,4,5,6].map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><span className="library-hint">{child?'Showing subjects for '+child.name:'Browse without creating a learner'}</span></div>
+   <div className="library-filters"><label>{tx("Learning pathway")} <select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{tx("School year")} <select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{primaryYears.map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><span className="library-hint">{child?'Showing subjects for '+child.name:'Browse without creating a learner'}</span></div>
    <div className="optional-subject-toggle"><button type="button" aria-pressed={showOptional} onClick={()=>setShowOptional(v=>!v)}>{showOptional?'Hide optional-language catalogues':'Show additional optional languages'} <span aria-hidden="true">{showOptional?'−':'+'}</span></button><small>{tx("Optional subjects vary by school.")}</small></div>
    <div className="subjects playful-subjects">{subjectOptions.map((subject,index)=>{
     const total=lessonCountForSubject(bootLessons,subject.name,browseYear,browseSchool);
@@ -589,7 +621,7 @@ function App(){
  {(page==='map'||page==='subject')&&<section className={page==='subject'?'subject-page':'curriculum-map'}><div className="section-heading"><div><span className="mini-label">{tx("🗺️ EXPLORE ALL LESSONS")}</span><h1>{page==='subject'?browseSubject:tx('My Learning Adventure')}</h1><p>{page==='subject'
  ? 'Tahun '+browseYear+' · '+browseSchool+' · '+subjectLessons.length+' '+(subjectLessons.length===1?tx('lesson'):tx('lessons'))
  : tx('Choose your preferred learning pathway, level and topic. These are supplementary lessons, not school classes or exams.')}</p></div></div>
- {page==='map'&&<><div className="library-filters"><label>{tx("Learning pathway")}<select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{tx("Year")}<select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{[1,2,3,4,5,6].map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><label>{tx("Subject")}<select value={browseSubject} onChange={e=>{setBrowseSubject(e.target.value);setBrowseChapter('all')}}>{subjectOptions.map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label></div>
+ {page==='map'&&<><div className="library-filters"><label>{tx("Learning pathway")}<select value={browseSchool} disabled={!!child} onChange={e=>{setSchool(e.target.value);setBrowseSubject('Matematik');setBrowseChapter('all')}}>{['SK','SJKC','SJKT'].map(v=><option key={v}>{v}</option>)}</select></label><label>{tx("Year")}<select value={browseYear} disabled={!!child} onChange={e=>{setYear(Number(e.target.value));setLessonQuery('');setBrowseChapter('all')}}>{primaryYears.map(v=><option key={v} value={v}>Tahun {v}</option>)}</select></label><label>{tx("Subject")}<select value={browseSubject} onChange={e=>{setBrowseSubject(e.target.value);setBrowseChapter('all')}}>{subjectOptions.map(s=><option key={s.id} value={s.name}>{s.name}</option>)}</select></label></div>
  {browseSchool==='SK'&&<label className="map-optional"><input type="checkbox" checked={showOptional} onChange={event=>setShowOptional(event.target.checked)}/> {tx("Show optional languages")}</label>}</>}
  <SubjectMindMap key={browseSubject} subject={browseSubject}/>
  {subjectLessons.length>0&&<LessonSearch query={lessonQuery} onChange={setLessonQuery} count={visibleLessons.length}/>}
@@ -633,7 +665,7 @@ function App(){
  {page==='membership'&&<MembershipPage boot={boot} live={isLive} onApply={()=>setPage('premium-kasih')} onRefresh={()=>refresh().catch(()=>{})} onExplore={()=>setPage('map')}/>}
  {page==='premium-kasih'&&<PremiumKasihApplication student={boot?.role==='STUDENT'} request={authRequest} live={isLive} onSubmitted={()=>refresh().catch(()=>{})}/>}
  </ModuleGate>
- </main><footer><div>{say(uiLanguage,'footerLine',{mode:say(uiLanguage,isLive?'modeLive':'modePreview')})}</div><div className="proease-footer">{say(uiLanguage,'footerRights',{year:new Date().getFullYear()})}</div></footer></div>
+ </main><footer><div>{say(uiLanguage,'footerLine',{edition:edition.name,mode:say(uiLanguage,isLive?'modeLive':'modePreview')})}</div><div className="proease-footer">{say(uiLanguage,'footerRights',{year:new Date().getFullYear()})}</div></footer></div>
 }
 createRoot(document.getElementById('root')).render(<AppBoundary><PlayfulScene/><App/>{!nativeAccountService&&<ReleaseUpdates/>}</AppBoundary>);
 

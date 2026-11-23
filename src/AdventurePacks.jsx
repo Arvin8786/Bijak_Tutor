@@ -13,8 +13,8 @@ export default function AdventurePacks({lessons=[],year=1,school='SK',childId=''
   </div>
   <div className="adventure-quest" aria-label={tx("Suggested learning mission")}>
    <div className="quest-symbol" aria-hidden="true">🎯</div>
-   <div className="quest-copy"><span className="tiny-heading">{tx("YOUR NEXT MINI MISSION")}</span><strong>{featured?featured.lesson.title:'Choose your first adventure'}</strong><small>{featured?featured.pack.title+' • 1 lesson at a time':'Prasekolah games are available too'}</small></div>
-   {featured?<button type="button" className="quest-go" onClick={()=>onOpen(featured.lesson.id)}>{tx("Start mission")} <span aria-hidden="true">→</span></button>:<button type="button" className="quest-go" onClick={onPreschool}>{tx("Explore ABC")} <span aria-hidden="true">→</span></button>}
+   <div className="quest-copy"><span className="tiny-heading">{tx("YOUR NEXT MINI MISSION")}</span><strong>{featured?featured.lesson.title:'Choose your first adventure'}</strong><small>{featured?featured.pack.title+' • 1 lesson at a time':onPreschool?'Prasekolah games are available too':'Browse the subject library for more lessons'}</small></div>
+   {featured?<button type="button" className="quest-go" onClick={()=>onOpen(featured.lesson.id)}>{tx("Start mission")} <span aria-hidden="true">→</span></button>:onPreschool&&<button type="button" className="quest-go" onClick={onPreschool}>{tx("Explore ABC")} <span aria-hidden="true">→</span></button>}
   </div>
   <div className="adventure-grid">
    {packs.map((pack,i)=>{

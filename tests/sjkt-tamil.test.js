@@ -76,4 +76,4 @@ test('tx translates fixed wording only in Tamil',()=>{
  assert.ok(first.length>=300);
 });
 
-test('live catalogue links survive changes to the bundled year bands',()=>{const source=fs.readFileSync(new URL('../src/main.jsx',import.meta.url),'utf8');assert.ok(source.includes('isLive&&boot?.lessons?.some(item=>item.id===id)'));assert.ok(source.includes("isLive?await call('getLesson',childId,id)"));assert.ok(source.includes('activity:listed?.activity'))});
+test('live catalogue links survive changes to the bundled year bands',()=>{const source=fs.readFileSync(new URL('../src/main.jsx',import.meta.url),'utf8');assert.ok(source.includes('isLive&&bootLessons.some(item=>item.id===id)'));assert.ok(source.includes("isLive?await call('getLesson',childId,id)"));assert.ok(source.includes('activity:listed?.activity'))});

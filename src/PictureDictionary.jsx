@@ -10,8 +10,8 @@ function shuffled(items){
  return choices;
 }
 
-export default function PictureDictionary({initialYear,initialLanguage,initialView}){
- const [year,setYear]=useState(()=>WORDS_BY_YEAR[initialYear]?initialYear:0);
+export default function PictureDictionary({initialYear,initialLanguage,initialView,years=WORDS_BY_YEAR.map((_,year)=>year)}){
+ const [year,setYear]=useState(()=>years.includes(Number(initialYear))?Number(initialYear):years[0]);
  const [language,setLanguage]=useState(()=>Math.max(0,DICTIONARY_LANGUAGES.findIndex(([code])=>code===initialLanguage)));
  const [view,setView]=useState(initialView),[audioStatus,setAudioStatus]=useState('');
  const [round,setRound]=useState(0),[result,setResult]=useState(null),[mode,setMode]=useState('clue');
@@ -65,7 +65,7 @@ export default function PictureDictionary({initialYear,initialLanguage,initialVi
    <h1>{initialView==='projects'?'Creative Projects':'Picture Dictionary'}</h1>
    <p>Tap a picture to hear its word, find the matching picture, or make something with the words you learn.</p>
    <div className="dictionary-filters">
-    <label>Learning level<select aria-label="Learning level" value={year} onChange={event=>chooseYear(Number(event.target.value))}>{WORDS_BY_YEAR.map((_,index)=><option key={index} value={index}>{index===0?'Preschool':'Year '+index}</option>)}</select></label>
+    <label>Learning level<select aria-label="Learning level" value={year} onChange={event=>chooseYear(Number(event.target.value))}>{years.map(index=><option key={index} value={index}>{index===0?'Preschool':'Year '+index}</option>)}</select></label>
     <label>Word language<select aria-label="Word language" value={language} onChange={event=>{setLanguage(Number(event.target.value));setAudioStatus('');restart();window.speechSynthesis?.cancel()}}>{DICTIONARY_LANGUAGES.map(([value,label],index)=><option key={value} value={index}>{label}</option>)}</select></label>
    </div>
   </header>

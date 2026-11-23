@@ -33,7 +33,7 @@ export const SHELL_COPY={
   practiceTeaserEyebrow:'🎯 NEW PRACTICE MODULES',practiceTeaserTitle:'Daily questions and flashcards',practiceTeaserText:'Choose a subject and a school year, then try short quizzes, daily challenges and flashcards.',openPractice:'🎯 Open Practice Arena',
   packsTeaserEyebrow:'🚀 NEW LEARNING PACKS',packsTeaserTitle:'Ready for a little adventure?',packsTeaserText:'Pick a themed mission, explore real study notes, and try short quizzes in a friendly learning journey.',openPacks:'Explore learning packs →',
   libraryEyebrow:'📚 EXPLORE YOUR LIBRARY',libraryText:'Pick a colourful subject card to see its learning materials.',
-  footerLine:'BijakLearn Junior · Learn, play and grow · {mode} · Independent supplementary learning',modeLive:'Family learning platform',modePreview:'Public learning preview',
+  footerLine:'{edition} · Learn, play and grow · {mode} · Independent supplementary learning',modeLive:'Family learning platform',modePreview:'Public learning preview',
   footerRights:'A ProEase Studio™ learning experience · © {year} ProEase Studio. All rights reserved.'
  },
  ms:{
@@ -68,7 +68,7 @@ export const SHELL_COPY={
   practiceTeaserEyebrow:'🎯 MODUL LATIHAN BAHARU',practiceTeaserTitle:'Soalan harian dan kad imbas',practiceTeaserText:'Pilih subjek dan tahun persekolahan, kemudian cuba kuiz pendek, cabaran harian dan kad imbas.',openPractice:'🎯 Buka Pusat Latihan',
   packsTeaserEyebrow:'🚀 PAKEJ PEMBELAJARAN BAHARU',packsTeaserTitle:'Sedia untuk pengembaraan kecil?',packsTeaserText:'Pilih misi bertema, terokai nota belajar sebenar, dan cuba kuiz pendek dalam perjalanan belajar yang mesra.',openPacks:'Terokai pakej pembelajaran →',
   libraryEyebrow:'📚 TEROKA PUSTAKA ANDA',libraryText:'Pilih kad subjek yang berwarna-warni untuk melihat bahan pembelajarannya.',
-  footerLine:'BijakLearn Junior · Belajar, bermain dan berkembang · {mode} · Pembelajaran tambahan yang bebas',modeLive:'Platform pembelajaran keluarga',modePreview:'Pratonton pembelajaran awam',
+  footerLine:'{edition} · Belajar, bermain dan berkembang · {mode} · Pembelajaran tambahan yang bebas',modeLive:'Platform pembelajaran keluarga',modePreview:'Pratonton pembelajaran awam',
   footerRights:'Pengalaman pembelajaran ProEase Studio™ · © {year} ProEase Studio. Hak cipta terpelihara.'
  },
  zh:{
@@ -103,7 +103,7 @@ export const SHELL_COPY={
   practiceTeaserEyebrow:'🎯 全新练习模块',practiceTeaserTitle:'每日题目和闪卡',practiceTeaserText:'选择科目和年级，然后试试短测验、每日挑战和闪卡。',openPractice:'🎯 打开练习中心',
   packsTeaserEyebrow:'🚀 全新学习包',packsTeaserTitle:'准备好一次小冒险了吗？',packsTeaserText:'选一个主题任务，阅读真实的学习笔记，在友好的学习旅程中尝试短测验。',openPacks:'探索学习包 →',
   libraryEyebrow:'📚 探索你的资料库',libraryText:'选一张彩色的科目卡片，查看它的学习资料。',
-  footerLine:'BijakLearn Junior · 学习、玩耍、成长 · {mode} · 独立的补充学习',modeLive:'家庭学习平台',modePreview:'公开学习预览',
+  footerLine:'{edition} · 学习、玩耍、成长 · {mode} · 独立的补充学习',modeLive:'家庭学习平台',modePreview:'公开学习预览',
   footerRights:'ProEase Studio™ 学习体验 · © {year} ProEase Studio。保留所有权利。'
  },
  ta:{
@@ -138,7 +138,7 @@ export const SHELL_COPY={
   practiceTeaserEyebrow:'🎯 புதிய பயிற்சித் தொகுதிகள்',practiceTeaserTitle:'தினசரிக் கேள்விகளும் நினைவட்டைகளும்',practiceTeaserText:'ஒரு பாடத்தையும் பள்ளி ஆண்டையும் தேர்ந்தெடுத்து, குறுகிய வினாடி வினாக்கள், தினசரிச் சவால்கள், நினைவட்டைகளை முயலுங்கள்.',openPractice:'🎯 பயிற்சி மையத்தைத் திற',
   packsTeaserEyebrow:'🚀 புதிய கற்றல் தொகுப்புகள்',packsTeaserTitle:'ஒரு சிறிய சாகசத்துக்குத் தயாரா?',packsTeaserText:'ஒரு கருப்பொருள் பணியைத் தேர்ந்தெடுத்து, உண்மையான படிப்புக் குறிப்புகளை ஆராய்ந்து, நட்பான கற்றல் பயணத்தில் குறுகிய வினாடி வினாக்களை முயலுங்கள்.',openPacks:'கற்றல் தொகுப்புகளை ஆராயுங்கள் →',
   libraryEyebrow:'📚 உங்கள் நூலகத்தை ஆராயுங்கள்',libraryText:'வண்ணமயமான பாட அட்டையைத் தேர்ந்தெடுத்து அதன் கற்றல் பொருட்களைப் பாருங்கள்.',
-  footerLine:'BijakLearn Junior · கற்போம், விளையாடுவோம், வளர்வோம் · {mode} · சுயாதீனத் துணைக் கற்றல்',modeLive:'குடும்பக் கற்றல் தளம்',modePreview:'பொதுக் கற்றல் முன்னோட்டம்',
+  footerLine:'{edition} · கற்போம், விளையாடுவோம், வளர்வோம் · {mode} · சுயாதீனத் துணைக் கற்றல்',modeLive:'குடும்பக் கற்றல் தளம்',modePreview:'பொதுக் கற்றல் முன்னோட்டம்',
   footerRights:'ProEase Studio™ கற்றல் அனுபவம் · © {year} ProEase Studio. அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை.'
  }
 };

@@ -26,19 +26,20 @@ export function ReviewQuestions({items,onRetry}) {
  </section>;
 }
 
-export function LearningPaths({lessons,onOpen,onLab,onReview,finished}) {
+export function LearningPaths({lessons,years,onOpen,onLab,onReview,finished}) {
  const [year,setYear]=useState('all');
  const [subject,setSubject]=useState('all');
  const available=new Map(lessons.map(lesson=>[lesson.id,lesson]));
- const paths=PATHS.filter(path=>(year==='all'||String(path.year)===year)&&(subject==='all'||path.subject===subject));
+ const catalogue=PATHS.filter(path=>!years||years.includes(path.year));
+ const paths=catalogue.filter(path=>(year==='all'||String(path.year)===year)&&(subject==='all'||path.subject===subject));
  return <section className="learning-paths">
   <h1>{tx("Learning Paths · Laluan Pembelajaran")}</h1>
   <p>{tx("Follow four steps at your own pace. Learn the idea, play with it, try a quiz, and review.")}</p>
   <div className="library-filters">
    <label>{tx("Year")} <select value={year} onChange={event=>setYear(event.target.value)}><option value="all">{tx("All years")}</option>
-    {[...new Set(PATHS.map(path=>path.year))].map(value=><option key={value} value={value}>Tahun {value}</option>)}</select></label>
+    {[...new Set(catalogue.map(path=>path.year))].map(value=><option key={value} value={value}>Tahun {value}</option>)}</select></label>
    <label>{tx("Subject")} <select value={subject} onChange={event=>setSubject(event.target.value)}><option value="all">{tx("All subjects")}</option>
-    {[...new Set(PATHS.map(path=>path.subject))].map(value=><option key={value}>{value}</option>)}</select></label>
+    {[...new Set(catalogue.map(path=>path.subject))].map(value=><option key={value}>{value}</option>)}</select></label>
   </div>
   {!paths.length&&<p role="status">{tx("No paths for this selection. Try another year or subject.")}</p>}
   {paths.map(path=>{

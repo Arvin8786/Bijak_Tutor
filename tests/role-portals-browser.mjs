@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {WORDS_BY_YEAR} from '../src/pictureDictionary.js';
 export async function checkRolePortalsBrowser(browser,base){
- for(const role of ['ADMIN','PARENT','STUDENT']){
+ for(const [role,year] of [['ADMIN',2],['PARENT',2],['STUDENT',2],['STUDENT',6]]){
   const page=await browser.newPage({viewport:{width:role==='PARENT'?375:1280,height:900}}),errors=[];
   await page.emulateMedia({reducedMotion:'reduce'});
   page.on('pageerror',error=>errors.push(error.message));
@@ -10,11 +10,11 @@ export async function checkRolePortalsBrowser(browser,base){
   await page.route('https://script.google.com/macros/s/**/exec',route=>route.fulfill({
    headers:{'Access-Control-Allow-Origin':'*'},json:{ok:true,value:{parent:null,children:[]}}
   }));
-  await page.addInitScript(role=>{
+  await page.addInitScript(({role,year})=>{
    localStorage.setItem('bijaklearn:ui-language:v1','en');window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';let signIn;
    window.playedWords=[];
    Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>[],cancel(){},speak(word){window.playedWords.push([word.text,word.lang]);}}});
-   const child={id:'fictional-child',name:'Fictional learner',year:2,school:'SK',language:'en'};
+   const child={id:'fictional-child',name:'Fictional learner',year,school:'SK',language:'en'};
    const posted=[];
    function invoke(method,...args){
     if(method==='listParentNoticesAdmin')return posted;
@@ -34,7 +34,7 @@ export async function checkRolePortalsBrowser(browser,base){
     throw Error('Unexpected mocked request: '+method);
    }
    window.google={accounts:{id:{initialize(options){signIn=options.callback},renderButton(container){const button=document.createElement('button');button.textContent='Test Google account';button.onclick=()=>signIn({credential:'fictional-token'});container.append(button)}}},script:{run:{withSuccessHandler(success){return {withFailureHandler:failure=>new Proxy({},{get:(_,method)=>(...args)=>{const respond=()=>{try{success(invoke(method,...args))}catch(error){failure(error)}};if(method==='getPortalBootstrap')setTimeout(respond,400);else respond()}})}}}}};
-  },role);
+  },{role,year});
   await page.goto(base,{waitUntil:'networkidle'});
 
   await page.getByRole('button',{name:'Test Google account',exact:true}).click();
@@ -76,6 +76,7 @@ export async function checkRolePortalsBrowser(browser,base){
    await announcement.getByRole('button',{name:'Close'}).click();
    const directory=page.getByRole('region',{name:'Linked children'});
    await directory.getByText('Fictional learner',{exact:true}).waitFor();
+   await directory.getByText('BijakLearn Junior',{exact:true}).waitFor();
    await directory.getByRole('button',{name:'View progress · Fictional learner',exact:true}).click();
    await page.locator('#child-report-fictional-child').waitFor();
    await directory.getByRole('button',{name:'Edit profile · Fictional learner',exact:true}).click();
@@ -85,7 +86,7 @@ export async function checkRolePortalsBrowser(browser,base){
    await page.getByRole('button',{name:'Enrol a child',exact:true}).click();await page.getByLabel('Student Google email (optional)',{exact:true}).waitFor();await page.getByText('parent@test.invalid',{exact:true}).waitFor();
    await page.getByRole('button',{name:'Comments & suggestions',exact:true}).click();await page.getByLabel('Your message',{exact:true}).fill('Fictional suggestion for testing');await page.getByRole('button',{name:'Send to BijakLearn Team',exact:true}).click();await page.getByText('Saved successfully.',{exact:true}).waitFor();
    await page.locator('.portal-language select').selectOption('ta');await page.getByRole('button',{name:'வெளியேறு',exact:true}).waitFor();await page.locator('.portal-language select').selectOption('en');await page.getByRole('button',{name:'Sign out',exact:true}).waitFor();
-  }else{
+  }else if(year===2){
    await page.getByRole('heading',{name:/Learn, explore and grow/}).waitFor();
    await page.locator('nav.nav').getByRole('button',{name:'Picture Dictionary',exact:true}).click();
    await page.getByRole('heading',{name:'Picture Dictionary',exact:true}).waitFor();
@@ -101,9 +102,15 @@ export async function checkRolePortalsBrowser(browser,base){
    await page.getByRole('status').filter({hasText:'Correct!'}).waitFor();
    await page.getByLabel('Challenge',{exact:true}).selectOption('audio');
    await page.getByRole('button',{name:'Play the mystery word',exact:false}).waitFor();
+   assert.deepEqual(await page.getByLabel('Learning level',{exact:true}).locator('option').evaluateAll(options=>options.map(option=>option.value)),['0','1','2','3']);
+   assert.equal(await page.locator('.portal-shell').count(),0);
+  }else{
+   await page.getByRole('heading',{name:'BijakLearn Junior Plus',exact:true}).waitFor();
+   assert.equal(await page.locator('nav.nav').getByRole('button',{name:/Preschool/}).count(),0);
+   assert.deepEqual(await page.locator('.library-filters select').nth(1).locator('option').evaluateAll(options=>options.map(option=>option.value)),['4','5','6']);
    await page.locator('nav.nav').getByRole('button',{name:'Creative Projects',exact:true}).click();
-   await page.getByLabel('Learning level',{exact:true}).selectOption('6');
    await page.getByRole('heading',{name:'Pitch a cleaner school',exact:true}).waitFor();
+   assert.deepEqual(await page.getByLabel('Learning level',{exact:true}).locator('option').evaluateAll(options=>options.map(option=>option.value)),['4','5','6']);
    for(const item of await page.locator('.dictionary-project input[type="checkbox"]').all())await item.check();
    await page.getByRole('status').filter({hasText:'Project complete'}).waitFor();
    await page.getByLabel('Choose a project',{exact:true}).selectOption('bonus');

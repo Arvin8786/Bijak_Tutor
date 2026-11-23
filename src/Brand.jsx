@@ -1,9 +1,10 @@
 import React from 'react';
+import {JUNIOR} from './learningEditions.js';
 import {SHELL_COPY} from './shellCopy.js';
 export const APP_ICON='./icons/app-icon.svg';
 /** One brand mark across every role, sign-in and the installed app. */
-export default function Brand({subtitle='',compact=false}){
- return <span className={'bl-brand'+(compact?' bl-brand-compact':'')}><img className="bl-brand-icon" src={APP_ICON} width="52" height="52" alt=""/><span className="bl-brand-copy"><strong>BijakLearn <em>Junior</em></strong>{subtitle&&<small>{subtitle}</small>}</span></span>;
+export default function Brand({subtitle='',compact=false,edition=JUNIOR}){
+ return <span className={'bl-brand'+(compact?' bl-brand-compact':'')}><img className="bl-brand-icon" src={APP_ICON} width="52" height="52" alt=""/><span className="bl-brand-copy"><strong>BijakLearn <em>{edition.name.replace(/^BijakLearn /,'')}</em></strong>{subtitle&&<small>{subtitle}</small>}</span></span>;
 }
 export function BrandCredit({language='en'}){
  const copy=SHELL_COPY[language]||SHELL_COPY.en;

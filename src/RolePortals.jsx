@@ -1,4 +1,5 @@
 import {NoticePublisher,ParentNoticePopup} from './ParentNotices.jsx';
+import {learningEditionForYear} from './learningEditions.js';
 import {useSheetRefresh} from './sheetRefresh.js';
 import Brand,{APP_ICON,PortalGlyph,BrandCredit} from './Brand.jsx';
 import React,{useEffect,useState} from 'react';
@@ -77,6 +78,7 @@ export function RolePortals({boot,request,onSignOut}){
     return <article className="child-directory-card" key={child.id}>
      <strong>{child.name}</strong>
      <span>{child.year===0?t('Preschool'):t('Year')+' '+child.year} · {child.school}</span>
+     <span>{learningEditionForYear(child.year)?.name}</span>
      {link?.studentEmail&&<span>{link.studentEmail}</span>}
      <div><button type="button" aria-label={t('View progress')+' · '+child.name} onClick={()=>openChild(child.id)}>{t('View progress')}</button>
      <button type="button" aria-label={t('Edit profile')+' · '+child.name} onClick={()=>openChild(child.id,true)}>{t('Edit profile')}</button></div>
