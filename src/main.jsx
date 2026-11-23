@@ -41,6 +41,7 @@ import GrowthHub from './GrowthHub.jsx';
 import './growth.css';
 import WordTilesGame from './WordTilesGame.jsx';
 import FreeLibrary from './FreeLibrary.jsx';
+import LanguageStudio from './LanguageStudio.jsx';
 import './word-tiles.css';
 import ActivityArcade from './ActivityArcade.jsx';
 import LearningMission from './LearningMission.jsx';
@@ -535,6 +536,7 @@ function App(){
    <NavButton icon="🤖" label={say(uiLanguage,'tutor')} active={page==='tutor'} onClick={()=>setPage('tutor')}/>
    <NavButton icon="🔬" label={say(uiLanguage,'science')} active={page==='science-lab'} onClick={()=>setPage('science-lab')}/>
    <NavButton icon="📚" label="Free Library" active={page==='free-library'} onClick={()=>setPage('free-library')}/>
+   <NavButton icon="🗣️" label="Learn a Language and Skill" active={page==='language-studio'} onClick={()=>setPage('language-studio')}/>
    <NavButton icon="📖" label="Picture Dictionary" active={page==='dictionary'} onClick={()=>setPage('dictionary')}/>
    <NavButton icon="📺" label="Learning Videos" active={page==='videos'} onClick={()=>setPage('videos')}/>
    <NavButton icon="🧮" label={say(uiLanguage,'maths')} active={page==='maths-studio'} onClick={()=>setPage('maths-studio')}/>
@@ -574,6 +576,7 @@ function App(){
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<><AccountAccessPanel request={authRequest}/><StudentAccessPanel request={authRequest}/><KasihReviewPanel request={authRequest}/></>}
  {page==='maths-studio'&&<MathsStudio language={uiLanguage} lessons={activeLessons} initialYear={browseYear} years={primaryYears} school={browseSchool} onOpenLesson={openLesson}/>}
  {page==='science-lab'&&<ScienceLab language={uiLanguage}/>}
+ {page==='language-studio'&&<LanguageStudio openSkill={()=>setPage('creative-projects')}/>}
  {page==='free-library'&&<FreeLibrary openWordTiles={()=>setPage('wordgame')} request={isLive&&boot?.role==='STUDENT'?authRequest:undefined}/>}
  {page==='arcade'&&<ActivityArcade edition={edition}/>}
  {page==='wordgame'&&<WordTilesGame/>}
