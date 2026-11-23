@@ -7,7 +7,7 @@ import VideoLibrary from './VideoLibrary.jsx';
 // Capture a referral only in this tab; no tracking cookies, email addresses or child data in URLs.
 function getReferralCode(){try{const code=new URL(window.location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('bijaklearn:referral',code);return sessionStorage.getItem('bijaklearn:referral')||''}catch{return ''}}
 getReferralCode();
-import {ACCOUNT_URL,GOOGLE_CLIENT_ID,remoteAccountCall} from './accountTransport.js';
+import {ACCOUNT_URL,GOOGLE_CLIENT_ID,AccountConnectionError,remoteAccountCall} from './accountTransport.js';
 import {RolePortals,StudentUsage} from './RolePortals.jsx';
 import OAuthLogin from './OAuthLogin.jsx';
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
@@ -102,7 +102,7 @@ async function localCall(method,args){
  if(method==='getParentReport'){if(args[2]!==mockPin)throw Error('Incorrect parent PIN');const childId=args[1];const skills=Object.entries(mockAttempts).filter(([k])=>k.startsWith(childId+'/'));const attempts=skills.flatMap(([,s])=>s.attempts);return {attempts:attempts.length,errors:attempts.filter(a=>!a.correct).length,independent:attempts.filter(a=>a.correct&&!a.hints&&a.mode!=='choice').length,mastered:skills.filter(([,s])=>evaluateSkill(s).mastered).length,topics:skills.map(([k,s])=>({lessonId:k.split('/')[1],...evaluateSkill(s)})),recent:attempts.slice(-20)};}
  throw Error('Unsupported demo operation: '+method)
 }
-function api(method,...args){const pending=!isLive?localCall(method,args):!nativeAccountService?remoteAccountCall(method,...args):new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));return pending.catch(error=>{throw new Error(String(error.message||error).replace(/\badministrator\b/gi,'BijakLearn Team'))});}
+function api(method,...args){const pending=!isLive?localCall(method,args):!nativeAccountService?remoteAccountCall(method,...args):new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));return pending.catch(error=>{if(error instanceof AccountConnectionError)throw error;throw new Error(String(error.message||error).replace(/\badministrator\b/gi,'BijakLearn Team'))});}
 function accountNotice(error) {
  if(error.message.includes('[STUDENT_NOT_LINKED]'))return 'Your Google account is not linked to a learner profile. Ask your parent or BijakLearn Team to enable student sign-in.';
  if(error.message.includes('[STUDENT_REVOKED]'))return 'Student sign-in is unavailable. Ask your parent or BijakLearn Team to check your profile link.';
@@ -110,6 +110,18 @@ function accountNotice(error) {
  if (error.message.includes('[ACCOUNT_PENDING]')) return 'Your account is waiting for BijakLearn Team approval. Sign in again once access is granted.';
  if (error.message.includes('[ACCOUNT_REVOKED]')) return 'Your account access has been blocked. Contact your BijakLearn Team.';
  return '';
+}
+function signInFailure(error,role){
+ if(error instanceof AccountConnectionError)return 'BijakLearn could not reach its account service. Check your connection and try Google sign-in again.';
+ const notice=accountNotice(error);
+ if(notice)return notice;
+ if(/(?:google identity verification failed|invalid google identity|sign in with your google account)/i.test(error.message)){
+  return 'Google could not verify this sign-in. Choose your Google account again.';
+ }
+ if(role==='admin'&&/(?:team access required|team account required|team only)/i.test(error.message)){
+  return 'Choose the Google account registered for BijakLearn Team access.';
+ }
+ return 'BijakLearn could not load your account. Please try signing in again.';
 }
 function GoogleLogin({onToken,notice,signingIn}){
  const [issue,setIssue]=useState(''),[googleReady,setGoogleReady]=useState(false);
@@ -392,6 +404,7 @@ function App(){
   try{
    const data=await api(portalV2?'getPortalBootstrap':role==='student'?'getStudentBootstrap':'getBootstrap',credential,...(portalV2?[role,getReferralCode(),'owner-roles-v1']:[]));
    if(attempt!==loginAttempt.current||activeToken.current!==credential)return;
+   if(!data||!Array.isArray(data.children))throw new Error('Incomplete account response');
    if(data.role==='STUDENT'){setGrowthAudience('junior');setGrowthKind('ai');}
    const session=data.ownerRoleAccess?{idToken:credential,role:data.role.toLowerCase(),childId:data.role==='STUDENT'?data.children[0]?.id||'':''}:credential;
    activeToken.current=session;
@@ -401,7 +414,7 @@ function App(){
    setToken(session);
    setSigningIn(false);
   }catch(error){
-   if(attempt===loginAttempt.current&&activeToken.current===credential)endSession(accountNotice(error)||'Sign-in could not be completed. Please try again.');
+   if(attempt===loginAttempt.current&&activeToken.current===credential)endSession(signInFailure(error,role));
   }
  },[authRequest,endSession]);
  async function refresh(){const b=await call(portalV2?'getPortalBootstrap':boot?.role==='STUDENT'?'getStudentBootstrap':'getBootstrap',...(portalV2?[boot?.role?.toLowerCase()]:[]));setBoot(b);if(!b.children.some(x=>x.id===childId))setChildId(b.children[0]?.id||'');}
