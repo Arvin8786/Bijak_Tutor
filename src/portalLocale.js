@@ -8,6 +8,8 @@ export const writePortalLanguage=code=>{try{localStorage.setItem(KEY,code)}catch
 // Keys are the English strings used in the parent dashboard.
 export const PORTAL_COPY={
  ms:{
+  'Add a child':'Tambah anak',
+  'Linked children':'Anak yang dipautkan','No linked children yet.':'Belum ada anak yang dipautkan.','View progress':'Lihat kemajuan','Edit profile':'Edit profil','Show all child reports':'Lihat semua laporan anak','Preschool':'Prasekolah','Save profile':'Simpan profil','Cancel':'Batal',
   'Child reports':'Laporan anak','Enrol a child':'Daftar anak','Comments & suggestions':'Komen & cadangan','Membership & payments':'Keahlian & pembayaran','Referrals & earnings':'Rujukan & pendapatan','Premium Kasih':'Premium Kasih',
   'Parent dashboard':'Papan pemuka ibu bapa','Sign out':'Log keluar','Parent navigation':'Navigasi ibu bapa','YOUR FAMILY SPACE':'RUANG KELUARGA ANDA',
   'Private reports for children linked to your verified parent Google account.':'Laporan peribadi untuk anak yang dipautkan ke akaun Google ibu bapa anda yang telah disahkan.','Language':'Bahasa','Saved successfully.':'Berjaya disimpan.',
@@ -25,6 +27,8 @@ export const PORTAL_COPY={
   'Please do not include passwords, payment-card details or sensitive documents.':'Sila jangan sertakan kata laluan, butiran kad pembayaran atau dokumen sensitif.','Send to BijakLearn Team':'Hantar kepada pentadbir','Your messages and replies':'Mesej dan balasan anda','BijakLearn Team reply':'Balasan pentadbir','No messages yet.':'Belum ada mesej.'
  },
  zh:{
+  'Add a child':'添加孩子',
+  'Linked children':'已关联的孩子','No linked children yet.':'尚未关联孩子。','View progress':'查看进度','Edit profile':'编辑档案','Show all child reports':'查看所有孩子的报告','Preschool':'学前班','Save profile':'保存档案','Cancel':'取消',
   'Child reports':'孩子报告','Enrol a child':'登记孩子','Comments & suggestions':'意见与建议','Membership & payments':'会员与付款','Referrals & earnings':'推荐与收益','Premium Kasih':'Premium Kasih',
   'Parent dashboard':'家长控制台','Sign out':'退出登录','Parent navigation':'家长导航','YOUR FAMILY SPACE':'您的家庭空间',
   'Private reports for children linked to your verified parent Google account.':'仅限已关联到您已验证的家长 Google 账户的孩子的私人报告。','Language':'语言','Saved successfully.':'保存成功。',
@@ -42,6 +46,8 @@ export const PORTAL_COPY={
   'Please do not include passwords, payment-card details or sensitive documents.':'请勿包含密码、支付卡信息或敏感文件。','Send to BijakLearn Team':'发送给管理员','Your messages and replies':'您的留言和回复','BijakLearn Team reply':'管理员回复','No messages yet.':'暂无留言。'
  },
  ta:{
+  'Add a child':'குழந்தையைச் சேர்க்கவும்',
+  'Linked children':'இணைக்கப்பட்ட குழந்தைகள்','No linked children yet.':'இதுவரை எந்தக் குழந்தையும் இணைக்கப்படவில்லை.','View progress':'முன்னேற்றத்தைக் காண்க','Edit profile':'சுயவிவரத்தைத் திருத்து','Show all child reports':'அனைத்து குழந்தைகளின் அறிக்கைகளையும் காண்க','Preschool':'முன்பள்ளி','Save profile':'சுயவிவரத்தைச் சேமி','Cancel':'ரத்துசெய்',
   'Child reports':'குழந்தை அறிக்கைகள்','Enrol a child':'குழந்தையைப் பதிவு செய்','Comments & suggestions':'கருத்துகள் & பரிந்துரைகள்','Membership & payments':'உறுப்பினர் & கட்டணங்கள்','Referrals & earnings':'பரிந்துரைகள் & வருவாய்','Premium Kasih':'Premium Kasih',
   'Parent dashboard':'பெற்றோர் முகப்புப் பலகை','Sign out':'வெளியேறு','Parent navigation':'பெற்றோர் வழிசெலுத்தல்','YOUR FAMILY SPACE':'உங்கள் குடும்ப இடம்',
   'Private reports for children linked to your verified parent Google account.':'உங்கள் சரிபார்க்கப்பட்ட பெற்றோர் Google கணக்குடன் இணைக்கப்பட்ட குழந்தைகளுக்கான தனிப்பட்ட அறிக்கைகள்.','Language':'மொழி','Saved successfully.':'வெற்றிகரமாகச் சேமிக்கப்பட்டது.',

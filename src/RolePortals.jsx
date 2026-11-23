@@ -41,14 +41,49 @@ export function RolePortals({boot,request,onSignOut}){
  const chooseLanguage=code=>{setLanguage(code);writePortalLanguage(code)};
  const [page,setPage]=useState(tabs[0][0]),[refresh,setRefresh]=useState(0),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
  const [sheetRevision,reloadSheets]=useSheetRefresh();
+ const [selectedChild,setSelectedChild]=useState(''),[editingChild,setEditingChild]=useState('');
  const overview=useRemote(request,admin?'getAdministrationOverview':'getParentDashboard',refresh+sheetRevision);
  async function mutate(method,...args){setBusy(true);setNotice('');try{const result=await request(method,...args);setRefresh(n=>n+1);setNotice(t('Saved successfully.'));return result}catch(error){setNotice(error.message);throw error}finally{setBusy(false)}}
  const data=overview.data;
+ const reportChildren=!admin&&Array.isArray(data?.children)?data.children:null;
+ const children=reportChildren??boot.children??[];
+ const editing=children.find(child=>child.id===editingChild);
+ const selection=children.some(child=>child.id===selectedChild)?selectedChild:'';
+ function openChild(id,edit=false){
+  setSelectedChild(id);
+  setEditingChild(edit?id:'');
+  setPage('reports');
+  setNotice('');
+ }
+ useEffect(()=>{
+  if(page!=='reports'||!selection)return;
+  const target=document.getElementById(editing?'child-profile-editor':'child-report-'+selection);
+  if(target){target.focus({preventScroll:true});target.scrollIntoView({block:'start'});}
+ },[selection,editing?.id,page,reportChildren?.some(child=>child.id===selection)]);
+
  const name=overview.data?.parent?.name||boot.user?.name||boot.parent?.name||'Welcome';
  const initials=name.trim().split(/\s+/).slice(0,2).map(part=>part[0]).join('').toUpperCase();
  return <div lang={lang} className={'portal-shell portal-'+(admin?'admin':'parent')}><header className="portal-header"><Brand subtitle={admin?'BijakLearn Team console':t('Parent dashboard')}/><div className="portal-user"><span className="portal-avatar" aria-hidden="true">{initials}</span><span className="portal-user-copy"><strong>{name}</strong></span>{!admin&&<label className="portal-language"><span>{t('Language')}</span><select aria-label={t('Language')} value={language} onChange={e=>chooseLanguage(e.target.value)}>{PORTAL_LANGUAGES.map(([code,name])=><option key={code} value={code}>{name}</option>)}</select></label>}<button onClick={onSignOut}>{admin?'Sign out':t('Sign out')}</button></div></header>
  <nav className="portal-nav" aria-label={admin?'BijakLearn Team navigation':t('Parent navigation')}><div className="portal-nav-label">{admin?'YOUR WORKSPACE':t('YOUR FAMILY SPACE')}</div>{tabs.map(([id,label])=><button key={id} aria-current={page===id?'page':undefined} onClick={()=>{setPage(id);setRefresh(n=>n+1);setNotice('')}}><span className="portal-nav-icon"><PortalGlyph name={id}/></span><span>{admin?label:t(label)}</span><span className="portal-nav-arrow" aria-hidden="true">›</span></button>)}</nav>
  <main className="portal-main"><section className="portal-welcome"><div><h1>{(label=>admin?label:t(label))(tabs.find(tab=>tab[0]===page)?.[1])}</h1><p className="portal-subtitle">{admin?'Manage accounts, memberships and parent notices.':t('Private reports for children linked to your verified parent Google account.')}</p></div><div className="portal-welcome-art" aria-hidden="true"><span className="portal-spark spark-one">✦</span><img src={APP_ICON} alt=""/><span className="portal-spark spark-two">✧</span></div></section>{notice&&<p className="portal-notice" role="status">{notice}</p>}<div className="actions"><button type="button" onClick={reloadSheets} disabled={busy}>Refresh records</button><small>Updates automatically every 15 seconds while this page is visible.</small>{admin&&data?.databaseUrl&&<a href={data.databaseUrl} target="_blank" rel="noopener noreferrer">Open linked database</a>}</div><RemoteState result={overview}/>
+ {!admin&&<section className="panel child-directory" aria-labelledby="child-directory-title">
+  <div className="child-directory-heading"><h2 id="child-directory-title">{t('Linked children')}</h2><button type="button" onClick={()=>{setPage('enrol');setNotice('')}}>{t('Add a child')}</button></div>
+  {!children.length&&data&&<p>{t('No linked children yet.')}</p>}
+  <div className="child-directory-grid">
+   {children.map(child=>{
+    const link=data?.enrolments?.find(record=>String(record.childId)===String(child.id));
+    return <article className="child-directory-card" key={child.id}>
+     <strong>{child.name}</strong>
+     <span>{child.year===0?t('Preschool'):t('Year')+' '+child.year} · {child.school}</span>
+     {link?.studentEmail&&<span>{link.studentEmail}</span>}
+     <div><button type="button" aria-label={t('View progress')+' · '+child.name} onClick={()=>openChild(child.id)}>{t('View progress')}</button>
+     <button type="button" aria-label={t('Edit profile')+' · '+child.name} onClick={()=>openChild(child.id,true)}>{t('Edit profile')}</button></div>
+    </article>;
+   })}
+  </div>
+ </section>}
+ {!admin&&page==='reports'&&editing&&<ChildProfileEditor key={editing.id} child={editing} mutate={mutate} busy={busy} t={t} onClose={()=>setEditingChild('')}/>}
+ {!admin&&page==='reports'&&selection&&children.length>1&&<button type="button" onClick={()=>{setSelectedChild('');setEditingChild('')}}>{t('Show all child reports')}</button>}
  {data&&admin&&page==='overview'&&<><div className="statgrid"><article className="stat"><strong>{data.children}</strong><span>Linked learner profiles</span></article><article className="stat"><strong>{minutes(data.reportedSeconds7Days)}</strong><span>Reported learning time · last 7 days</span></article></div><section className="panel service-settings"><h2>Service settings</h2><p>A clear view of the services supporting your learning community.</p><div className="service-status-grid">{Object.entries(data.settings).map(([key,value])=><div className={'service-status '+(value?'is-ready':'needs-setup')} key={key}><span className="service-status-dot" aria-hidden="true"/><span>{({clientIdConfigured:'Google sign-in',spreadsheetConfigured:'Learning database',adminConfigured:'BijakLearn Team identity',pinPepperConfigured:'Private security settings',documentsConfigured:'Private document storage'})[key]||key.replace(/([A-Z])/g,' $1')}<strong>{value?'Configured':'Not configured'}</strong></span></div>)}</div><p>Secrets and private identifiers are never displayed here. Usage time is approximate activity reporting, not verified attendance.</p><button onClick={()=>setRefresh(n=>n+1)}>Refresh overview</button></section></>}
  {admin&&page==='accounts'&&<><AccountAccessPanel request={request} revision={sheetRevision+refresh}/><StudentAccessPanel request={request} revision={sheetRevision+refresh}/></>}
  {admin&&page==='enrolments'&&<EnrolmentApprovals request={request} refresh={refresh+sheetRevision} mutate={mutate} busy={busy}/>}
@@ -59,12 +94,29 @@ export function RolePortals({boot,request,onSignOut}){
  {admin&&page==='offers'&&<FamilyCommerce revision={sheetRevision+refresh} request={request} admin section="offers"/>}
  {admin&&page==='kasih'&&<KasihReviewPanel request={request} revision={sheetRevision+refresh}/>}
  {admin&&page==='feedback'&&<AdminFeedback request={request} refresh={refresh+sheetRevision} mutate={mutate} busy={busy}/>}
- {!admin&&data&&page==='reports'&&<><p>{t('Results below come from server-marked lesson checks. Games and practice that do not submit an assessment are not counted as test results. Reported activity time excludes hidden pages and extended inactivity and is approximate.')}</p>{!data.children.length&&<p>{t('No children are paired yet. Enrol a child and add their separate Google account from Enrol a child.')}</p>}{data.children.map(child=><section className="panel" key={child.id}><h2>{child.name} · {t('Year')} {child.year}</h2><div className="statgrid">{[['Test attempts',child.attempts],['Correct answers',child.correct],['Accuracy',Number.isFinite(child.accuracy)?child.accuracy+'%':t('No tests yet')],['Practice milestones',child.mastered],['Reported learning time',minutes(child.reportedSeconds)]].map(([label,value])=><article className="stat" key={label}><strong>{value}</strong><span>{t(label)}</span></article>)}</div><h3>{t('Daily usage')}</h3>{child.dailyUsage.length?<ul>{child.dailyUsage.map(day=><li key={day.date}>{day.date}: {minutes(day.seconds)}</li>)}</ul>:<p>{t('No usage reported yet.')}</p>}<h3>{t('Recent test results')}</h3>{child.recent.length?<ul>{child.recent.map((attempt,i)=><li key={i}>{attempt.createdAt.slice(0,16).replace('T',' ')} · {attempt.lessonId}: {attempt.correct?t('Correct'):t('Needs practice')} · {attempt.hints} {t('hints')}</li>)}</ul>:<p>{t('No test results yet.')}</p>}</section>)}<button onClick={()=>setRefresh(n=>n+1)}>{t('Refresh child reports')}</button></>}
+ {!admin&&data&&page==='reports'&&<><p>{t('Results below come from server-marked lesson checks. Games and practice that do not submit an assessment are not counted as test results. Reported activity time excludes hidden pages and extended inactivity and is approximate.')}</p>{!data.children.length&&<p>{t('No children are paired yet. Enrol a child and add their separate Google account from Enrol a child.')}</p>}{data.children.filter(child=>!selection||selection===child.id).map(child=><section className="panel child-report" key={child.id} id={'child-report-'+child.id} tabIndex={-1}><h2>{child.name} · {child.year===0?t('Preschool'):t('Year')+' '+child.year}</h2><div className="statgrid">{[['Test attempts',child.attempts],['Correct answers',child.correct],['Accuracy',Number.isFinite(child.accuracy)?child.accuracy+'%':t('No tests yet')],['Practice milestones',child.mastered],['Reported learning time',minutes(child.reportedSeconds)]].map(([label,value])=><article className="stat" key={label}><strong>{value}</strong><span>{t(label)}</span></article>)}</div><h3>{t('Daily usage')}</h3>{child.dailyUsage.length?<ul>{child.dailyUsage.map(day=><li key={day.date}>{day.date}: {minutes(day.seconds)}</li>)}</ul>:<p>{t('No usage reported yet.')}</p>}<h3>{t('Recent test results')}</h3>{child.recent.length?<ul>{child.recent.map((attempt,i)=><li key={i}>{attempt.createdAt.slice(0,16).replace('T',' ')} · {attempt.lessonId}: {attempt.correct?t('Correct'):t('Needs practice')} · {attempt.hints} {t('hints')}</li>)}</ul>:<p>{t('No test results yet.')}</p>}</section>)}<button onClick={()=>setRefresh(n=>n+1)}>{t('Refresh child reports')}</button></>}
  {!admin&&data&&page==='enrol'&&<ParentEnrolment parent={data.parent} enrolments={data.enrolments} mutate={mutate} busy={busy} t={t}/>}
  {!admin&&data&&page==='feedback'&&<ParentFeedback feedback={data.feedback} mutate={mutate} busy={busy} t={t}/>}
  {!admin&&['membership','referrals'].includes(page)&&<FamilyCommerce revision={sheetRevision+refresh} request={request} section={page}/>}
  {!admin&&page==='kasih'&&<PremiumKasihApplication request={request} live={true} student={false} onSubmitted={()=>setRefresh(n=>n+1)}/>}
  </main>{!admin&&<ParentNoticePopup request={request}/>}<footer className="portal-footer">BijakLearn Junior · {admin?'BijakLearn Team operations':t('Family reports')} · {admin?'Google account access is checked by the server.':t('Google account access is checked by the server.')}<BrandCredit language={lang}/></footer></div>;
+}
+function ChildProfileEditor({child,mutate,busy,t,onClose}){
+ const [form,setForm]=useState({name:child.name,year:child.year,school:child.school||'SK',language:child.language||'ms'});
+ function field(event){const {name,value}=event.target;setForm(previous=>({...previous,[name]:value}));}
+ return <section className="panel child-report" id="child-profile-editor" tabIndex={-1}>
+  <h2>{t('Edit profile')} · {child.name}</h2>
+  <form className="portal-form" onSubmit={async event=>{
+   event.preventDefault();
+   try{await mutate('updateChildDetails',child.id,{...form,year:Number(form.year)});onClose()}catch{}
+  }}>
+   <label>{t('Child nickname')}<input name="name" value={form.name} onChange={field} required maxLength={40}/></label>
+   <label>{t('School year')}<select name="year" value={form.year} onChange={field}>{[0,1,2,3,4,5,6].map(year=><option key={year} value={year}>{year===0?t('Preschool'):year}</option>)}</select></label>
+   <label>{t('School stream')}<select name="school" value={form.school} onChange={field}>{['SK','SJKC','SJKT'].map(school=><option key={school}>{school}</option>)}</select></label>
+   <label>{t('Learning language')}<select name="language" value={form.language} onChange={field}>{PORTAL_LANGUAGES.map(([code,label])=><option key={code} value={code}>{label}</option>)}</select></label>
+   <div className="actions"><button type="submit" className="primary" disabled={busy}>{t('Save profile')}</button><button type="button" onClick={onClose}>{t('Cancel')}</button></div>
+  </form>
+ </section>;
 }
 function ParentEnrolment({parent,enrolments,mutate,busy,t=x=>x}){
  const [form,setForm]=useState({requestId:crypto.randomUUID(),name:'',studentEmail:'',year:1,school:'SK',language:'ms',consent:false});

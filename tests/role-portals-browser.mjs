@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
+import {WORDS_BY_YEAR} from '../src/pictureDictionary.js';
 export async function checkRolePortalsBrowser(browser,base){
  for(const role of ['ADMIN','PARENT','STUDENT']){
   const page=await browser.newPage({viewport:{width:role==='PARENT'?375:1280,height:900}}),errors=[];
@@ -8,12 +9,15 @@ export async function checkRolePortalsBrowser(browser,base){
   await page.route('https://accounts.google.com/gsi/client',route=>route.fulfill({status:200,contentType:'application/javascript',body:'// Google identity is mocked in this test.'}));
 await page.addInitScript(role=>{
    localStorage.setItem('bijaklearn:ui-language:v1','en');window.BIJAKLEARN_PORTAL_VERSION=2;window.BIJAKLEARN_GOOGLE_CLIENT_ID='test';let signIn;
+   window.playedWords=[];
+   Object.defineProperty(window,'speechSynthesis',{value:{getVoices:()=>[],cancel(){},speak(word){window.playedWords.push([word.text,word.lang]);}}});
    const child={id:'fictional-child',name:'Fictional learner',year:2,school:'SK',language:'en'};
    const posted=[];
    function invoke(method,...args){
     if(method==='listParentNoticesAdmin')return posted;
     if(method==='publishParentNotice'){posted.push({...args[1],id:'test-notice',published:true});return {id:'test-notice'}}
     if(method==='getParentNotices')return [{id:'test-notice',kind:'Announcement',title:'Holiday schedule',message:'Classes resume on Monday.'}];
+    if(method==='updateChildDetails'){Object.assign(child,args[2]);return {ok:true}}
     if(method==='getPortalBootstrap')return {role,user:{name:'Test account'},parent:{name:'Test parent',email:'parent@test.invalid'},canManageAccounts:role==='ADMIN',children:role==='STUDENT'?[child]:[],lessons:[],access:{active:false,plan:'FREE'},modules:[]};
     if(method==='getCommerceAdministration')return {settings:{commissionBps:0,paymentInstructions:'Scan our administrator QR',qrUploadId:''},orders:[],discounts:[],commissions:[],payouts:[],uploadsConfigured:false};
     if(method==='getEducationalVideos')return [];
@@ -26,11 +30,12 @@ await page.addInitScript(role=>{
     if(method==='submitParentFeedback')return {id:'test-feedback'};
     throw Error('Unexpected mocked request: '+method);
    }
-   window.google={accounts:{id:{initialize(options){signIn=options.callback},renderButton(container){const button=document.createElement('button');button.textContent='Test Google account';button.onclick=()=>signIn({credential:'fictional-token'});container.append(button)}}},script:{run:{withSuccessHandler(success){return {withFailureHandler:failure=>new Proxy({},{get:(_,method)=>(...args)=>{try{success(invoke(method,...args))}catch(error){failure(error)}}})}}}}};
+   window.google={accounts:{id:{initialize(options){signIn=options.callback},renderButton(container){const button=document.createElement('button');button.textContent='Test Google account';button.onclick=()=>signIn({credential:'fictional-token'});container.append(button)}}},script:{run:{withSuccessHandler(success){return {withFailureHandler:failure=>new Proxy({},{get:(_,method)=>(...args)=>{const respond=()=>{try{success(invoke(method,...args))}catch(error){failure(error)}};if(method==='getPortalBootstrap')setTimeout(respond,400);else respond()}})}}}}};
   },role);
   await page.goto(base,{waitUntil:'networkidle'});
 
   await page.getByRole('button',{name:'Test Google account',exact:true}).click();
+  await page.getByRole('status').filter({hasText:'Signing in…'}).waitFor();
   if(role==='ADMIN')await page.getByRole('heading',{name:'Service settings',exact:true}).waitFor();
   if(role==='PARENT')await page.getByText('75%',{exact:true}).waitFor();
   await page.locator('.bl-brand-icon').waitFor();
@@ -66,11 +71,42 @@ await page.addInitScript(role=>{
    await page.evaluate(()=>window.dispatchEvent(new Event('online')));
    await announcement.getByRole('heading',{name:'Holiday schedule'}).waitFor();
    await announcement.getByRole('button',{name:'Close'}).click();
+   const directory=page.getByRole('region',{name:'Linked children'});
+   await directory.getByText('Fictional learner',{exact:true}).waitFor();
+   await directory.getByRole('button',{name:'View progress · Fictional learner',exact:true}).click();
+   await page.locator('#child-report-fictional-child').waitFor();
+   await directory.getByRole('button',{name:'Edit profile · Fictional learner',exact:true}).click();
+   await page.getByLabel('Child nickname',{exact:true}).fill('Updated learner');
+   await page.getByRole('button',{name:'Save profile',exact:true}).click();
+   await directory.getByText('Updated learner',{exact:true}).waitFor();
    await page.getByRole('button',{name:'Enrol a child',exact:true}).click();await page.getByLabel('Student Google email',{exact:true}).waitFor();await page.getByText('parent@test.invalid',{exact:true}).waitFor();
    await page.getByRole('button',{name:'Comments & suggestions',exact:true}).click();await page.getByLabel('Your message',{exact:true}).fill('Fictional suggestion for testing');await page.getByRole('button',{name:'Send to BijakLearn Team',exact:true}).click();await page.getByText('Saved successfully.',{exact:true}).waitFor();
    await page.locator('.portal-language select').selectOption('ta');await page.getByRole('button',{name:'வெளியேறு',exact:true}).waitFor();await page.locator('.portal-language select').selectOption('en');await page.getByRole('button',{name:'Sign out',exact:true}).waitFor();
   }else{
-   await page.getByRole('heading',{name:/Learn, explore and grow/}).waitFor();assert.equal(await page.locator('.portal-shell').count(),0);assert.equal(await page.getByRole('button',{name:'Manage account access',exact:true}).count(),0);
+   await page.getByRole('heading',{name:/Learn, explore and grow/}).waitFor();
+   await page.locator('nav.nav').getByRole('button',{name:'Picture Dictionary',exact:true}).click();
+   await page.getByRole('heading',{name:'Picture Dictionary',exact:true}).waitFor();
+   await page.getByLabel('Learning level',{exact:true}).selectOption('0');
+   await page.getByRole('button',{name:'Hear apple',exact:true}).click();
+   assert.deepEqual(await page.evaluate(()=>window.playedWords),[['apple','en-GB']]);
+   await page.getByLabel('Word language',{exact:true}).selectOption('1');
+   await page.getByRole('button',{name:'Hear epal',exact:true}).waitFor();
+   await page.getByRole('button',{name:'Word detective',exact:true}).click();
+   const clue=await page.locator('.dictionary-clue').innerText();
+   const word=WORDS_BY_YEAR[0].find(entry=>entry[5]===clue);
+   await page.getByRole('button',{name:word[1],exact:true}).click();
+   await page.getByRole('status').filter({hasText:'Correct!'}).waitFor();
+   await page.getByLabel('Challenge',{exact:true}).selectOption('audio');
+   await page.getByRole('button',{name:'Play the mystery word',exact:false}).waitFor();
+   await page.locator('nav.nav').getByRole('button',{name:'Creative Projects',exact:true}).click();
+   await page.getByLabel('Learning level',{exact:true}).selectOption('6');
+   await page.getByRole('heading',{name:'Pitch a cleaner school',exact:true}).waitFor();
+   for(const item of await page.locator('.dictionary-project input[type="checkbox"]').all())await item.check();
+   await page.getByRole('status').filter({hasText:'Project complete'}).waitFor();
+   await page.getByLabel('Choose a project',{exact:true}).selectOption('bonus');
+   await page.getByRole('heading',{name:'Design a message from space',exact:true}).waitFor();
+   assert.equal(await page.locator('.dictionary-project input:checked').count(),0);
+   assert.equal(await page.locator('.portal-shell').count(),0);assert.equal(await page.getByRole('button',{name:'Manage account access',exact:true}).count(),0);
   }
   assert.equal(new URL(page.url()).pathname,'/Bijak_Tutor/','Role changes must not navigate away from the app URL');assert.deepEqual(errors,[]);await page.close();
  }

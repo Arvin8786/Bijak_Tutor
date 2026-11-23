@@ -48,7 +48,9 @@ await page.addInitScript(()=>{
   assert.equal(await page.getByLabel('Fictional nickname',{exact:true}).count(),0);
   assert.equal(await page.locator('nav.nav').getByRole('button',{name:'Adults',exact:true}).count(),0);
   await page.locator('nav.nav').getByRole('button',{name:'Membership',exact:true}).click();
-  assert.equal(await page.getByRole('button',{name:'Apply for Premium Kasih',exact:true}).isEnabled(),false);
+  await page.getByRole('heading',{name:'Your membership',exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Apply for Premium Kasih',exact:true}).count(),0);
+  assert.equal(await page.locator('.membership-tiers').count(),0);
   console.log('Passed student role selection, unlinked-account gate, admin linking and student-only interface browser flows.');
  }finally{await page.close()}
 }

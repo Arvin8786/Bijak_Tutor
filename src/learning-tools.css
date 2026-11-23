@@ -1,0 +1,58 @@
+.signin-action { position: relative; min-height: 52px; }
+.signin-progress { display: flex; align-items: center; gap: .65rem; min-height: 44px; margin: .25rem 0; font-weight: 700; }
+.signin-progress span {
+ width: 1.2rem;
+ height: 1.2rem;
+ border: 2px solid #c4e0d9;
+ border-top-color: #08776a;
+ border-radius: 50%;
+ animation: bijak-signin-spin .85s linear infinite;
+}
+@keyframes bijak-signin-spin { to { transform: rotate(360deg); } }
+@media(prefers-reduced-motion:reduce) { .signin-progress span { animation: none; } }
+html[data-motion=off] .signin-progress span { animation: none; }
+
+.child-directory-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .75rem; }
+.child-directory-heading h2 { margin: 0; }
+.child-directory-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,245px),1fr)); gap: .75rem; }
+.child-directory-card {
+ display: grid; gap: .35rem; min-width: 0; padding: .9rem;
+ background: #f2f8f5; border: 1px solid #d1e6df; border-radius: 14px; overflow-wrap: anywhere;
+}
+.child-directory-card strong { color: #174d44; font-size: 1.08rem; }
+.child-directory-card span { color: #405c63; font-size: .86rem; }
+.child-directory-card div { display: flex; gap: .45rem; flex-wrap: wrap; margin-top: .3rem; }
+.child-directory :is(button,.child-directory-card button) { min-height: 42px; }
+.child-report { scroll-margin-top: 6rem; }
+
+.learner-membership p { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem; }
+.learner-membership strong { display: inline-block; background: #dff5ed; color: #105a4f; padding: .42rem .95rem; border-radius: 999px; }
+
+.picture-dictionary { display: grid; gap: 1rem; color: #172d39; }
+body .app .dictionary-intro { background: linear-gradient(118deg,#e5f7ed,#fff5df); border-color: #c9e5d9; }
+.dictionary-intro h1 { margin-top: 0; }
+.dictionary-filters { display: flex; align-items: end; gap: .65rem; flex-wrap: wrap; }
+.dictionary-filters label, .dictionary-quiz > label, .dictionary-project > label { display: grid; gap: .25rem; font-weight: 650; }
+.dictionary-filters select, .dictionary-quiz select, .dictionary-project select { padding: .45rem .7rem; min-height: 44px; }
+.dictionary-tabs { margin: 0; }
+.dictionary-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,145px),1fr)); gap: .65rem; }
+.dictionary-card {
+ display: flex; min-width: 0; width: 100%; min-height: 100px; flex-direction: column; align-items: center;
+ justify-content: center; gap: .4rem; padding: .75rem .4rem; background: #fff;
+ color: #163d46; border: 1px solid #d4e8e2; border-radius: 16px; overflow-wrap: anywhere;
+}
+.dictionary-card:hover:not(:disabled) { background: #f1faf5; border-color: #1f8c79; }
+.dictionary-card:focus-visible { outline: 3px solid #177d71; outline-offset: 3px; }
+.dictionary-picture {
+ display: grid; place-items: center; width: 70px; height: 65px; border-radius: 16px;
+ font-family: 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
+ font-size: 2.35rem; line-height: 1.1; background: #e6f5ed;
+}
+.dictionary-card:nth-child(3n+2) .dictionary-picture { background: #fff0d6; }
+.dictionary-card:nth-child(3n+3) .dictionary-picture { background: #e9e9fa; }
+.dictionary-listen { font-size: .78rem; color: #315c62; }
+.dictionary-clue { padding: .75rem; background: #f3f7f6; border-radius: 12px; }
+.dictionary-quiz .dictionary-grid { margin-block: .75rem; }
+.dictionary-project fieldset { border: 1px solid #c9e5d9; border-radius: 14px; }
+.dictionary-project fieldset label { display: flex; align-items: center; gap: .5rem; min-height: 44px; }
+.dictionary-audio-status { margin: 0; }

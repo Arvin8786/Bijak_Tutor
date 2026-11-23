@@ -1,4 +1,6 @@
 import ReleaseUpdates from './ReleaseUpdates.jsx';
+import PictureDictionary from './PictureDictionary.jsx';
+import './learning-tools.css';
 import {useSheetRefresh} from './sheetRefresh.js';
 import Brand,{BrandCredit,PortalGlyph} from './Brand.jsx';
 import VideoLibrary from './VideoLibrary.jsx';
@@ -109,8 +111,9 @@ function accountNotice(error) {
  if (error.message.includes('[ACCOUNT_REVOKED]')) return 'Your account access has been blocked. Contact your BijakLearn Team.';
  return '';
 }
-function GoogleLogin({onToken,notice}){
- const [issue,setIssue]=useState('');
+function GoogleLogin({onToken,notice,signingIn}){
+ const [issue,setIssue]=useState(''),[googleReady,setGoogleReady]=useState(false);
+ const externalGoogle=isLive&&!window.location.hostname.endsWith('-script.googleusercontent.com');
  const initialRole=['parent','student','admin'].includes(window.BIJAKLEARN_LOGIN_ROLE)?window.BIJAKLEARN_LOGIN_ROLE:'parent';
  const [loginRole,setLoginRole]=useState(initialRole);
  const modeRef=useRef(initialRole);
@@ -131,6 +134,7 @@ function GoogleLogin({onToken,notice}){
      if(container){
       container.replaceChildren();
       window.google.accounts.id.renderButton(container,{theme:'outline',size:'medium',shape:'rectangular',text:'signin_with',width:260});
+      setGoogleReady(true);
      }
     }catch{setIssue('Google sign-in could not be initialized. Please try again.')}
    }else if(++tries>80){clearInterval(timer);setIssue('Google sign-in could not load on this browser. Please reload to try again.')}
@@ -147,13 +151,18 @@ function GoogleLogin({onToken,notice}){
   </section>
   <section className="signin-form">
    <div className="signin-tabs" role="group" aria-label="Sign-in type">
-    <button type="button" aria-pressed={loginRole==='parent'} onClick={()=>chooseRole('parent')}><PortalGlyph name="accounts"/>Parent sign-in</button>
-    <button type="button" aria-pressed={student} onClick={()=>chooseRole('student')}><PortalGlyph name="tiers"/>Student sign-in</button>
-    <button type="button" aria-pressed={admin} onClick={()=>chooseRole('admin')}><PortalGlyph name="overview"/>BijakLearn Team</button>
+    <button type="button" aria-pressed={loginRole==='parent'} disabled={signingIn} onClick={()=>chooseRole('parent')}><PortalGlyph name="accounts"/>Parent sign-in</button>
+    <button type="button" aria-pressed={student} disabled={signingIn} onClick={()=>chooseRole('student')}><PortalGlyph name="tiers"/>Student sign-in</button>
+    <button type="button" aria-pressed={admin} disabled={signingIn} onClick={()=>chooseRole('admin')}><PortalGlyph name="overview"/>BijakLearn Team</button>
    </div>
    <h2>{admin?'BijakLearn Team sign-in':student?'Student sign-in':'Welcome back'}</h2>
    <p>{admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Use your own Google account linked by your parent or BijakLearn Team to your learner profile.':'Sign in to see your child’s progress, manage profiles and view parent notices.'}</p>
-   {isLive?<>{window.location.hostname.endsWith('-script.googleusercontent.com')?<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>:<div id="google-signin" ref={googleButtonRef}/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your BijakLearn Team for the private learning app link.</p>}
+   <div className="signin-action">
+    <div hidden={signingIn}>
+     {isLive?<>{externalGoogle?<div id="google-signin" ref={googleButtonRef}/>:<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your BijakLearn Team for the private learning app link.</p>}
+    </div>
+    {signingIn?<p className="signin-progress" role="status"><span aria-hidden="true"/> Signing in…</p>:externalGoogle&&!googleReady&&!issue&&<p className="signin-progress" role="status"><span aria-hidden="true"/> Loading Google sign-in…</p>}
+   </div>
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
    {!admin&&!student&&<p className="signin-note">New parent accounts need approval from the BijakLearn Team.</p>}
@@ -269,6 +278,7 @@ function App(){
   persistDemo();
  }
  const [loginNotice,setLoginNotice]=useState('');
+ const [signingIn,setSigningIn]=useState(false);
  const activeToken=useRef('');
  const loginAttempt=useRef(0);
  const [growthAudience,setGrowthAudience]=useState('junior'),[growthKind,setGrowthKind]=useState('ai');
@@ -339,6 +349,7 @@ function App(){
  const [accountRevision]=useSheetRefresh(isLive&&!!token&&boot?.role==='STUDENT');
  const endSession=useCallback((notice='')=>{
   loginAttempt.current++;
+  setSigningIn(false);
   activeToken.current='';
   setToken('');
   setBoot(null);
@@ -377,6 +388,7 @@ function App(){
   const attempt=++loginAttempt.current;
   activeToken.current=credential;
   setLoginNotice('');
+  setSigningIn(true);
   try{
    const data=await api(portalV2?'getPortalBootstrap':role==='student'?'getStudentBootstrap':'getBootstrap',credential,...(portalV2?[role,getReferralCode(),'owner-roles-v1']:[]));
    if(attempt!==loginAttempt.current||activeToken.current!==credential)return;
@@ -387,6 +399,7 @@ function App(){
    setChildId(data.children[0]?.id||'');
    setPage('home');
    setToken(session);
+   setSigningIn(false);
   }catch(error){
    if(attempt===loginAttempt.current&&activeToken.current===credential)endSession(accountNotice(error)||'Sign-in could not be completed. Please try again.');
   }
@@ -435,7 +448,7 @@ function App(){
  async function savePin(){try{await call('setParentPin',pin,oldPin);alert('Parent PIN saved. Keep it private.')}catch{}}
 
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
- if(!token)return <><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} notice={loginNotice}/></>;
+ if(!token)return <><PwaControls language={uiLanguage}/><GoogleLogin onToken={login} notice={loginNotice} signingIn={signingIn}/></>;
  if(portalV2&&['ADMIN','PARENT'].includes(boot?.role))return <RolePortals boot={boot} request={authRequest} onSignOut={()=>endSession()} language={uiLanguage}/>;
  return <div className="app"><header><button className="logo" onClick={()=>setPage('home')}><Brand subtitle="Discover something wonderful"/></button><div className="topactions"><StreakChip language={uiLanguage}/>{isLive&&boot?.role==='STUDENT'&&<button disabled={busy} onClick={()=>refresh().catch(()=>{})}>Refresh account details</button>}<button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>
  {error&&<div role="alert" className="error">{error}<button onClick={()=>setError('')}>✕</button></div>}
@@ -448,10 +461,12 @@ function App(){
    <NavButton icon="🗺️" label={say(uiLanguage,'map')} active={page==='map'} onClick={()=>setPage('map')}/>
    <NavButton icon="🤖" label={say(uiLanguage,'tutor')} active={page==='tutor'} onClick={()=>setPage('tutor')}/>
    <NavButton icon="🔬" label={say(uiLanguage,'science')} active={page==='science-lab'} onClick={()=>setPage('science-lab')}/>
+   <NavButton icon="📖" label="Picture Dictionary" active={page==='dictionary'} onClick={()=>setPage('dictionary')}/>
    <NavButton icon="📺" label="Learning Videos" active={page==='videos'} onClick={()=>setPage('videos')}/>
    <NavButton icon="🧮" label={say(uiLanguage,'maths')} active={page==='maths-studio'} onClick={()=>setPage('maths-studio')}/>
   </div>
   <div className="nav-group" role="group" aria-label={say(uiLanguage,'navPlay')}><span className="nav-title">{say(uiLanguage,'navPlay')}</span>
+   <NavButton icon="✂️" label="Creative Projects" active={page==='creative-projects'} onClick={()=>setPage('creative-projects')}/>
    <NavButton icon="🎯" label={say(uiLanguage,'practice')} active={page==='practice'} onClick={()=>setPage('practice')}/>
    <NavButton icon="🔡" label={say(uiLanguage,'wordGame')} active={page==='wordgame'} onClick={()=>setPage('wordgame')}/>
    <NavButton icon="🎪" label={say(uiLanguage,'arcade')} active={page==='arcade'} onClick={()=>setPage('arcade')}/>
@@ -478,6 +493,7 @@ function App(){
  {page==='lab'&&selectedPath&&<PracticeLab key={selectedPath.id} path={selectedPath} onComplete={()=>updateProgress('activities',selectedPath.id)}/>}
  {page==='review'&&!isLive&&<ReviewQuestions items={selectedPath?missed.filter(item=>selectedPath.lessons.includes(item.lesson.id)):missed}
   onRetry={(id,questionId)=>openLesson(id,{questionId})}/>}
+ {['dictionary','creative-projects'].includes(page)&&<PictureDictionary key={page} initialYear={child?.year??browseYear} initialLanguage={uiLanguage} initialView={page==='creative-projects'?'projects':'words'}/>}
  {page==='videos'&&<VideoLibrary request={isLive?authRequest:null} language={uiLanguage}/>}
  {page==='discovery'&&<DiscoveryLibrary availableLessons={bootLessons||[]} onOpen={openLesson}/>}
  {isLive&&boot?.canManageAccounts&&page==='account-access'&&<><AccountAccessPanel request={authRequest}/><StudentAccessPanel request={authRequest}/><KasihReviewPanel request={authRequest}/></>}
@@ -497,6 +513,7 @@ function App(){
   missed={missed.length} onOpen={openLesson} onReview={()=>setPage('review')} onPaths={()=>setPage('paths')}/>}
  <div className="study-shortcuts" aria-label={say(uiLanguage,'navLearn')}>
   <a href="#study-library">📚 {say(uiLanguage,'browseLibrary')}</a>
+  <button type="button" onClick={()=>setPage('dictionary')}>📖 Picture Dictionary</button>
   <button type="button" onClick={()=>setPage('discovery')}>🧩 {say(uiLanguage,'discovery')}</button>
   {isLive&&<button type="button" onClick={()=>setPage('paths')}>{say(uiLanguage,'learningPaths')}</button>}
   <button type="button" onClick={()=>setPage('practice')}>🎯 {say(uiLanguage,'startQuiz')}</button>
