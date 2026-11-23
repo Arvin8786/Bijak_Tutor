@@ -4,6 +4,10 @@
 
 The repository contains interactive preschool modules, a primary-school study library for Tahun 1–6 and three school streams, a virtual science lab, learning games, and separate parent and administrator consoles. The deployed app uses verified Google accounts and server-enforced family access. An explicit local demonstration mode is available for development testing.
 
+## Release notes and announcements
+
+Edit [release-notes.json](release-notes.json) and publish through the normal GitHub Pages workflow. Each notice has a unique `id`, a `title`, and an `items` list. Add a new ID for a new announcement or a revised notice that readers should see again. Keep notices public and remove expired announcements from the file.
+
 ## Run the learning app
 
 The production site opens parent, student and administrator Google sign-in on the GitHub Pages URL. An origin-restricted Apps Script transport handles private backend requests. Configure its public service URL as `VITE_ACCOUNT_APP_URL`; see the [role portal guide](docs/ROLE_PORTALS.md). Local development includes an explicit demo entry for testing.

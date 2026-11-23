@@ -1,3 +1,4 @@
+import ReleaseUpdates from './ReleaseUpdates.jsx';
 import {useSheetRefresh} from './sheetRefresh.js';
 import Brand,{BrandCredit,PortalGlyph} from './Brand.jsx';
 import VideoLibrary from './VideoLibrary.jsx';
@@ -161,68 +162,20 @@ function PwaControls({language='ms'}){
  const [installEvent,setInstallEvent]=useState(null);
  const [standalone,setStandalone]=useState(window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true);
  const [showHelp,setShowHelp]=useState(false);
- const [updateReady,setUpdateReady]=useState(false);
- const reloaded=useRef(false);
  useEffect(()=>{
-  const onOnline=()=>{setOnline(true);checkRelease()};
+  const onOnline=()=>setOnline(true);
   const onOffline=()=>setOnline(false);
   const onInstall=e=>{e.preventDefault();setInstallEvent(e)};
   const onInstalled=()=>{setInstallEvent(null);setStandalone(true)};
-  const release=__BIJAK_RELEASE__;
-  let alive=true;
-  async function checkRelease(){
-   if(nativeAccountService||!navigator.onLine)return;
-   try{
-    const url=`${import.meta.env.BASE_URL}release.json?check=${Date.now()}`;
-    const response=await fetch(url,{cache:'no-store'});
-    if(!response.ok)return;
-    const data=await response.json();
-    if(data.version&&data.version!==release&&alive){
-      setUpdateReady(true);
-      navigator.serviceWorker?.getRegistration().then(reg=>reg?.update()).catch(()=>{});
-      const key='bijaklearn:last-reload:'+data.version;
-      if(!reloaded.current&&sessionStorage.getItem(key)!=='yes'){
-       reloaded.current=true;
-       sessionStorage.setItem(key,'yes');
-       window.location.reload();
-      }
-    }
-   }catch{ /* Offline release checks must never block studying. */ }
-  }
-  const onVisible=()=>{if(document.visibilityState==='visible')checkRelease()};
-  const hadController=Boolean(navigator.serviceWorker?.controller);
-  const onControllerChange=()=>{
-   if(hadController&&!reloaded.current){
-    reloaded.current=true;window.location.reload();
-   }
-  };
-  const onWorkerMessage=e=>{
-   if(e.data?.type==='BIJAK_RELEASE_ACTIVATED'&&e.data.version!=='bijaklearn-static-'+release)setUpdateReady(true);
-  };
   window.addEventListener('online',onOnline);
   window.addEventListener('offline',onOffline);
-  window.addEventListener('focus',checkRelease);
   window.addEventListener('beforeinstallprompt',onInstall);
   window.addEventListener('appinstalled',onInstalled);
-  document.addEventListener('visibilitychange',onVisible);
-  navigator.serviceWorker?.addEventListener('controllerchange',onControllerChange);
-  navigator.serviceWorker?.addEventListener('message',onWorkerMessage);
-  let tick;
-  if(!nativeAccountService){
-   checkRelease();
-   tick=window.setInterval(checkRelease,60000);
-   if(window.isSecureContext&&'serviceWorker' in navigator){
-    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`,{updateViaCache:'none'}).then(reg=>reg.update()).catch(err=>console.warn('PWA offline cache unavailable:',err));
-   }
-  }
   return ()=>{
-   alive=false;window.clearInterval(tick);
-   window.removeEventListener('online',onOnline);window.removeEventListener('offline',onOffline);
-   window.removeEventListener('focus',checkRelease);
-   window.removeEventListener('beforeinstallprompt',onInstall);window.removeEventListener('appinstalled',onInstalled);
-   document.removeEventListener('visibilitychange',onVisible);
-   navigator.serviceWorker?.removeEventListener('controllerchange',onControllerChange);
-   navigator.serviceWorker?.removeEventListener('message',onWorkerMessage);
+   window.removeEventListener('online',onOnline);
+   window.removeEventListener('offline',onOffline);
+   window.removeEventListener('beforeinstallprompt',onInstall);
+   window.removeEventListener('appinstalled',onInstalled);
   };
  },[]);
  const install=async()=>{
@@ -232,7 +185,6 @@ function PwaControls({language='ms'}){
  return <div className="pwa-controls" aria-label={say(language,'install')}>
   <span className={'connection '+(online?'connected':'disconnected')} role="status">{online?'● '+say(language,'online'):'● '+say(language,'offline')}</span>
   {!nativeAccountService&&!standalone&&<button type="button" className="install-button" onClick={install}>📲 {say(language,'install')}</button>}
-  {updateReady&&<span className="pwa-update" role="status">✨ {say(language,'newVersion')} <button type="button" onClick={()=>window.location.reload()}>{say(language,'updateNow')}</button></span>}
   {showHelp&&<p className="install-help">{say(language,'installHelp')}</p>}
   {!online&&<p className="install-help">{say(language,'offlineHelp')}</p>}
  </div>;
@@ -623,5 +575,5 @@ function App(){
  </ModuleGate>
  </main><footer><div>{say(uiLanguage,'footerLine',{mode:say(uiLanguage,isLive?'modeLive':'modePreview')})}</div><div className="proease-footer">{say(uiLanguage,'footerRights',{year:new Date().getFullYear()})}</div></footer></div>
 }
-createRoot(document.getElementById('root')).render(<AppBoundary><PlayfulScene/><App/></AppBoundary>);
+createRoot(document.getElementById('root')).render(<AppBoundary><PlayfulScene/><App/>{!nativeAccountService&&<ReleaseUpdates showNotices={!demoEnabled}/>}</AppBoundary>);
 

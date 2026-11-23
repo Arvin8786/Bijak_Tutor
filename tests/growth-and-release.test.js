@@ -42,7 +42,7 @@ test('ProEase Studio trademark and both hubs are displayed, without registered-m
  assert.ok(!app.includes('ProEase Studio®'));
 });
 test('PWA publishes immutable release metadata and checks foreground updates',()=>{
- const pack=fs.readFileSync('package.json','utf8'),client=fs.readFileSync('src/main.jsx','utf8');
+ const pack=fs.readFileSync('package.json','utf8'),client=fs.readFileSync('src/ReleaseUpdates.jsx','utf8');
  const sw=fs.readFileSync('public/sw.js','utf8'),build=fs.readFileSync('scripts/stamp-release.mjs','utf8');
  assert.match(pack,/stamp-release\.mjs/);
  assert.match(client,/release\.json\?check=/);

@@ -26,16 +26,32 @@ try{
  for(const width of [375,768,1280]){
   const page=await browser.newPage({viewport:{width,height:850}});
   await page.addInitScript(()=>{if(!localStorage.getItem('bijaklearn:ui-language:v1'))localStorage.setItem('bijaklearn:ui-language:v1','en')});
+  let simulatedUpdate = false;
+  if(width===375)await page.route('**/release.json?check=*',route=>{
+   if(!simulatedUpdate)return route.continue();
+   simulatedUpdate=false;
+   return route.fulfill({json:{version:'test-new-release'}});
+  });
   const exceptions=[];
   page.on('pageerror',e=>exceptions.push(e.message));
   const response=await page.goto(base,{waitUntil:'networkidle'});
   assert.ok(response?.ok(),`Production page did not load at ${base}`);
+  if(width===375){
+   simulatedUpdate=true;
+   await page.evaluate(()=>window.dispatchEvent(new Event('online')));
+   await page.waitForURL(url=>url.searchParams.get('bijak-release')==='test-new-release');
+  }
   assert.equal(new URL(page.url()).pathname,projectPath,'Expected the GitHub Pages project path');
   assert.equal(await page.locator('.welcome-gate').count(),0,'Language selection should not block startup');
   await page.getByRole('heading',{name:'Welcome back',exact:true}).waitFor();
   assert.match(await page.locator('.signin .brand-credit').innerText(),/ProEase Studio/);
   assert.doesNotMatch(await page.locator('.signin').innerText(),/fictional profiles|pilot phase|Studio · [0-9a-f]{7}/i,'Customer sign-in must show product attribution, not development notices');
   if(!await page.getByRole('button',{name:'Explore learning demo',exact:true}).count()){
+   const notices=page.getByRole('complementary',{name:'BijakLearn updates'});
+   await notices.getByRole('heading',{name:'What’s new in BijakLearn'}).waitFor();
+   await notices.getByRole('button',{name:'Got it'}).click();
+   await page.reload({waitUntil:'networkidle'});
+   assert.equal(await notices.count(),0,'Dismissed notes should stay closed after reopening');
    assert.equal(await page.locator('nav.nav').count(),0,'Learning must stay behind the gate');
    await page.getByRole('button',{name:'BijakLearn Team',exact:true}).click();
    await page.getByRole('heading',{name:'BijakLearn Team sign-in',exact:true}).waitFor();

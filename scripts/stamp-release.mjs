@@ -7,7 +7,11 @@ function revision(){
 }
 const version=revision();
 if(!/^[a-zA-Z0-9-]{4,30}$/.test(version))throw Error('Invalid build revision');
-fs.writeFileSync('dist/release.json',JSON.stringify({version,publishedAt:new Date().toISOString()},null,2)+'\n');
+const notices=JSON.parse(fs.readFileSync('release-notes.json','utf8'));
+if(!Array.isArray(notices)||notices.some(notice=>!notice?.id||!notice.title||!Array.isArray(notice.items)||!notice.items.every(item=>typeof item==='string'))||new Set(notices.map(notice=>notice.id)).size!==notices.length){
+ throw Error('Release notices need unique IDs, titles and text items');
+}
+fs.writeFileSync('dist/release.json',JSON.stringify({version,publishedAt:new Date().toISOString(),notices},null,2)+'\n');
 const path='dist/sw.js';let sw=fs.readFileSync(path,'utf8');
 const before="const VERSION = 'bijaklearn-static-v9';";
 if(!sw.includes(before))throw Error('Expected worker cache version marker not found');
