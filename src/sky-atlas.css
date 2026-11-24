@@ -3,7 +3,7 @@ body:has(.app),body:has(.portal-shell),body:has(.signin-page){
  background-color:#f7f4ef;background-image:radial-gradient(ellipse at 92% 4%,#f9dac8 0,transparent 32rem),radial-gradient(ellipse at 3% 50%,#d7e8e1 0,transparent 38rem),radial-gradient(#695c8924 .8px,transparent .9px);background-size:auto,auto,16px 16px;color:#252940}
 .signin-page .signin-layout{gap:clamp(1.2rem,4vw,4rem);align-items:stretch}
 .signin-page .signin-form{background:#fffdf8;border:1px solid #d9d1cb;border-radius:28px;box-shadow:0 20px 55px -36px #513047;padding:clamp(1.25rem,4vw,3rem)}
-.signin-page .signin-programmes,body .app .hero,.portal-shell .portal-welcome,body .app .free-library>header{
+.signin-page .signin-programmes,body .app[data-edition] main > .hero,.portal-shell .portal-welcome,body .app .free-library>header{
  color:#fff5df;background:radial-gradient(circle at 88% 16%,#ffca88 0 18px,transparent 19px),radial-gradient(ellipse at 95% 132%,#548c89 0 29%,transparent 29.3%),radial-gradient(ellipse at 71% 140%,#4d747f 0 36%,transparent 36.3%),linear-gradient(120deg,#222a50 0%,#414074 65%,#785582 100%);border:0;border-radius:26px}
 .signin-page .signin-programme-copy{background:transparent;position:relative}
 .signin-page .signin-programme-copy::before{content:"";display:block;width:82px;height:85px;background:url('../public/icons/app-icon.svg') center/contain no-repeat;border:none;transform:rotate(-6deg);margin:0 0 1.1rem}
@@ -36,4 +36,4 @@ html[data-motion=on] .learning-balloon{animation:atlas-float 3s ease-in-out infi
 @media(max-width:640px){.signin-page .signin-form{padding:1.2rem}.signin-page .signin-programme-copy::before{width:46px;height:46px;margin:0 0 .5rem}.portal-shell .portal-welcome{padding:1rem}}
 @media(prefers-reduced-motion:reduce){.learning-balloon{animation:none!important}}
 .signin-page .signin-programme-copy::before{position:relative;inset:auto;z-index:0;box-shadow:none;border-radius:20%}
-body .app .hero,.signin-page .signin-programmes{background-color:#222a50}
+body .app[data-edition] main > .hero,.signin-page .signin-programmes{background-color:#222a50}
