@@ -52,9 +52,9 @@ export async function checkOwnerRolesBrowser(browser,base){
   const signInLayout=await page.locator('.signin-tabs').evaluate(el=>getComputedStyle(el).display);
   assert.equal(signInLayout,'grid','the published sign-in theme must load');
   const background=selector=>page.locator(selector).evaluate(el=>getComputedStyle(el).backgroundColor);
-  assert.equal(await background('.signin-form'),'rgb(255, 255, 255)','sign-in form surface');
+  assert.equal(await background('.signin-form'),'rgb(255, 253, 248)','sign-in form surface');
   await page.waitForFunction(()=>document.querySelector('.signin-brandbar img')?.naturalWidth>0);
-  assert.equal(await background('.signin-programmes'),'rgb(24, 45, 76)','programme panel surface');
+  assert.equal(await background('.signin-programmes'),'rgb(34, 42, 80)','programme panel surface');
   for(const [choice,role,heading] of [['BijakLearn Team','admin','Overview & usage'],['Parent sign-in','parent','Child reports'],['Student sign-in','student','Your learning profile']]){
    await page.getByRole('button',{name:choice,exact:true}).click();await page.getByRole('button',{name:'Use my Google account',exact:true}).click();
    await page.getByRole('heading',{name:heading,exact:true}).waitFor();
@@ -65,7 +65,7 @@ export async function checkOwnerRolesBrowser(browser,base){
    }
    if(role==='student'){
     assert.equal(await page.locator('.portal-shell').count(),0);
-    assert.equal(await background('.app .hero'),'rgb(17, 59, 60)','learner header surface');
+    assert.equal(await background('.app .hero'),'rgb(34, 42, 80)','learner header surface');
     assert.equal(await page.locator('.app').evaluate(el=>getComputedStyle(el).display),'grid','learner desktop sidebar theme');
     await page.locator('nav.nav').getByRole('button',{name:'Maths Studio',exact:true}).click();
     await page.getByText('Maths Studio is restricted for this learner profile.',{exact:true}).waitFor();

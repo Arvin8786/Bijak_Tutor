@@ -36,3 +36,4 @@ html[data-motion=on] .learning-balloon{animation:atlas-float 3s ease-in-out infi
 @media(max-width:640px){.signin-page .signin-form{padding:1.2rem}.signin-page .signin-programme-copy::before{width:46px;height:46px;margin:0 0 .5rem}.portal-shell .portal-welcome{padding:1rem}}
 @media(prefers-reduced-motion:reduce){.learning-balloon{animation:none!important}}
 .signin-page .signin-programme-copy::before{position:relative;inset:auto;z-index:0;box-shadow:none;border-radius:20%}
+body .app .hero,.signin-page .signin-programmes{background-color:#222a50}
