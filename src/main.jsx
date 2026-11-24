@@ -10,6 +10,7 @@ import VideoLibrary from './VideoLibrary.jsx';
 // Capture a referral only in this tab; no tracking cookies, email addresses or child data in URLs.
 function getReferralCode(){try{const code=new URL(window.location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('bijaklearn:referral',code);return sessionStorage.getItem('bijaklearn:referral')||''}catch{return ''}}
 getReferralCode();
+import {FreeAccessForm} from './MembershipDesk.jsx';
 import {ACCOUNT_URL,GOOGLE_CLIENT_ID,AccountConnectionError,directAccountCall,remoteAccountCall} from './accountTransport.js';
 import {RolePortals,StudentUsage} from './RolePortals.jsx';
 import OAuthLogin from './OAuthLogin.jsx';
@@ -114,7 +115,7 @@ async function localCall(method,args){
  if(method==='getParentReport'){if(args[2]!==mockPin)throw Error('Incorrect parent PIN');const childId=args[1];const skills=Object.entries(mockAttempts).filter(([k])=>k.startsWith(childId+'/'));const attempts=skills.flatMap(([,s])=>s.attempts);return {attempts:attempts.length,errors:attempts.filter(a=>!a.correct).length,independent:attempts.filter(a=>a.correct&&!a.hints&&a.mode!=='choice').length,mastered:skills.filter(([,s])=>evaluateSkill(s).mastered).length,topics:skills.map(([k,s])=>({lessonId:k.split('/')[1],...evaluateSkill(s)})),recent:attempts.slice(-20)};}
  throw Error('Unsupported demo operation: '+method)
 }
-const directMethods=new Set(['getPasswordSettings','saveParentPassword','saveChildPassword','passwordSignIn','passwordSignOut','friendMatch','mockExamRequest']);
+const directMethods=new Set([...(nativeAccountService?[]:['membershipDesk']),'getPasswordSettings','saveParentPassword','saveChildPassword','passwordSignIn','passwordSignOut','friendMatch','mockExamRequest']);
 let accountUsesDirect=false;
 function api(method,...args){const pending=!isLive?localCall(method,args):directMethods.has(method)||accountUsesDirect?directAccountCall(method,...args):!nativeAccountService?remoteAccountCall(method,...args):new Promise((resolve,reject)=>window.google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))))[method](...args));return pending.catch(error=>{if(error instanceof AccountConnectionError)throw error;throw new Error(String(error.message||error).replace(/\badministrator\b/gi,'BijakLearn Team'))});}
 function accountNotice(error) {
@@ -152,7 +153,7 @@ function GoogleLogin({onToken,onPassword,notice,signingIn,language}){
  const modeRef=useRef(initialRole);
  const googleButtonRef=useRef(null);
  const chooseRole=role=>{modeRef.current=role;setLoginRole(role)};
- const admin=loginRole==='admin',student=loginRole==='student';
+ const admin=loginRole==='admin',student=loginRole==='student',applying=loginRole==='request';
  useEffect(()=>{
   if(!isLive||window.location.hostname.endsWith('-script.googleusercontent.com'))return;
   if(!(window.BIJAKLEARN_GOOGLE_CLIENT_ID||GOOGLE_CLIENT_ID)){setIssue('Google sign-in is not configured. Ask the BijakLearn Team to set the OAuth Web client ID in Apps Script.');return;}
@@ -181,15 +182,15 @@ function GoogleLogin({onToken,onPassword,notice,signingIn,language}){
   </header>
   <div className="signin-layout">
   <section className="signin-form" aria-labelledby="signin-heading">
-   <h1 id="signin-heading">{admin?'BijakLearn Team sign-in':student?'Student sign-in':'Welcome back'}</h1>
-   <p>{admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Sign in to open your lessons and activities.':'Choose your account and sign in to continue.'}</p>
+   <h1 id="signin-heading">{applying?'Request Free access':admin?'BijakLearn Team sign-in':student?'Student sign-in':'Welcome back'}</h1>
+   <p>{applying?'Verify your parent Google account to start your family application.':admin?'Sign in with the BijakLearn Team Google account to review requests and manage access.':student?'Sign in to open your lessons and activities.':'Choose your account and sign in to continue.'}</p>
    <div className="signin-tabs" role="group" aria-label="Sign-in type">
     <button type="button" aria-pressed={loginRole==='parent'} disabled={signingIn} onClick={()=>chooseRole('parent')}><PortalGlyph name="accounts"/>Parent sign-in</button>
     <button type="button" aria-pressed={student} disabled={signingIn} onClick={()=>chooseRole('student')}><PortalGlyph name="tiers"/>Student sign-in</button>
     <button type="button" aria-pressed={admin} disabled={signingIn} onClick={()=>chooseRole('admin')}><PortalGlyph name="overview"/>BijakLearn Team</button>
    </div>
-   {isLive&&!admin&&<PasswordSignIn key={loginRole} role={loginRole} onSubmit={onPassword} disabled={signingIn}/>}
-   {isLive&&!admin&&<div className="signin-divider"><span>or</span></div>}
+   {isLive&&!admin&&!applying&&<PasswordSignIn key={loginRole} role={loginRole} onSubmit={onPassword} disabled={signingIn}/>}
+   {isLive&&!admin&&!applying&&<div className="signin-divider"><span>or</span></div>}
    <div className="signin-action">
     <div hidden={signingIn}>
      {isLive?<>{externalGoogle?<div id="google-signin" ref={googleButtonRef}/>:<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your BijakLearn Team for the private learning app link.</p>}
@@ -198,7 +199,7 @@ function GoogleLogin({onToken,onPassword,notice,signingIn,language}){
    </div>
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
-   {!admin&&!student&&<p className="signin-note">New parent accounts need approval from the BijakLearn Team.</p>}
+   {isLive&&!admin&&!student&&<button type="button" disabled={signingIn} onClick={()=>chooseRole(applying?'parent':'request')}>{applying?'Back to parent sign-in':'Request Free access'}</button>}
    {!isLive&&demoEnabled&&<button type="button" onClick={()=>onToken('DEMO')}>Explore learning demo</button>}
   </section>
   <aside className="signin-programmes" aria-labelledby="signin-programmes-title">
@@ -345,6 +346,7 @@ function App(){
   setProgress(mockProgress);
   persistDemo();
  }
+ const [applicant,setApplicant]=useState(null);
  const [loginNotice,setLoginNotice]=useState('');
  const [signingIn,setSigningIn]=useState(false);
  const activeToken=useRef('');
@@ -476,6 +478,11 @@ function App(){
   setLoginNotice('');
   setSigningIn(true);
   try{
+   if(requestedRole==='request'){
+    const identity=await api('membershipDesk',input,'identify',null);
+    if(attempt===loginAttempt.current){setApplicant({credential:input,identity});setSigningIn(false)}
+    return;
+   }
    const credential=withPassword?(await directAccountCall('passwordSignIn',input)).token:input;
    if(attempt!==loginAttempt.current)return;
    const roleBootstrap=portalV2||withPassword;
@@ -506,6 +513,14 @@ function App(){
    setToken(session);
    setSigningIn(false);
   }catch(error){
+   if(attempt!==loginAttempt.current)return;
+   if(!withPassword&&portalV2&&requestedRole==='parent'&&error.message.includes('[ACCOUNT_PENDING]')){
+    try{
+     const identity=await api('membershipDesk',input,'identify',null);
+     if(attempt!==loginAttempt.current)return;
+     setApplicant({credential:input,identity});setSigningIn(false);return;
+    }catch{/* Keep the pending-account notice if the application service is unavailable. */}
+   }
    if(attempt===loginAttempt.current)endSession(withPassword&&!(error instanceof AccountConnectionError)?(accountNotice(error)||error.message):signInFailure(error,requestedRole));
   }
  },[endSession]);
@@ -554,6 +569,10 @@ function App(){
  async function savePin(){try{await call('setParentPin',pin,oldPin);alert('Parent PIN saved. Keep it private.')}catch{}}
 
  if(!welcomeDone)return <WelcomeGate language={uiLanguage} onLanguage={setUiLanguage} onContinue={()=>{writeLocale(uiLanguage);setWelcomeDone(true)}}/>;
+ if(!token&&applicant)return <FreeAccessForm identity={applicant.identity} onBack={()=>{setApplicant(null);endSession()}} onSubmit={async details=>{
+  const identity=await api('membershipDesk',applicant.credential,'apply',details);
+  setApplicant({...applicant,identity});
+ }}/>;
  if(!token)return <GoogleLogin onToken={login} onPassword={login} notice={loginNotice} signingIn={signingIn} language={uiLanguage}/>;
  if(portalV2&&['ADMIN','PARENT'].includes(boot?.role))return <RolePortals boot={boot} request={authRequest} onSignOut={()=>endSession()} language={uiLanguage}/>;
  return <div className="app" data-edition={edition.id}><header><button className="logo" onClick={()=>setPage('home')}><Brand edition={edition} subtitle={edition.label}/></button><div className="topactions"><PlayfulScene/><StreakChip language={uiLanguage}/>{isLive&&boot?.role==='STUDENT'&&<button disabled={busy} onClick={()=>refresh().catch(()=>{})}>Refresh account details</button>}<button type="button" className="language-switch" aria-label={say(uiLanguage,'change')} onClick={()=>setWelcomeDone(false)}><span aria-hidden="true">🌐</span> {LANGUAGES.find(l=>l.code===uiLanguage)?.name}</button><PwaControls language={uiLanguage}/><><span>{isLive?(boot?.user?.name||boot?.parent?.name):'Learning demo'}</span><button onClick={()=>endSession()}>{say(uiLanguage,'signOut')}</button></></div></header>

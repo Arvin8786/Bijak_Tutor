@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import {checkMembershipDeskBrowser} from './membership-desk-browser.mjs';
 import {checkPasswordBrowser} from './password-browser.mjs';
 import {checkAccountSyncBrowser} from './account-sync-browser.mjs';
 import {checkOwnerRolesBrowser} from './owner-roles-browser.mjs';
@@ -729,6 +730,7 @@ try{
  }
  await offlineContext.close();
  await checkPasswordBrowser(browser, base);
+ await checkMembershipDeskBrowser(browser,base);
  await checkAccountAccessBrowser(browser, base);
  await checkTierAccessBrowser(browser, base);
  await checkStudentAccessBrowser(browser, base);

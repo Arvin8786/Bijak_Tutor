@@ -69,7 +69,7 @@ function makeWorld() {
   };
   vm.createContext(ctx);
   const read = f => fs.readFileSync(new URL('../apps-script/' + f, import.meta.url), 'utf8');
-  for (const f of ['Code.gs', 'AccountAccess.gs', 'TierAccess.gs', 'PremiumKasih.gs', 'StudentAccess.gs', 'ModuleService.gs', 'AdminOperations.gs', 'TutorAI.gs', 'Commerce.gs', 'SubscriptionBilling.gs', 'RolePortals.gs', 'CurriculumImport.gs']) vm.runInContext(read(f), ctx, {filename: f});
+  for (const f of ['Code.gs', 'AccountAccess.gs', 'TierAccess.gs', 'PremiumKasih.gs', 'StudentAccess.gs', 'ModuleService.gs', 'AdminOperations.gs', 'TutorAI.gs', 'Commerce.gs', 'SubscriptionBilling.gs', 'RolePortals.gs', 'CurriculumImport.gs','PasswordAccounts.gs','AccountHttp.gs']) vm.runInContext(read(f), ctx, {filename: f});
   const marking = fs.readFileSync(new URL('../src/answerMarking.js', import.meta.url), 'utf8').replaceAll('export ', '').replace(/\b(markPractice|normalizedAnswer|numericValue)\b/g, '$1_');
   vm.runInContext(marking, ctx);
   props.set('GOOGLE_CLIENT_ID', 'client-1');
@@ -191,4 +191,40 @@ test('portal allowlist serves both bootstraps and the transport answers when ref
   assert.match(portal, /operations=\{getBootstrap,getStudentBootstrap,/);
   const transport = fs.readFileSync(new URL('../apps-script/Transport.html', import.meta.url), 'utf8');
   assert.match(transport, /refuse\('Too many requests at once/);
+});
+
+test('Free requests use verified identity, preserve phone digits, and wait for explicit approval',()=>{
+ const w=makeWorld(),parent=w.person('507','verified@example.test'),admin=w.person('900000000000000000001','owner@example.test');
+ w.run("setupMembershipDesk();setupMembershipDesk()");
+ const details={name:'Example parent',phone:'0123456789',children:3,email:'other@example.test'};
+ const call=(token,action,input=null)=>w.ctx.membershipDesk(token,action,input);
+ assert.equal(call(parent,'identify').email,'verified@example.test');
+ assert.throws(()=>call(parent,'apply',{...details,children:-1}),/number of children/);
+ assert.throws(()=>call('bja1.fake','apply',details),/Google/);
+ assert.equal(call(parent,'apply',details).submitted,true);
+ call(parent,'apply',details);
+ w.run('setupMembershipDesk()');
+ assert.equal(w.run("rows_('FreeAccessRequests').length"),1);
+ assert.equal(w.run("rows_('AccountAccess').length"),1);
+ assert.equal(call(admin,'account','google:507').application.phone,'0123456789');
+ assert.equal(call(admin,'account','google:507').application.email,'verified@example.test');
+ assert.throws(()=>call(parent,'account','google:507'),/administrator/i);
+ assert.throws(()=>call(parent,'family'),/ACCOUNT_PENDING/);
+ w.ctx.setAccountAccess(admin,'google:507','ACTIVE','');
+ assert.equal(call(parent,'identify').status,'ACTIVE');
+ w.ctx.setAccountAccess(admin,'google:507','REVOKED','test');
+ assert.throws(()=>call(parent,'apply',details),/blocked/);
+});
+test('family messages follow the effective tier, Malaysian day and paid child slots',()=>{
+ const w=makeWorld(),parent=w.person('508','family@example.test'),admin=w.person('900000000000000000001','owner@example.test');
+ w.run("setupMembershipDesk()");
+ w.ctx.membershipDesk(parent,'apply',{name:'Parent',phone:'+60123456789',children:3});w.ctx.setAccountAccess(admin,'google:508','ACTIVE','');
+ for(const n of [1,2,3])w.run("append_('Children',{parentSub:'508',childId:'c"+n+"',nickname:'Child "+n+"',status:'ACTIVE'})");
+ const family=()=>w.ctx.membershipDesk(parent,'family',null),seen=key=>w.ctx.membershipDesk(parent,'seen',key);
+ const free=family();assert.equal(free.message.kind,'offer');seen(free.message.key);assert.equal(family().message,null);
+ assert.equal(w.ctx.membershipMessage_(free,{noticeKey:free.message.key},'next-day').kind,'offer');
+ w.ctx.setMembership(admin,'google:508','PREMIUM',1,'Reviewed');
+ const paid=family();assert.equal(paid.message.kind,'welcome');assert.deepEqual(Array.from(paid.children,c=>c.plan),['PREMIUM','PREMIUM','FREE']);
+ seen(paid.message.key);assert.equal(family().message,null);
+ assert.equal(w.ctx.membershipMessage_({plan:'PREMIUM_KASIH'},{plan:'FREE'},'today').kind,'welcome');
 });

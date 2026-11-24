@@ -95,7 +95,7 @@ const NOTICE_METHODS=['getParentNotices','getParentNoticeImage','listParentNotic
 
 export async function directAccountCall(method,...args){
  const controller=new AbortController();
- const signingIn=method==='getPortalBootstrap'||method==='passwordSignIn';
+ const signingIn=method==='getPortalBootstrap'||method==='passwordSignIn'||method==='membershipDesk';
  const timeout=setTimeout(()=>controller.abort(),signingIn?SIGN_IN_TIMEOUT_MS:45000);
  let result;
  try{

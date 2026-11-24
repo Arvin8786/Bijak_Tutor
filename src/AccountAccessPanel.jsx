@@ -1,5 +1,7 @@
 import React, {useEffect, useState} from 'react';
 
+import {AdminMembershipDetails} from './MembershipDesk.jsx';
+
 const statusLabels = {PENDING: 'Awaiting approval', ACTIVE: 'Active', REVOKED: 'Blocked'};
 
 export default function AccountAccessPanel({request,revision=0}) {
@@ -21,7 +23,7 @@ export default function AccountAccessPanel({request,revision=0}) {
   event.preventDefault();setSaving(true);setError('');setNotice('');
   try{
    const result=await request('setMembership',membershipAccount,membershipPlan,membershipMonths==='LIFETIME'?'LIFETIME':Number(membershipMonths),membershipReason);
-   setNotice('Membership updated: '+result.plan.replaceAll('_',' '));setMembershipReason('');
+   setRefresh(v=>v+1);setNotice('Membership updated: '+result.plan.replaceAll('_',' '));setMembershipReason('');
   }catch(failure){setError(failure.message)}finally{setSaving(false)}
  }
 
@@ -113,6 +115,7 @@ export default function AccountAccessPanel({request,revision=0}) {
    {visible.map(account => <li className="panel" key={account.id}>
     <strong>{account.name || account.email || account.id}</strong>
     <p style={{overflowWrap: 'anywhere'}}>{account.email}</p>
+    <AdminMembershipDetails account={account} request={request} revision={revision+refresh}/>
     <ParentDetails account={account} request={request} onSaved={()=>setRefresh(n=>n+1)}/>
     <p>{statusLabels[account.status] || 'Access unavailable'}</p>
     <div className="actions">
