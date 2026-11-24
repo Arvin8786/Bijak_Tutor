@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import test from 'node:test';
 import vm from 'node:vm';
 
-function fixture(){
+function fixture(overrides={}){
  const src=fs.readFileSync('src/accountTransport.js','utf8')
   .replace('import.meta.env.VITE_ACCOUNT_APP_URL', "''")
   .replace(/^export /gm,'');
@@ -15,9 +15,10 @@ function fixture(){
   setTimeout(callback){const id=++serial;timers.set(id,callback);return id},
   clearTimeout:id=>timers.delete(id),
   window:{addEventListener:(_,callback)=>listeners.add(callback),removeEventListener:(_,callback)=>listeners.delete(callback)},
-  document:{createElement(){return {style:{},setAttribute(){},remove(){this.removed=true}}},body:{append:frame=>frames.push(frame)}}
+  document:{createElement(){return {style:{},setAttribute(){},remove(){this.removed=true}}},body:{append:frame=>frames.push(frame)}},
+  ...overrides
  });
- vm.runInContext(src+'\nglobalThis.rpc=remoteAccountCall;',context);
+ vm.runInContext(src+'\nglobalThis.rpc=remoteAccountCall;globalThis.post=directAccountCall;',context);
  function deliver(event){for(const listener of [...listeners])listener({origin,...event})}
  function ready(frame){
   const channel=new URL(frame.src).searchParams.get('channel');
@@ -33,7 +34,7 @@ function fixture(){
   timers.delete(id);
   callback();
  }
- return {call:context.rpc,frames,messages,ready,respond,expire};
+ return {call:context.rpc,post:context.post,frames,messages,ready,respond,expire};
 }
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 
@@ -66,4 +67,24 @@ test('authorization rejections and timed-out writes are never retried',async()=>
  bridge.expire();
  await assert.rejects(write,/did not respond/);
  assert.equal(bridge.frames.length,1);
+});
+
+test('slow Apps Script startup and sign-in responses fit the transport deadlines',async()=>{
+ const deadlines=[];
+ const bridge=fixture({
+  AbortController,
+  setTimeout(callback,ms){deadlines.push(ms);return deadlines.length},
+  fetch:async()=>({ok:true,json:async()=>({ok:true,value:'ok'})})
+ });
+ for(const method of ['passwordSignIn','getPortalBootstrap']){
+  assert.equal(await bridge.post(method), 'ok');
+  assert.ok(deadlines.at(-1)>60_000);
+ }
+ const login=bridge.call('getPortalBootstrap','verified-session','student');
+ assert.ok(deadlines.at(-1)>50_000);
+ bridge.ready(bridge.frames[0]);
+ await tick();
+ assert.ok(deadlines.at(-1)>60_000);
+ bridge.respond({ok:true,value:'profile'});
+ assert.equal(await login,'profile');
 });

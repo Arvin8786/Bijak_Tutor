@@ -2,8 +2,12 @@
 export const ACCOUNT_URL=import.meta.env.VITE_ACCOUNT_APP_URL||'https://script.google.com/macros/s/AKfycbyPJHxkj9PSkvs1-KYLZoTaF7DXCjt_vKzFJwyWwwBBNcrtjEkYQg5rhzlwrqqDyC1u/exec';
 export const GOOGLE_CLIENT_ID='92044632567-40m43hcb263872ausujuc1b4ij99e1u7.apps.googleusercontent.com';
 const SERVICE_ORIGIN='https://n-vldjkpsrhfo7nws4qz55tdcwo4iumiztih5n5cq-0lu-script.googleusercontent.com';
+// Apps Script cold starts and the ContentService redirect can each take tens of seconds.
+const SIGN_IN_TIMEOUT_MS=120_000;
+const FRAME_READY_TIMEOUT_MS=60_000;
 let connection;
 export class AccountConnectionError extends Error {}
+const slowAccountMessage='The account service took too long to respond. Please try signing in again.';
 export function makeResponseHandler({channel,origin,source,pending}){
  return event=>{
   const data=event.data;
@@ -25,9 +29,8 @@ function connect(){
  endpoint.searchParams.set('channel',channel);
  let receive,readyTimer,rejectConnection;
  const session={ready:null,disconnect};
- function disconnect(){
+ function disconnect(error=new AccountConnectionError('The account service connection was interrupted.')){
   if(connection===session)connection=null;
-  const error=new AccountConnectionError('The account service connection was interrupted.');
   clearTimeout(readyTimer);
   window.removeEventListener('message',handshake);
   if(receive)window.removeEventListener('message',receive);
@@ -60,7 +63,7 @@ function connect(){
  session.ready=new Promise((resolve,reject)=>{
   acceptConnection=resolve;
   rejectConnection=reject;
-  readyTimer=setTimeout(disconnect,15000);
+  readyTimer=setTimeout(()=>disconnect(new AccountConnectionError(slowAccountMessage)),FRAME_READY_TIMEOUT_MS);
   window.addEventListener('message',handshake);
   frame.src=endpoint.href;
   document.body.append(frame);
@@ -75,7 +78,7 @@ export async function remoteAccountCall(method,...args){
   const session=connection??=connect();
   try{
    const call=await session.ready;
-   return await call(method,args,signIn?24000:45000);
+   return await call(method,args,signIn?SIGN_IN_TIMEOUT_MS:45000);
   }catch(error){
    if(error instanceof AccountConnectionError)session.disconnect();
    throw error;
@@ -92,7 +95,8 @@ const NOTICE_METHODS=['getParentNotices','getParentNoticeImage','listParentNotic
 
 export async function directAccountCall(method,...args){
  const controller=new AbortController();
- const timeout=setTimeout(()=>controller.abort(),method==='getPortalBootstrap'?12000:45000);
+ const signingIn=method==='getPortalBootstrap'||method==='passwordSignIn';
+ const timeout=setTimeout(()=>controller.abort(),signingIn?SIGN_IN_TIMEOUT_MS:45000);
  let result;
  try{
   const notice=NOTICE_METHODS.includes(method);
@@ -105,7 +109,8 @@ export async function directAccountCall(method,...args){
   result=await response.json();
   if(typeof result?.ok!=='boolean')throw Error('Account service returned an unexpected response');
  }catch{
-  throw new AccountConnectionError('BijakLearn could not reach its account service.');
+  if(controller.signal.aborted)throw new AccountConnectionError(slowAccountMessage);
+  throw new AccountConnectionError('BijakLearn could not reach its account service. Please try again.');
  }finally{clearTimeout(timeout)}
  if(!result.ok)throw Error(result.error||'Account request failed');
  return result.value;

@@ -127,7 +127,7 @@ function accountNotice(error) {
  return '';
 }
 function signInFailure(error,role){
- if(error instanceof AccountConnectionError)return 'BijakLearn could not reach its account service. Please check your connection and try signing in again.';
+ if(error instanceof AccountConnectionError)return navigator.onLine===false?'You are offline. Reconnect and try signing in again.':error.message;
  const notice=accountNotice(error);
  if(notice)return notice;
  if(/(?:google identity verification failed|invalid google identity|sign in with your google account)/i.test(error.message)){
@@ -143,6 +143,12 @@ function GoogleLogin({onToken,onPassword,notice,signingIn,language}){
  const externalGoogle=isLive&&!window.location.hostname.endsWith('-script.googleusercontent.com');
  const initialRole=['parent','student','admin'].includes(window.BIJAKLEARN_LOGIN_ROLE)?window.BIJAKLEARN_LOGIN_ROLE:'parent';
  const [loginRole,setLoginRole]=useState(initialRole);
+ const [slowSignIn,setSlowSignIn]=useState(false);
+ useEffect(()=>{
+  if(!signingIn){setSlowSignIn(false);return}
+  const timer=setTimeout(()=>setSlowSignIn(true),8000);
+  return ()=>clearTimeout(timer);
+ },[signingIn]);
  const modeRef=useRef(initialRole);
  const googleButtonRef=useRef(null);
  const chooseRole=role=>{modeRef.current=role;setLoginRole(role)};
@@ -188,7 +194,7 @@ function GoogleLogin({onToken,onPassword,notice,signingIn,language}){
     <div hidden={signingIn}>
      {isLive?<>{externalGoogle?<div id="google-signin" ref={googleButtonRef}/>:<OAuthLogin onToken={credential=>onToken(credential,modeRef.current)}/>}</>:<p role="status" className="signin-note">Account sign-in is not available on this site yet. Please contact your BijakLearn Team for the private learning app link.</p>}
     </div>
-    {signingIn?<p className="signin-progress" role="status"><span aria-hidden="true"/> Signing in…</p>:externalGoogle&&!googleReady&&!issue&&<p className="signin-progress" role="status"><span aria-hidden="true"/> Loading Google sign-in…</p>}
+    {signingIn?<p className="signin-progress" role="status"><span aria-hidden="true"/> {slowSignIn?'Still signing in… Your account is loading.':'Signing in…'}</p>:externalGoogle&&!googleReady&&!issue&&<p className="signin-progress" role="status"><span aria-hidden="true"/> Loading Google sign-in…</p>}
    </div>
    {notice&&<p className="error" role="alert">{notice}</p>}
    {issue&&<p className="error" role="alert">{issue}</p>}
@@ -472,15 +478,18 @@ function App(){
   try{
    const credential=withPassword?(await directAccountCall('passwordSignIn',input)).token:input;
    if(attempt!==loginAttempt.current)return;
-   const method=portalV2?'getPortalBootstrap':requestedRole==='student'?'getStudentBootstrap':'getBootstrap';
-   const options=portalV2?[requestedRole,getReferralCode(),'owner-roles-v1']:[];
+   const roleBootstrap=portalV2||withPassword;
+   const method=roleBootstrap?'getPortalBootstrap':requestedRole==='student'?'getStudentBootstrap':'getBootstrap';
+   const options=roleBootstrap?[requestedRole,getReferralCode(),'owner-roles-v1']:[];
    let data,direct=false;
    if(withPassword||isLive&&!nativeAccountService&&portalV2){
     try{
-     data=await directAccountCall('getPortalBootstrap',credential,requestedRole,...options.slice(1));
+     data=await directAccountCall(method,credential,...options);
      direct=true;
     }catch(error){
-     if(withPassword||!(error instanceof AccountConnectionError))throw error;
+     // Only recover the profile request. Reusing its verified session avoids
+     // re-submitting a password or counting a second password attempt.
+     if(!(error instanceof AccountConnectionError))throw error;
     }
    }
    if(attempt!==loginAttempt.current)return;
@@ -497,7 +506,7 @@ function App(){
    setToken(session);
    setSigningIn(false);
   }catch(error){
-   if(attempt===loginAttempt.current)endSession(withPassword?(accountNotice(error)||error.message):signInFailure(error,requestedRole));
+   if(attempt===loginAttempt.current)endSession(withPassword&&!(error instanceof AccountConnectionError)?(accountNotice(error)||error.message):signInFailure(error,requestedRole));
   }
  },[endSession]);
  async function refresh(){const b=await call(portalV2?'getPortalBootstrap':boot?.role==='STUDENT'?'getStudentBootstrap':'getBootstrap',...(portalV2?[boot?.role?.toLowerCase()]:[]));setBoot(b);if(!b.children.some(x=>x.id===childId))setChildId(b.children[0]?.id||'');}
